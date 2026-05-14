@@ -4,9 +4,7 @@ Tài liệu này dành cho **PM / Designer** muốn tự thêm trang, chỉnh UI
 
 ---
 
-## 1. Cài đặt lần đầu
-
-### Yêu cầu
+## 1. Cài đặt lần đầu (chỉ làm 1 lần)
 
 | Công cụ | Link tải | Kiểm tra |
 |---|---|---|
@@ -14,35 +12,28 @@ Tài liệu này dành cho **PM / Designer** muốn tự thêm trang, chỉnh UI
 | pnpm | `npm i -g pnpm` | `pnpm -v` |
 | Claude Code | https://claude.ai/code | `claude -v` |
 
-### Clone và chạy
-
-```bash
-# Clone repo
-git clone git@github.com:ZBS-Product/zbs-account-prototype.git
-cd zbs-account-prototype
-
-# Cài dependencies
-pnpm install
-
-# Chạy dev server
-pnpm dev
-```
-
-Mở trình duyệt vào **http://localhost:3000** — UI sẽ hiển thị ngay.
-
 ---
 
-## 2. Mở Claude Code
+## 2. Bắt đầu chỉ với một lệnh
 
-Từ thư mục project, chạy:
+Copy và chạy lệnh này trong Terminal:
 
 ```bash
-claude
+git clone git@github.com:ZBS-Product/zbs-account-prototype.git zbs-prototype && cd zbs-prototype && pnpm install && pnpm dev & sleep 3 && claude
 ```
 
-Claude Code sẽ khởi động trong terminal, đọc toàn bộ codebase và sẵn sàng nhận yêu cầu.
+Lệnh này tự động:
+1. Clone repo về máy (thư mục `zbs-prototype`)
+2. Cài dependencies
+3. Khởi động dev server tại http://localhost:3000
+4. Mở Claude Code — sẵn sàng nhận yêu cầu ngay
 
-> **Tip:** Giữ terminal Claude Code và trình duyệt side-by-side để thấy thay đổi ngay lập tức.
+> **Lần sau** (đã có sẵn repo), chỉ cần vào thư mục và chạy:
+> ```bash
+> cd zbs-prototype && pnpm dev & sleep 3 && claude
+> ```
+
+> **Tip:** Mở thêm tab trình duyệt vào http://localhost:3000 để thấy thay đổi realtime khi Claude đang code.
 
 ---
 
