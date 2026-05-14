@@ -97,9 +97,11 @@ export default function ZbsTemplateLayout({ children }: { children: React.ReactN
         <aside className="w-[200px] shrink-0 bg-white border-r border-border flex flex-col overflow-y-auto">
           {/* Tạo Template button */}
           <div className="p-3">
-            <Button className="w-full gap-2 bg-white border border-blue-500 text-blue-600 hover:bg-blue-50 text-sm h-9" variant="outline">
-              <Plus className="h-4 w-4" />
-              Tạo Template
+            <Button className="w-full gap-2 bg-white border border-blue-500 text-blue-600 hover:bg-blue-50 text-sm h-9" variant="outline" asChild>
+              <Link href={`${basePath}/cong-cu/gui-tin/tao-template`}>
+                <Plus className="h-4 w-4" />
+                Tạo Template
+              </Link>
             </Button>
           </div>
 

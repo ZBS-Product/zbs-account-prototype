@@ -23,17 +23,11 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
-interface NavChild {
-  label: string
-  href: string
-}
-
 interface NavItem {
   label: string
   href: string
   badge?: string
   external?: boolean
-  children?: NavChild[]
 }
 
 function buildNavSections(basePath: string) {
@@ -52,15 +46,7 @@ function buildNavSections(basePath: string) {
       label: "Công cụ",
       icon: Wrench,
       items: [
-        {
-          label: "Dịch vụ gửi tin",
-          href: `${basePath}/cong-cu/gui-tin`,
-          children: [
-            { label: "Chất lượng gửi tin SĐT", href: `${basePath}/cong-cu/gui-tin/chat-luong-gui-tin` },
-            { label: "Quản lý Logo", href: `${basePath}/cong-cu/gui-tin/quan-ly-logo` },
-            { label: "Gửi theo chiến dịch", href: `${basePath}/cong-cu/gui-tin/gui-theo-chien-dich` },
-          ],
-        },
+        { label: "Dịch vụ gửi tin", href: `${basePath}/cong-cu/gui-tin` },
         { label: "Dịch vụ OA", href: `${basePath}/cong-cu/oa`, external: true },
       ] as NavItem[],
     },
@@ -108,8 +94,7 @@ export default function ZbsSidebar({ basePath: _ignored }: { basePath?: string }
             <SidebarGroupContent>
               <SidebarMenu>
                 {section.items.map((item) => {
-                  const isActive = pathname === item.href
-                  const hasActiveChild = item.children?.some((c) => pathname === c.href || pathname.startsWith(c.href))
+                  const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
                   return (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton
@@ -134,28 +119,6 @@ export default function ZbsSidebar({ basePath: _ignored }: { basePath?: string }
                         </Link>
                       </SidebarMenuButton>
 
-                      {/* Sub-items */}
-                      {item.children && (
-                        <div className="ml-3 mt-0.5 space-y-0.5 border-l border-border pl-3">
-                          {item.children.map((child) => {
-                            const childActive = pathname === child.href || pathname.startsWith(child.href + "/")
-                            return (
-                              <Link
-                                key={child.href}
-                                href={child.href}
-                                className={cn(
-                                  "flex w-full items-center rounded-md px-2 py-1 text-xs transition-colors",
-                                  childActive
-                                    ? "bg-blue-600 text-white"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                                )}
-                              >
-                                {child.label}
-                              </Link>
-                            )
-                          })}
-                        </div>
-                      )}
                     </SidebarMenuItem>
                   )
                 })}
