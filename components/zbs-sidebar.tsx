@@ -23,6 +23,19 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
+interface NavChild {
+  label: string
+  href: string
+}
+
+interface NavItem {
+  label: string
+  href: string
+  badge?: string
+  external?: boolean
+  children?: NavChild[]
+}
+
 const navSections = [
   {
     label: "Chi tiêu",
@@ -32,15 +45,23 @@ const navSections = [
       { label: "Chi tiêu tin Template", href: "/chi-tieu/tin-template" },
       { label: "Chi tiêu OA", href: "/chi-tieu/oa" },
       { label: "Quản lý Ngân Sách", href: "/chi-tieu/ngan-sach", badge: "Beta" },
-    ],
+    ] as NavItem[],
   },
   {
     label: "Công cụ",
     icon: Wrench,
     items: [
-      { label: "Dịch vụ gửi tin", href: "/cong-cu/gui-tin" },
+      {
+        label: "Dịch vụ gửi tin",
+        href: "/cong-cu/gui-tin",
+        children: [
+          { label: "Chất lượng gửi tin SĐT", href: "/cong-cu/gui-tin/chat-luong-gui-tin" },
+          { label: "Quản lý Logo", href: "/cong-cu/gui-tin/quan-ly-logo" },
+          { label: "Gửi theo chiến dịch", href: "/cong-cu/gui-tin/gui-theo-chien-dich" },
+        ],
+      },
       { label: "Dịch vụ OA", href: "/cong-cu/oa", external: true },
-    ],
+    ] as NavItem[],
   },
   {
     label: "Giao dịch",
@@ -48,7 +69,7 @@ const navSections = [
     items: [
       { label: "Lịch sử giao dịch", href: "/giao-dich/lich-su" },
       { label: "Quản lý hóa đơn", href: "/giao-dich/hoa-don" },
-    ],
+    ] as NavItem[],
   },
   {
     label: "Cài đặt",
@@ -58,7 +79,7 @@ const navSections = [
       { label: "Quản lý tài sản", href: "/cai-dat/tai-san" },
       { label: "Quản lý thành viên", href: "/cai-dat/thanh-vien" },
       { label: "Quản lý thông báo", href: "/cai-dat/thong-bao" },
-    ],
+    ] as NavItem[],
   },
 ]
 
@@ -82,6 +103,7 @@ export default function ZbsSidebar() {
               <SidebarMenu>
                 {section.items.map((item) => {
                   const isActive = pathname === item.href
+                  const hasActiveChild = item.children?.some((c) => pathname === c.href || pathname.startsWith(c.href))
                   return (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton
@@ -105,6 +127,29 @@ export default function ZbsSidebar() {
                           )}
                         </Link>
                       </SidebarMenuButton>
+
+                      {/* Sub-items */}
+                      {item.children && (
+                        <div className="ml-3 mt-0.5 space-y-0.5 border-l border-border pl-3">
+                          {item.children.map((child) => {
+                            const childActive = pathname === child.href || pathname.startsWith(child.href + "/")
+                            return (
+                              <Link
+                                key={child.href}
+                                href={child.href}
+                                className={cn(
+                                  "flex w-full items-center rounded-md px-2 py-1 text-xs transition-colors",
+                                  childActive
+                                    ? "bg-blue-600 text-white"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                                )}
+                              >
+                                {child.label}
+                              </Link>
+                            )
+                          })}
+                        </div>
+                      )}
                     </SidebarMenuItem>
                   )
                 })}
