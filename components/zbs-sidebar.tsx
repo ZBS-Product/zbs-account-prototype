@@ -48,7 +48,6 @@ const navSections = [
     items: [
       { label: "Lịch sử giao dịch", href: "/giao-dich/lich-su" },
       { label: "Quản lý hóa đơn", href: "/giao-dich/hoa-don" },
-      { label: "Hoá đơn", href: "/giao-dich/invoice" },
     ],
   },
   {
@@ -67,7 +66,7 @@ export default function ZbsSidebar() {
   const pathname = usePathname()
 
   return (
-    <Sidebar className="border-r border-border bg-white" style={{ width: 220 }}>
+    <Sidebar className="border-r border-border bg-gray-50" style={{ width: 220 }}>
       <SidebarHeader className="px-4 py-4 border-b border-border">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded bg-blue-600">

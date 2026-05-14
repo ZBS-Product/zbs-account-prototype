@@ -87,8 +87,13 @@ Tạo branch prototype/ten-tinh-nang rồi thêm trang ...
 |---|---|
 | `/` | 📊 Tổng quan |
 | `/chi-tieu/tin-template` | 📨 Chi tiêu tin Template |
+| `/chi-tieu/oa` | 📡 Chi tiêu OA |
 | `/cong-cu/gui-tin` | 📤 Dịch vụ gửi tin |
 | `/giao-dich/lich-su` | 🧾 Lịch sử giao dịch |
+| `/giao-dich/hoa-don` | 🧾 Quản lý hóa đơn |
+| `/cai-dat/tai-san` | 🔗 Quản lý tài sản |
+| `/cai-dat/thanh-vien` | 👥 Quản lý thành viên |
+| `/cai-dat/thong-bao` | 🔔 Quản lý thông báo |
 
 ---
 
