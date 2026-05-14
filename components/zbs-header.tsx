@@ -18,11 +18,11 @@ export default function ZbsHeader() {
 
       <div className="flex items-center gap-2 pl-2 border-l border-border ml-1">
         <Avatar className="h-8 w-8">
-          <AvatarFallback className="bg-blue-100 text-blue-700 text-xs font-semibold">HH</AvatarFallback>
+          <AvatarFallback className="bg-blue-100 text-blue-700 text-xs font-semibold">TP</AvatarFallback>
         </Avatar>
         <div className="flex flex-col leading-tight">
-          <span className="text-sm font-medium">Hoàng Thu Hà</span>
-          <span className="text-[11px] text-muted-foreground truncate max-w-[140px]">Cty TNHH Tên rất dài...</span>
+          <span className="text-sm font-medium">Trường Phát</span>
+          <span className="text-[11px] text-muted-foreground truncate max-w-[140px]">ZNSTest</span>
         </div>
       </div>
     </header>

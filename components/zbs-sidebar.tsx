@@ -67,16 +67,8 @@ export default function ZbsSidebar() {
 
   return (
     <Sidebar className="border-r border-border bg-gray-50" style={{ width: 220 }}>
-      <SidebarHeader className="px-4 py-4 border-b border-border">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded bg-blue-600">
-            <span className="text-xs font-bold text-white">Z</span>
-          </div>
-          <div className="flex flex-col leading-tight">
-            <span className="text-sm font-bold text-blue-600">Zalo</span>
-            <span className="text-[10px] text-muted-foreground leading-tight">Business Solutions</span>
-          </div>
-        </div>
+      <SidebarHeader className="px-4 py-3 border-b border-border">
+        <img src="/zbs-logo.svg" alt="Zalo Business Solutions" className="h-10 w-auto" />
       </SidebarHeader>
 
       <SidebarContent className="py-2">
