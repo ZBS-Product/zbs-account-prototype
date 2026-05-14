@@ -1,21 +1,21 @@
-# ZBS Account UI — Prototype
+# 🎨 ZBS Account UI — Prototype
 
 > Prototype giao diện quản lý tài khoản Zalo Business Solutions.  
 > Dành cho PM/Designer — không cần biết code.
 
 ---
 
-## Bắt đầu
+## 🚀 Bắt đầu
 
-### Bước 1 — Cài đặt (chỉ làm 1 lần)
+### 📦 Bước 1 — Cài đặt (chỉ làm 1 lần)
 
-| Công cụ | Tải về | Sau khi cài, mở Terminal kiểm tra |
+| Công cụ | Tải về | Kiểm tra |
 |---|---|---|
-| **Node.js** | [nodejs.org](https://nodejs.org) → bản LTS | `node -v` → thấy số là được |
-| **pnpm** | Mở Terminal, chạy: `npm i -g pnpm` | `pnpm -v` → thấy số là được |
-| **Claude Code** | [claude.ai/code](https://claude.ai/code) | `claude -v` → thấy số là được |
+| **Node.js** | [nodejs.org](https://nodejs.org) → bản LTS | `node -v` → thấy số là được ✅ |
+| **pnpm** | Mở Terminal, chạy: `npm i -g pnpm` | `pnpm -v` → thấy số là được ✅ |
+| **Claude Code** | [claude.ai/code](https://claude.ai/code) | `claude -v` → thấy số là được ✅ |
 
-> **Chưa có SSH key GitHub?** Chạy lệnh này trong Terminal, sau đó làm theo hướng dẫn:
+> 🔑 **Chưa có SSH key GitHub?** Chạy lệnh này trong Terminal, sau đó làm theo hướng dẫn:
 > ```bash
 > ssh-keygen -t ed25519 -C "email@cua-ban.com"
 > ```
@@ -23,7 +23,7 @@
 
 ---
 
-### Bước 2 — Mở Claude Code với repo này
+### ⚡ Bước 2 — Mở Claude Code với repo này
 
 Mở **Terminal**, copy và chạy lệnh sau:
 
@@ -37,11 +37,11 @@ Claude Code sẽ tự mở. Tiếp theo, paste prompt này vào Claude Code:
 Chạy dev server, sau đó cho mình xem UI đang có gì
 ```
 
-Mở trình duyệt vào **http://localhost:3000** — prototype hiện ra ngay.
+Mở trình duyệt vào **http://localhost:3000** — prototype hiện ra ngay. 🎉
 
 ---
 
-### Lần sau (đã clone rồi)
+### 🔁 Lần sau (đã clone rồi)
 
 ```bash
 cd zbs-prototype && claude
@@ -55,34 +55,34 @@ Chạy dev server
 
 ---
 
-## Làm gì với Claude Code?
+## 💬 Làm gì với Claude Code?
 
 Gõ hoặc paste yêu cầu bằng tiếng Việt bình thường. Ví dụ:
 
-**Thêm trang mới — paste screenshot Figma kèm mô tả:**
+**🖼️ Thêm trang mới — paste screenshot Figma kèm mô tả:**
 ```
 Làm trang này theo design: [kéo thả ảnh Figma vào đây]
 Trang đặt tại /giao-dich/hoa-don, thêm vào sidebar
 ```
 
-**Chỉnh UI:**
+**🎨 Chỉnh UI:**
 ```
 Card "Tổng chi tiêu" font số tiền quá nhỏ, tăng lên và thêm viền cam bên trái
 ```
 
-**Thêm dữ liệu:**
+**📊 Thêm dữ liệu:**
 ```
 Thêm 10 dòng vào bảng Lịch sử giao dịch, mix đủ 3 trạng thái
 ```
 
-**Làm trên branch riêng** (khuyến nghị trước mỗi thử nghiệm mới):
+**🌿 Làm trên branch riêng** (khuyến nghị trước mỗi thử nghiệm mới):
 ```
 Tạo branch prototype/ten-tinh-nang rồi thêm trang ...
 ```
 
 ---
 
-## Screenshots
+## 📸 Screenshots
 
 ### Tổng quan
 ![Tổng quan](docs/screenshots/tong-quan.png)
@@ -98,19 +98,19 @@ Tạo branch prototype/ten-tinh-nang rồi thêm trang ...
 
 ---
 
-## Trang đã có
+## 🗂️ Trang đã có
 
 | Route | Tên trang |
 |---|---|
-| `/` | Tổng quan |
-| `/chi-tieu/tin-template` | Chi tiêu tin Template |
-| `/cong-cu/gui-tin` | Dịch vụ gửi tin |
-| `/giao-dich/lich-su` | Lịch sử giao dịch |
+| `/` | 📊 Tổng quan |
+| `/chi-tieu/tin-template` | 📨 Chi tiêu tin Template |
+| `/cong-cu/gui-tin` | 📤 Dịch vụ gửi tin |
+| `/giao-dich/lich-su` | 🧾 Lịch sử giao dịch |
 
 ---
 
 <details>
-<summary>Tech stack</summary>
+<summary>🛠️ Tech stack</summary>
 
 | | |
 |---|---|
