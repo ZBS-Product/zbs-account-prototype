@@ -5,12 +5,12 @@
 # Syntax: [path pattern]   @[github-username]
 
 # Base prototype — chỉ maintainer (phatnt11) được approve thay đổi
-/app/base/                  @phatnt11
-/components/                @phatnt11
-/next.config.mjs            @phatnt11
-/app/page.tsx               @phatnt11
+/app/base/                  @patrickphat
+/components/                @patrickphat
+/next.config.mjs            @patrickphat
+/app/page.tsx               @patrickphat
 
 # Fork của từng người — chỉ chính người đó approve
-/app/phatnt11/              @phatnt11
+/app/phatnt11/              @patrickphat
 # /app/viht2/               @viht2
 # /app/hainlb/              @hainlb

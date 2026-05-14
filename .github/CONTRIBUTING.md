@@ -7,6 +7,9 @@ git clone git@github.com:ZBS-Product/zbs-account-prototype.git
 cd zbs-account-prototype
 pnpm install
 
+# Cài git hook chặn push nhầm lên main (bắt buộc)
+pnpm setup:hooks
+
 # Checkout branch của bạn (thay viht2 bằng username của bạn)
 git checkout -b prototype/viht2
 # Nếu branch đã tồn tại:

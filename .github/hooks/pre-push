@@ -1,0 +1,21 @@
+#!/bin/sh
+# Pre-push hook: chặn push thẳng lên main
+# Cài đặt: chạy `pnpm setup:hooks` sau khi clone
+
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+REMOTE=$1
+
+if [ "$REMOTE" = "origin" ] && [ "$BRANCH" = "main" ]; then
+  echo ""
+  echo "🚫  Không được push thẳng lên main!"
+  echo ""
+  echo "    Hãy dùng branch của bạn:"
+  echo "    git checkout -b prototype/<username-của-bạn>"
+  echo "    git push origin prototype/<username-của-bạn>"
+  echo ""
+  echo "    Sau đó mở Pull Request trên GitHub."
+  echo ""
+  exit 1
+fi
+
+exit 0
