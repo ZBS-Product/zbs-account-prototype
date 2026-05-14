@@ -1,0 +1,16 @@
+# CODEOWNERS — ai được phép review/approve thay đổi ở đâu
+#
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# Syntax: [path pattern]   @[github-username]
+
+# Base prototype — chỉ maintainer (phatnt11) được approve thay đổi
+/app/base/                  @phatnt11
+/components/                @phatnt11
+/next.config.mjs            @phatnt11
+/app/page.tsx               @phatnt11
+
+# Fork của từng người — chỉ chính người đó approve
+/app/phatnt11/              @phatnt11
+# /app/viht2/               @viht2
+# /app/hainlb/              @hainlb
