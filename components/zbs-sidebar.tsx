@@ -85,8 +85,11 @@ function buildNavSections(basePath: string) {
   ]
 }
 
-export default function ZbsSidebar({ basePath = "" }: { basePath?: string }) {
+export default function ZbsSidebar({ basePath: _ignored }: { basePath?: string }) {
   const pathname = usePathname()
+  // Auto-detect prototype prefix từ URL — đúng cả khi served qua fallback rewrite
+  // /viht2/chi-tieu/... → "/viht2" | /base/chi-tieu/... → "/base"
+  const basePath = `/${pathname.split("/")[1]}`
   const navSections = buildNavSections(basePath)
 
   return (

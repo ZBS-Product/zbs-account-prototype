@@ -7,41 +7,46 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 
-const secondarySections = [
-  {
-    label: "Báo cáo",
-    icon: BarChart2,
-    items: [
-      { label: "Kết quả gửi tin SĐT", href: "/base/cong-cu/gui-tin/bao-cao/ket-qua" },
-      { label: "Chất lượng gửi tin SĐT", href: "/base/cong-cu/gui-tin/bao-cao/chat-luong" },
-    ],
-  },
-  {
-    label: "Thiết kế nội dung",
-    icon: Zap,
-    items: [
-      { label: "Thư viện Template", href: "/base/cong-cu/gui-tin/thu-vien" },
-      { label: "Quản lý Template", href: "/base/cong-cu/gui-tin/quan-ly-template" },
-      { label: "Quản lý Logo", href: "/base/cong-cu/gui-tin/quan-ly-logo" },
-    ],
-  },
-  {
-    label: "Công cụ gửi tin SĐT",
-    icon: Smartphone,
-    items: [
-      { label: "Gửi theo chiến dịch", href: "/base/cong-cu/gui-tin/chien-dich" },
-    ],
-  },
-]
+function buildSections(basePath: string) {
+  return [
+    {
+      label: "Báo cáo",
+      icon: BarChart2,
+      items: [
+        { label: "Kết quả gửi tin SĐT", href: `${basePath}/cong-cu/gui-tin/bao-cao/ket-qua` },
+        { label: "Chất lượng gửi tin SĐT", href: `${basePath}/cong-cu/gui-tin/chat-luong-gui-tin` },
+      ],
+    },
+    {
+      label: "Thiết kế nội dung",
+      icon: Zap,
+      items: [
+        { label: "Thư viện Template", href: `${basePath}/cong-cu/gui-tin/thu-vien` },
+        { label: "Quản lý Template", href: `${basePath}/cong-cu/gui-tin/quan-ly-template` },
+        { label: "Quản lý Logo", href: `${basePath}/cong-cu/gui-tin/quan-ly-logo` },
+      ],
+    },
+    {
+      label: "Công cụ gửi tin SĐT",
+      icon: Smartphone,
+      items: [
+        { label: "Gửi theo chiến dịch", href: `${basePath}/cong-cu/gui-tin/gui-theo-chien-dich` },
+      ],
+    },
+  ]
+}
 
 export default function ZbsTemplateLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  // Detect prototype prefix từ URL: /viht2/cong-cu/... → "/viht2"
+  const basePath = `/${pathname.split("/")[1]}`
+  const secondarySections = buildSections(basePath)
 
   return (
     <div className="flex flex-col h-screen bg-background overflow-hidden">
       {/* Header */}
       <header className="flex h-14 items-center gap-3 border-b border-border bg-white px-4 shrink-0 z-10">
-        <Link href="/base" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors mr-2">
+        <Link href={basePath} className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors mr-2">
           <ArrowLeft className="h-4 w-4" />
         </Link>
         {/* ZBS Template Message logo */}
@@ -99,7 +104,7 @@ export default function ZbsTemplateLayout({ children }: { children: React.ReactN
                 </div>
                 <div className="mt-0.5 space-y-0.5">
                   {section.items.map((item) => {
-                    const isActive = pathname === item.href
+                    const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
                     return (
                       <Link
                         key={item.href}
