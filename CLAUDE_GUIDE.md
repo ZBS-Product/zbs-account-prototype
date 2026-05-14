@@ -103,7 +103,38 @@ Nút "Tạo chiến dịch" trên trang Dịch vụ gửi tin:
 
 ---
 
-## 5. Commit thay đổi lên GitHub
+## 5. Luôn làm việc trên branch riêng
+
+> ⚠️ **Quy tắc quan trọng:** Không bao giờ prototype trực tiếp trên `main`.
+
+Mỗi ý tưởng / trang mới = một branch riêng:
+
+```bash
+# Tạo branch mới trước khi bắt đầu
+git checkout -b prototype/ten-tinh-nang
+# Ví dụ:
+git checkout -b prototype/quan-ly-hoa-don
+git checkout -b prototype/cai-dat-tai-khoan
+```
+
+Hoặc yêu cầu Claude Code:
+```
+Tạo branch mới tên "prototype/quan-ly-hoa-don" rồi thêm trang đó
+```
+
+**Tại sao cần branch riêng?**
+- `main` luôn ở trạng thái "demo được" — có thể show bất cứ lúc nào
+- Dễ so sánh và discard nếu ý tưởng không ổn
+- Nhiều người có thể prototype song song không conflict
+
+**Merge khi đã duyệt:**
+```bash
+git checkout main
+git merge prototype/quan-ly-hoa-don
+git push
+```
+
+## 6. Commit thay đổi lên GitHub
 
 Sau khi hài lòng với prototype, yêu cầu Claude Code commit:
 
