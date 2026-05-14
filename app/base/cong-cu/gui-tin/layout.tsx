@@ -12,24 +12,24 @@ const secondarySections = [
     label: "Báo cáo",
     icon: BarChart2,
     items: [
-      { label: "Kết quả gửi tin SĐT", href: "/cong-cu/gui-tin/bao-cao/ket-qua" },
-      { label: "Chất lượng gửi tin SĐT", href: "/cong-cu/gui-tin/bao-cao/chat-luong" },
+      { label: "Kết quả gửi tin SĐT", href: "/base/cong-cu/gui-tin/bao-cao/ket-qua" },
+      { label: "Chất lượng gửi tin SĐT", href: "/base/cong-cu/gui-tin/bao-cao/chat-luong" },
     ],
   },
   {
     label: "Thiết kế nội dung",
     icon: Zap,
     items: [
-      { label: "Thư viện Template", href: "/cong-cu/gui-tin/thu-vien" },
-      { label: "Quản lý Template", href: "/cong-cu/gui-tin/quan-ly-template" },
-      { label: "Quản lý Logo", href: "/cong-cu/gui-tin/quan-ly-logo" },
+      { label: "Thư viện Template", href: "/base/cong-cu/gui-tin/thu-vien" },
+      { label: "Quản lý Template", href: "/base/cong-cu/gui-tin/quan-ly-template" },
+      { label: "Quản lý Logo", href: "/base/cong-cu/gui-tin/quan-ly-logo" },
     ],
   },
   {
     label: "Công cụ gửi tin SĐT",
     icon: Smartphone,
     items: [
-      { label: "Gửi theo chiến dịch", href: "/cong-cu/gui-tin/chien-dich" },
+      { label: "Gửi theo chiến dịch", href: "/base/cong-cu/gui-tin/chien-dich" },
     ],
   },
 ]
@@ -41,7 +41,7 @@ export default function ZbsTemplateLayout({ children }: { children: React.ReactN
     <div className="flex flex-col h-screen bg-background overflow-hidden">
       {/* Header */}
       <header className="flex h-14 items-center gap-3 border-b border-border bg-white px-4 shrink-0 z-10">
-        <Link href="/" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors mr-2">
+        <Link href="/base" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors mr-2">
           <ArrowLeft className="h-4 w-4" />
         </Link>
         {/* ZBS Template Message logo */}

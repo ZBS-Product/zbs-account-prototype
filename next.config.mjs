@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 
 // Fork users — thêm username mới vào đây khi có người join
-const FORK_USERS = ["phatnt11", "viht2", "hainlb"]
+const FORK_USERS = ["phatnt11", "viht2", "hainlb"] // thêm username mới vào đây
 
 const nextConfig = {
   async rewrites() {

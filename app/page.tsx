@@ -13,9 +13,25 @@ const prototypes = [
     id: "phatnt11",
     name: "phatnt11",
     path: "/phatnt11",
-    description: "Prototype của Phát — customizations & experiments",
+    description: "Prototype của Phát",
     color: "bg-purple-500",
     initials: "P",
+  },
+  {
+    id: "viht2",
+    name: "viht2",
+    path: "/viht2",
+    description: "Prototype của Vih",
+    color: "bg-emerald-500",
+    initials: "V",
+  },
+  {
+    id: "hainlb",
+    name: "hainlb",
+    path: "/hainlb",
+    description: "Prototype của Hải",
+    color: "bg-orange-500",
+    initials: "H",
   },
 ]
 

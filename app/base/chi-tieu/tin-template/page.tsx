@@ -88,7 +88,7 @@ function formatVND(amount: number) {
 export default function ChiTieuTinTemplatePage() {
   return (
     <SidebarProvider>
-      <ZbsSidebar />
+      <ZbsSidebar basePath="/base" />
       <SidebarInset>
         <ZbsHeader />
         <main className="flex-1 overflow-y-auto p-6 space-y-6 h-[calc(100vh-56px)]">

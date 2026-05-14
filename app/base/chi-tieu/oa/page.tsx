@@ -145,7 +145,7 @@ export default function ChiTieuOAPage() {
 
   return (
     <SidebarProvider>
-      <ZbsSidebar />
+      <ZbsSidebar basePath="/base" />
       <SidebarInset>
         <ZbsHeader />
         <main className="flex-1 overflow-y-auto p-6 space-y-5 h-[calc(100vh-56px)]">
@@ -225,7 +225,7 @@ export default function ChiTieuOAPage() {
                     {pieAppData.map((_, i) => <Cell key={i} fill={COLORS_APP[i % COLORS_APP.length]} />)}
                   </Pie>
                   <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-                  <Tooltip formatter={(v: number) => fmtVND(v)} />
+                  <Tooltip formatter={(v: unknown) => fmtVND(Number(v))} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -241,7 +241,7 @@ export default function ChiTieuOAPage() {
                     {pieOaData.map((_, i) => <Cell key={i} fill={COLORS_OA[i % COLORS_OA.length]} />)}
                   </Pie>
                   <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-                  <Tooltip formatter={(v: number) => fmtVND(v)} />
+                  <Tooltip formatter={(v: unknown) => fmtVND(Number(v))} />
                 </PieChart>
               </ResponsiveContainer>
             </div>

@@ -62,7 +62,7 @@ export default function TongQuanPage() {
 
   return (
     <SidebarProvider>
-      <ZbsSidebar basePath="/base" />
+      <ZbsSidebar basePath="/viht2" />
       <SidebarInset>
         <ZbsHeader />
         <main className="flex-1 overflow-auto p-6 space-y-6">

@@ -218,7 +218,7 @@ export default function LichSuGiaoDichPage() {
 
   return (
     <SidebarProvider>
-      <ZbsSidebar />
+      <ZbsSidebar basePath="/base" />
       <SidebarInset>
         <ZbsHeader />
         <main className="flex-1 overflow-y-auto p-6 space-y-5 h-[calc(100vh-56px)]">
