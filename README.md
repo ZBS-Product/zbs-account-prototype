@@ -7,50 +7,33 @@
 
 ## 🚀 Bắt đầu
 
-### 📦 Bước 1 — Cài đặt (chỉ làm 1 lần)
+### 📦 Bước 1 — Cài Claude Code (chỉ làm 1 lần)
 
-| Công cụ | Tải về | Kiểm tra |
-|---|---|---|
-| **Node.js** | [nodejs.org](https://nodejs.org) → bản LTS | `node -v` → thấy số là được ✅ |
-| **pnpm** | Mở Terminal, chạy: `npm i -g pnpm` | `pnpm -v` → thấy số là được ✅ |
-| **Claude Code** | [claude.ai/code](https://claude.ai/code) | `claude -v` → thấy số là được ✅ |
-
-> 🔑 **Chưa có SSH key GitHub?** Chạy lệnh này trong Terminal, sau đó làm theo hướng dẫn:
-> ```bash
-> ssh-keygen -t ed25519 -C "email@cua-ban.com"
-> ```
-> Copy nội dung file `~/.ssh/id_ed25519.pub` và thêm vào [GitHub → Settings → SSH Keys](https://github.com/settings/keys).
+Tải và cài **Claude Code** tại: **[claude.ai/code](https://claude.ai/code)**
 
 ---
 
-### ⚡ Bước 2 — Mở Claude Code với repo này
-
-Mở **Terminal**, copy và chạy lệnh sau:
-
-```bash
-git clone git@github.com:ZBS-Product/zbs-account-prototype.git zbs-prototype && cd zbs-prototype && pnpm install && claude
-```
-
-Claude Code sẽ tự mở. Tiếp theo, paste prompt này vào Claude Code:
+### ⚡ Bước 2 — Mở Terminal, gõ `claude`, rồi paste prompt này
 
 ```
-Chạy dev server, sau đó cho mình xem UI đang có gì
+Setup prototype ZBS Account UI cho mình:
+- Clone repo https://github.com/ZBS-Product/zbs-account-prototype.git vào ~/code/zbs-account-ui (nếu chưa có)
+- Cài Node.js LTS và pnpm nếu chưa có trên máy
+- Chạy pnpm install
+- Chạy dev server
+Sau đó mở http://localhost:3000 và cho mình biết đang thấy gì.
 ```
 
-Mở trình duyệt vào **http://localhost:3000** — prototype hiện ra ngay. 🎉
+Claude Code sẽ tự cài đặt, clone repo, và chạy — không cần làm gì thêm. 🎉
 
 ---
 
-### 🔁 Lần sau (đã clone rồi)
+### 🔁 Lần sau (đã setup rồi)
 
-```bash
-cd zbs-prototype && claude
-```
-
-Rồi paste vào Claude Code:
+Mở Terminal, gõ `claude`, paste:
 
 ```
-Chạy dev server
+Vào ~/code/zbs-account-ui, chạy dev server
 ```
 
 ---
