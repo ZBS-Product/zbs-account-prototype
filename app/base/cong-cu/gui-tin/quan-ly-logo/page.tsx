@@ -1,9 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import ZbsSidebar from "@/components/zbs-sidebar"
-import ZbsHeader from "@/components/zbs-header"
 import { Input } from "@/components/ui/input"
 import { Search, ImageOff } from "lucide-react"
 
@@ -73,11 +70,7 @@ export default function QuanLyLogoPage() {
   })
 
   return (
-    <SidebarProvider>
-      <ZbsSidebar basePath="/base" />
-      <SidebarInset>
-        <ZbsHeader />
-        <main className="flex-1 overflow-y-auto p-6 h-[calc(100vh-56px)]">
+    <div className="flex-1 overflow-y-auto p-6">
           <h1 className="text-2xl font-bold mb-6">Quản lý logo</h1>
 
           <div className="flex gap-6">
@@ -155,8 +148,6 @@ export default function QuanLyLogoPage() {
               </div>
             </div>
           </div>
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+    </div>
   )
 }
