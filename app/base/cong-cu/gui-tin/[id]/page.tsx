@@ -2,10 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import ZbsSidebar from "@/components/zbs-sidebar"
-import ZbsHeader from "@/components/zbs-header"
+import { useParams, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import {
@@ -213,6 +210,8 @@ function TemplatePreview({ t, dark }: { t: TemplateDetail; dark: boolean }) {
 
 export default function TemplateDetailPage() {
   const params = useParams()
+  const pathname = usePathname()
+  const basePath = `/${pathname.split("/")[1]}`
   const id = Array.isArray(params.id) ? params.id[0] : params.id
   const t = detailMap[id ?? "1"] ?? detailMap["1"]
   const [dark, setDark] = useState(false)
@@ -232,14 +231,10 @@ export default function TemplateDetailPage() {
   ]
 
   return (
-    <SidebarProvider>
-      <ZbsSidebar basePath="/base" />
-      <SidebarInset>
-        <ZbsHeader />
-        <main className="flex-1 overflow-y-auto h-[calc(100vh-56px)]">
+    <div className="flex-1 overflow-y-auto">
           {/* Top bar */}
           <div className="flex items-center gap-3 px-6 py-4 border-b border-border bg-white">
-            <Link href="/cong-cu/gui-tin" className="flex items-center text-muted-foreground hover:text-foreground transition-colors">
+            <Link href={`${basePath}/cong-cu/gui-tin/quan-ly-template`} className="flex items-center text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="h-5 w-5" />
             </Link>
             <h1 className="text-lg font-bold flex-1">Chi tiết mẫu Template</h1>
@@ -343,8 +338,6 @@ export default function TemplateDetailPage() {
               <TemplatePreview t={t} dark={dark} />
             </div>
           </div>
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+    </div>
   )
 }

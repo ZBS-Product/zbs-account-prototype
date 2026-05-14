@@ -5,6 +5,23 @@
 
 ---
 
+## 🌐 Multi-prototype
+
+Mỗi người có một URL riêng, chạy song song mà không ảnh hưởng nhau:
+
+| URL | Prototype |
+|---|---|
+| `/base` | Bản gốc — tham chiếu chuẩn |
+| `/phatnt11` | Fork của Phát |
+| `/viht2` | Fork của Vi |
+| `/hainlb` | Fork của Hải |
+
+Góc trên cùng có thanh **Prototype Switcher** để chuyển nhanh giữa các môi trường, tự động giữ nguyên trang đang xem.
+
+> Trang nào chưa có bản riêng sẽ tự động dùng lại bản `/base`.
+
+---
+
 ## 🚀 Bắt đầu
 
 ### 📦 Bước 1 — Cài Claude Code (chỉ làm 1 lần)
@@ -40,60 +57,73 @@ Vào ~/code/zbs-account-ui, chạy dev server
 
 ## 💬 Làm gì với Claude Code?
 
-Gõ hoặc paste yêu cầu bằng tiếng Việt bình thường. Ví dụ:
+> **Quan trọng:** Luôn nói rõ bạn đang làm trên prototype nào để Claude không edit nhầm file của người khác.
 
-**🖼️ Thêm trang mới — paste screenshot Figma kèm mô tả:**
+### ✏️ Làm tính năng trên prototype của bạn
+
 ```
+Mình đang làm prototype viht2.
+Thêm trang Báo cáo tổng hợp vào /viht2/bao-cao — chỉ tạo file trong app/viht2/, không đụng app/base/
+```
+
+### 🖼️ Thêm trang mới từ Figma
+
+```
+Mình đang làm prototype viht2.
 Làm trang này theo design: [kéo thả ảnh Figma vào đây]
-Trang đặt tại /giao-dich/hoa-don, thêm vào sidebar
+Trang đặt tại /viht2/giao-dich/hoa-don
 ```
 
-**🎨 Chỉnh UI:**
+### 🎨 Chỉnh UI
+
 ```
 Card "Tổng chi tiêu" font số tiền quá nhỏ, tăng lên và thêm viền cam bên trái
+(đây là trang /viht2/...)
 ```
 
-**📊 Thêm dữ liệu:**
-```
-Thêm 10 dòng vào bảng Lịch sử giao dịch, mix đủ 3 trạng thái
-```
+### 🌿 Luôn làm trên branch riêng
 
-**🌿 Làm trên branch riêng** (khuyến nghị trước mỗi thử nghiệm mới):
 ```
-Tạo branch prototype/ten-tinh-nang rồi thêm trang ...
+Tạo branch prototype/viht2-ten-tinh-nang rồi làm ...
 ```
 
 ---
 
-## 📸 Screenshots
+## 🗂️ Trang đã có (bản base)
 
-### Tổng quan
-![Tổng quan](docs/screenshots/tong-quan.png)
-
-### Chi tiêu tin Template
-![Chi tiêu tin Template](docs/screenshots/chi-tieu-tin-template.png)
-
-### Dịch vụ gửi tin
-![Gửi theo chiến dịch](docs/screenshots/gui-tin.png)
-
-### Lịch sử giao dịch
-![Lịch sử giao dịch](docs/screenshots/lich-su-giao-dich.png)
-
----
-
-## 🗂️ Trang đã có
+Tất cả trang đều có dạng `/<username>/...` — thay `base` bằng username của bạn.
 
 | Route | Tên trang |
 |---|---|
-| `/` | 📊 Tổng quan |
-| `/chi-tieu/tin-template` | 📨 Chi tiêu tin Template |
-| `/chi-tieu/oa` | 📡 Chi tiêu OA |
-| `/cong-cu/gui-tin` | 📤 Dịch vụ gửi tin |
-| `/giao-dich/lich-su` | 🧾 Lịch sử giao dịch |
-| `/giao-dich/hoa-don` | 🧾 Quản lý hóa đơn |
-| `/cai-dat/tai-san` | 🔗 Quản lý tài sản |
-| `/cai-dat/thanh-vien` | 👥 Quản lý thành viên |
-| `/cai-dat/thong-bao` | 🔔 Quản lý thông báo |
+| `/base` | 📊 Tổng quan |
+| `/base/chi-tieu/tin-template` | 📨 Chi tiêu tin Template |
+| `/base/chi-tieu/oa` | 📡 Chi tiêu OA |
+| `/base/chi-tieu/ngan-sach` | 💰 Quản lý Ngân sách |
+| `/base/cong-cu/gui-tin` | 📤 Dịch vụ gửi tin |
+| `/base/cong-cu/gui-tin/quan-ly-template` | 📋 Quản lý Template |
+| `/base/cong-cu/gui-tin/tao-template` | ➕ Tạo Template (wizard 3 bước) |
+| `/base/cong-cu/gui-tin/chat-luong-gui-tin` | 📶 Chất lượng gửi tin SĐT |
+| `/base/cong-cu/gui-tin/quan-ly-logo` | 🖼️ Quản lý Logo |
+| `/base/cong-cu/gui-tin/gui-theo-chien-dich` | 🎯 Gửi theo chiến dịch |
+| `/base/giao-dich/lich-su` | 🧾 Lịch sử giao dịch |
+| `/base/giao-dich/hoa-don` | 🧾 Quản lý hóa đơn |
+| `/base/cai-dat/tai-khoan` | 👤 Thông tin tài khoản |
+| `/base/cai-dat/tai-san` | 🔗 Quản lý tài sản |
+| `/base/cai-dat/thanh-vien` | 👥 Quản lý thành viên |
+| `/base/cai-dat/thong-bao` | 🔔 Quản lý thông báo |
+
+---
+
+## 🔒 Ai được sửa gì?
+
+| Scope | Người chịu trách nhiệm |
+|---|---|
+| `app/base/`, `components/`, `globals.css` | Base maintainer (`@patrickphat`) |
+| `app/phatnt11/` | phatnt11 |
+| `app/viht2/` | viht2 |
+| `app/hainlb/` | hainlb |
+
+Git hook sẽ chặn push thẳng lên `main` — mọi thay đổi phải qua branch + Pull Request.
 
 ---
 

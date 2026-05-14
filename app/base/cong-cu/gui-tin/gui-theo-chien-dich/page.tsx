@@ -1,9 +1,6 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import ZbsSidebar from "@/components/zbs-sidebar"
-import ZbsHeader from "@/components/zbs-header"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -73,11 +70,7 @@ export default function GuiTheoChienDichPage() {
   }), [search, purpose, status])
 
   return (
-    <SidebarProvider>
-      <ZbsSidebar basePath="/base" />
-      <SidebarInset>
-        <ZbsHeader />
-        <main className="flex-1 overflow-y-auto p-6 h-[calc(100vh-56px)]">
+    <div className="flex-1 overflow-y-auto p-6">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold">Gửi theo chiến dịch</h1>
             <Button className="text-white" style={{ background: "oklch(0.488 0.243 264.376)" }}>
@@ -188,8 +181,6 @@ export default function GuiTheoChienDichPage() {
               </div>
             </div>
           </div>
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+    </div>
   )
 }

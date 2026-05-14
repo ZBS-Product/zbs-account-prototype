@@ -104,6 +104,27 @@ components/zbs-sidebar.tsx                ✓ kebab-case
 - Không sửa `components/ui/` (shadcn components) — extend bằng wrapper nếu cần
 - Không push thẳng lên `main` — luôn dùng branch `prototype/<tên>`
 
+## Quyền chỉnh sửa theo prototype
+
+Trước khi edit bất kỳ file nào, hãy xác định scope làm việc:
+
+| Scope | Ai được edit |
+|---|---|
+| `app/base/` | Base maintainer (`@patrickphat`) |
+| `components/` | Base maintainer |
+| `app/globals.css`, `next.config.mjs` | Base maintainer |
+| `app/phatnt11/` | phatnt11 hoặc base maintainer |
+| `app/viht2/` | viht2 hoặc base maintainer |
+| `app/hainlb/` | hainlb hoặc base maintainer |
+
+**Nguyên tắc khi Claude hỗ trợ một prototype cụ thể:**
+
+- **Tính năng riêng** → tạo/sửa file trong `app/<username>/` — không đụng vào `app/base/` hay `components/`
+- **Bug ở shared code** (`components/`, `app/base/`, CSS) → cần xác nhận rõ ràng trước khi Claude edit, vì thay đổi ảnh hưởng tất cả prototypes
+- **Khi không chắc** → hỏi lại "File này là shared code, sửa sẽ ảnh hưởng tất cả prototypes — bạn có muốn tiếp tục không?"
+
+Git hook và CODEOWNERS là lớp bảo vệ thực sự — CLAUDE.md chỉ là hướng dẫn tư duy.
+
 ## Branch workflow
 
 ```bash

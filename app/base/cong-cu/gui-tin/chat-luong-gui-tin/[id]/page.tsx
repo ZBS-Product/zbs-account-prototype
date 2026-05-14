@@ -1,11 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { useParams } from "next/navigation"
+import { useParams, usePathname } from "next/navigation"
 import Link from "next/link"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import ZbsSidebar from "@/components/zbs-sidebar"
-import ZbsHeader from "@/components/zbs-header"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Download, ChevronDown, Info } from "lucide-react"
 import {
@@ -109,6 +106,8 @@ function LimitSlider({ currentLimit }: { currentLimit: number }) {
 
 export default function BaoCaoChiTietPage() {
   const { id } = useParams<{ id: string }>()
+  const pathname = usePathname()
+  const basePath = `/${pathname.split("/")[1]}`
   const oa = oaDetails[id] ?? oaDetails["2"]
   const [activeTab, setActiveTab] = useState<"Ngày" | "Tuần" | "Tháng">("Ngày")
   const [pageSize] = useState(10)
@@ -116,16 +115,12 @@ export default function BaoCaoChiTietPage() {
   const initials = oa.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()
 
   return (
-    <SidebarProvider>
-      <ZbsSidebar basePath="/base" />
-      <SidebarInset>
-        <ZbsHeader />
-        <main className="flex-1 overflow-y-auto p-6 space-y-5 h-[calc(100vh-56px)]">
+    <div className="flex-1 overflow-y-auto p-6 space-y-5">
 
           {/* Page header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Link href="/cong-cu/gui-tin/chat-luong-gui-tin" className="text-muted-foreground hover:text-foreground">
+              <Link href={`${basePath}/cong-cu/gui-tin/chat-luong-gui-tin`} className="text-muted-foreground hover:text-foreground">
                 <ArrowLeft className="h-5 w-5" />
               </Link>
               <h1 className="text-2xl font-bold">Báo cáo chất lượng gửi tin SĐT</h1>
@@ -274,8 +269,6 @@ export default function BaoCaoChiTietPage() {
             </div>
           </div>
 
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+    </div>
   )
 }

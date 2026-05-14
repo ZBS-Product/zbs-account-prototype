@@ -4,8 +4,15 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { ArrowLeft, Bell, Plus, BarChart2, Zap, Smartphone } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
+
+const PROTOTYPE_USERS: Record<string, { name: string; company: string; initials: string }> = {
+  base:     { name: "Trường Phát",  company: "ZNSTest", initials: "TP" },
+  phatnt11: { name: "PhatNT11",     company: "ZNSTest", initials: "P"  },
+  viht2:    { name: "ViHT2",        company: "ZNSTest", initials: "V"  },
+  hainlb:   { name: "HaiNLB",       company: "ZNSTest", initials: "H"  },
+}
 
 function buildSections(basePath: string) {
   return [
@@ -39,7 +46,9 @@ function buildSections(basePath: string) {
 export default function ZbsTemplateLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   // Detect prototype prefix từ URL: /viht2/cong-cu/... → "/viht2"
-  const basePath = `/${pathname.split("/")[1]}`
+  const protoId = pathname.split("/")[1] ?? "base"
+  const basePath = `/${protoId}`
+  const user = PROTOTYPE_USERS[protoId] ?? PROTOTYPE_USERS.base
   const secondarySections = buildSections(basePath)
 
   return (
@@ -74,12 +83,11 @@ export default function ZbsTemplateLayout({ children }: { children: React.ReactN
         {/* User */}
         <div className="flex items-center gap-2 pl-2 border-l border-border ml-1">
           <Avatar className="h-8 w-8">
-            <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=phat" />
-            <AvatarFallback className="bg-blue-100 text-blue-700 text-xs font-semibold">TP</AvatarFallback>
+            <AvatarFallback className="bg-blue-100 text-blue-700 text-xs font-semibold">{user.initials}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col leading-tight">
-            <span className="text-sm font-medium">Trường Phát</span>
-            <span className="text-[11px] text-muted-foreground">ZNSTest</span>
+            <span className="text-sm font-medium">{user.name}</span>
+            <span className="text-[11px] text-muted-foreground">{user.company}</span>
           </div>
         </div>
       </header>
@@ -89,9 +97,11 @@ export default function ZbsTemplateLayout({ children }: { children: React.ReactN
         <aside className="w-[200px] shrink-0 bg-white border-r border-border flex flex-col overflow-y-auto">
           {/* Tạo Template button */}
           <div className="p-3">
-            <Button className="w-full gap-2 bg-white border border-blue-500 text-blue-600 hover:bg-blue-50 text-sm h-9" variant="outline">
-              <Plus className="h-4 w-4" />
-              Tạo Template
+            <Button className="w-full gap-2 bg-white border border-blue-500 text-blue-600 hover:bg-blue-50 text-sm h-9" variant="outline" asChild>
+              <Link href={`${basePath}/cong-cu/gui-tin/tao-template`}>
+                <Plus className="h-4 w-4" />
+                Tạo Template
+              </Link>
             </Button>
           </div>
 

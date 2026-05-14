@@ -1,9 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import ZbsSidebar from "@/components/zbs-sidebar"
-import ZbsHeader from "@/components/zbs-header"
+import { usePathname } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search } from "lucide-react"
@@ -45,6 +43,8 @@ const qualityConfig: Record<OAItem["quality"], { label: string; bg: string; colo
 }
 
 export default function ChatLuongGuiTinPage() {
+  const pathname = usePathname()
+  const basePath = `/${pathname.split("/")[1]}`
   const [search, setSearch] = useState("")
   const [quality, setQuality] = useState<Quality>("all")
 
@@ -56,11 +56,7 @@ export default function ChatLuongGuiTinPage() {
   }), [search, quality])
 
   return (
-    <SidebarProvider>
-      <ZbsSidebar basePath="/base" />
-      <SidebarInset>
-        <ZbsHeader />
-        <main className="flex-1 overflow-y-auto p-6 h-[calc(100vh-56px)]">
+    <div className="flex-1 overflow-y-auto p-6">
           <h1 className="text-2xl font-bold mb-6">Chất lượng gửi tin qua SĐT</h1>
 
           <div className="flex gap-6">
@@ -118,7 +114,7 @@ export default function ChatLuongGuiTinPage() {
 
                       {/* Action */}
                       <Button variant="outline" size="sm" className="shrink-0 text-xs h-8" asChild>
-                        <Link href={`/cong-cu/gui-tin/chat-luong-gui-tin/${item.id}`}>Xem báo cáo</Link>
+                        <Link href={`${basePath}/cong-cu/gui-tin/chat-luong-gui-tin/${item.id}`}>Xem báo cáo</Link>
                       </Button>
                     </div>
                   )
@@ -142,8 +138,6 @@ export default function ChatLuongGuiTinPage() {
               </div>
             </div>
           </div>
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+    </div>
   )
 }
