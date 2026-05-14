@@ -15,6 +15,9 @@ Prototype giao diện quản lý tài khoản cho **Zalo Business Solutions**, x
 ### Dịch vụ gửi tin — Gửi theo chiến dịch
 ![Gửi theo chiến dịch](docs/screenshots/gui-tin.png)
 
+### Lịch sử giao dịch
+![Lịch sử giao dịch](docs/screenshots/lich-su-giao-dich.png)
+
 ---
 
 ## Tech Stack
@@ -38,6 +41,7 @@ Prototype giao diện quản lý tài khoản cho **Zalo Business Solutions**, x
 | `/` | Tổng quan | Dashboard chi tiêu tổng hợp theo ngày/tuần/tháng, biểu đồ stacked bar và pie |
 | `/chi-tieu/tin-template` | Chi tiêu tin Template | KPI cards, combo chart, pie charts theo ứng dụng/OA, bảng lịch sử |
 | `/cong-cu/gui-tin` | Dịch vụ gửi tin | Danh sách chiến dịch, filter trạng thái & CSKH, tạo chiến dịch |
+| `/giao-dich/lich-su` | Lịch sử giao dịch | Bảng giao dịch, filter loại/hoạt động/trạng thái, banner hạn mức tài khoản |
 
 ---
 
@@ -62,10 +66,18 @@ app/
 ├── page.tsx                        # Tổng quan (/)
 ├── chi-tieu/
 │   └── tin-template/page.tsx       # Chi tiêu tin Template
-└── cong-cu/
-    └── gui-tin/page.tsx            # Dịch vụ gửi tin
+├── cong-cu/
+│   └── gui-tin/page.tsx            # Dịch vụ gửi tin
+└── giao-dich/
+    └── lich-su/page.tsx            # Lịch sử giao dịch
 components/
 ├── zbs-sidebar.tsx                 # Sidebar điều hướng
 ├── zbs-header.tsx                  # Header (nạp tiền, user info, sidebar toggle)
 └── ui/                             # shadcn/ui components
 ```
+
+---
+
+## Hướng dẫn prototype với Claude Code (dành cho PM)
+
+Xem [CLAUDE_GUIDE.md](CLAUDE_GUIDE.md) để biết cách dùng Claude Code để thêm trang, chỉnh UI và prototype nhanh mà không cần biết code.
