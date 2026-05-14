@@ -36,55 +36,58 @@ interface NavItem {
   children?: NavChild[]
 }
 
-const navSections = [
-  {
-    label: "Chi tiêu",
-    icon: BarChart3,
-    items: [
-      { label: "Tổng quan", href: "/" },
-      { label: "Chi tiêu tin Template", href: "/chi-tieu/tin-template" },
-      { label: "Chi tiêu OA", href: "/chi-tieu/oa" },
-      { label: "Quản lý Ngân Sách", href: "/chi-tieu/ngan-sach", badge: "Beta" },
-    ] as NavItem[],
-  },
-  {
-    label: "Công cụ",
-    icon: Wrench,
-    items: [
-      {
-        label: "Dịch vụ gửi tin",
-        href: "/cong-cu/gui-tin",
-        children: [
-          { label: "Chất lượng gửi tin SĐT", href: "/cong-cu/gui-tin/chat-luong-gui-tin" },
-          { label: "Quản lý Logo", href: "/cong-cu/gui-tin/quan-ly-logo" },
-          { label: "Gửi theo chiến dịch", href: "/cong-cu/gui-tin/gui-theo-chien-dich" },
-        ],
-      },
-      { label: "Dịch vụ OA", href: "/cong-cu/oa", external: true },
-    ] as NavItem[],
-  },
-  {
-    label: "Giao dịch",
-    icon: Receipt,
-    items: [
-      { label: "Lịch sử giao dịch", href: "/giao-dich/lich-su" },
-      { label: "Quản lý hóa đơn", href: "/giao-dich/hoa-don" },
-    ] as NavItem[],
-  },
-  {
-    label: "Cài đặt",
-    icon: Settings,
-    items: [
-      { label: "Thông tin tài khoản", href: "/cai-dat/tai-khoan" },
-      { label: "Quản lý tài sản", href: "/cai-dat/tai-san" },
-      { label: "Quản lý thành viên", href: "/cai-dat/thanh-vien" },
-      { label: "Quản lý thông báo", href: "/cai-dat/thong-bao" },
-    ] as NavItem[],
-  },
-]
+function buildNavSections(basePath: string) {
+  return [
+    {
+      label: "Chi tiêu",
+      icon: BarChart3,
+      items: [
+        { label: "Tổng quan", href: basePath === "" ? "/" : basePath },
+        { label: "Chi tiêu tin Template", href: `${basePath}/chi-tieu/tin-template` },
+        { label: "Chi tiêu OA", href: `${basePath}/chi-tieu/oa` },
+        { label: "Quản lý Ngân Sách", href: `${basePath}/chi-tieu/ngan-sach`, badge: "Beta" },
+      ] as NavItem[],
+    },
+    {
+      label: "Công cụ",
+      icon: Wrench,
+      items: [
+        {
+          label: "Dịch vụ gửi tin",
+          href: `${basePath}/cong-cu/gui-tin`,
+          children: [
+            { label: "Chất lượng gửi tin SĐT", href: `${basePath}/cong-cu/gui-tin/chat-luong-gui-tin` },
+            { label: "Quản lý Logo", href: `${basePath}/cong-cu/gui-tin/quan-ly-logo` },
+            { label: "Gửi theo chiến dịch", href: `${basePath}/cong-cu/gui-tin/gui-theo-chien-dich` },
+          ],
+        },
+        { label: "Dịch vụ OA", href: `${basePath}/cong-cu/oa`, external: true },
+      ] as NavItem[],
+    },
+    {
+      label: "Giao dịch",
+      icon: Receipt,
+      items: [
+        { label: "Lịch sử giao dịch", href: `${basePath}/giao-dich/lich-su` },
+        { label: "Quản lý hóa đơn", href: `${basePath}/giao-dich/hoa-don` },
+      ] as NavItem[],
+    },
+    {
+      label: "Cài đặt",
+      icon: Settings,
+      items: [
+        { label: "Thông tin tài khoản", href: `${basePath}/cai-dat/tai-khoan` },
+        { label: "Quản lý tài sản", href: `${basePath}/cai-dat/tai-san` },
+        { label: "Quản lý thành viên", href: `${basePath}/cai-dat/thanh-vien` },
+        { label: "Quản lý thông báo", href: `${basePath}/cai-dat/thong-bao` },
+      ] as NavItem[],
+    },
+  ]
+}
 
-export default function ZbsSidebar() {
+export default function ZbsSidebar({ basePath = "" }: { basePath?: string }) {
   const pathname = usePathname()
+  const navSections = buildNavSections(basePath)
 
   return (
     <Sidebar className="border-r border-border bg-gray-50" style={{ width: 220 }}>
