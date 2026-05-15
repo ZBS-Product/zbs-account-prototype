@@ -54,6 +54,7 @@ function buildNavSections(basePath: string) {
       label: "Giao dịch",
       icon: Receipt,
       items: [
+        { label: "Nạp tiền", href: `${basePath}/giao-dich/nap-tien` },
         { label: "Lịch sử giao dịch", href: `${basePath}/giao-dich/lich-su` },
         { label: "Quản lý hóa đơn", href: `${basePath}/giao-dich/hoa-don` },
       ] as NavItem[],
@@ -71,11 +72,15 @@ function buildNavSections(basePath: string) {
   ]
 }
 
+// Root-level section prefixes — không phải prototype name
+const ROOT_SECTIONS = new Set(["cong-cu", "chi-tieu", "cai-dat", "giao-dich", "bao-cao", ""])
+
 export default function ZbsSidebar({ basePath: _ignored }: { basePath?: string }) {
   const pathname = usePathname()
-  // Auto-detect prototype prefix từ URL — đúng cả khi served qua fallback rewrite
-  // /viht2/chi-tieu/... → "/viht2" | /base/chi-tieu/... → "/base"
-  const basePath = `/${pathname.split("/")[1]}`
+  // Auto-detect prototype prefix từ URL
+  // /viht2/chi-tieu/... → "/viht2" | /base/chi-tieu/... → "/base" | /cong-cu/... → ""
+  const seg = pathname.split("/")[1] ?? ""
+  const basePath = ROOT_SECTIONS.has(seg) ? "" : `/${seg}`
   const navSections = buildNavSections(basePath)
 
   return (

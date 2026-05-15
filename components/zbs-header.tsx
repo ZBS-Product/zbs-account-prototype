@@ -3,7 +3,7 @@
 import { Wallet } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 
 const PROTOTYPE_USERS: Record<string, { name: string; company: string; initials: string }> = {
   base:     { name: "Trường Phát",  company: "ZNSTest", initials: "TP" },
@@ -12,19 +12,37 @@ const PROTOTYPE_USERS: Record<string, { name: string; company: string; initials:
   hainlb:   { name: "HaiNLB",       company: "ZNSTest", initials: "H"  },
 }
 
-export default function ZbsHeader() {
+const ROOT_SECTIONS = new Set(["cong-cu", "chi-tieu", "cai-dat", "giao-dich", "bao-cao", ""])
+
+export default function ZbsHeader({ standalone }: { standalone?: boolean } = {}) {
   const pathname = usePathname()
-  const protoId = pathname.split("/")[1] ?? "base"
+  const router = useRouter()
+  const seg = pathname.split("/")[1] ?? ""
+  const basePath = ROOT_SECTIONS.has(seg) ? "" : `/${seg}`
+  const protoId = ROOT_SECTIONS.has(seg) ? "base" : seg
   const user = PROTOTYPE_USERS[protoId] ?? PROTOTYPE_USERS.base
+  const homeHref = basePath === "" ? "/" : basePath
 
   return (
-    <header className="flex h-14 items-center gap-3 border-b border-border bg-white px-4 shrink-0">
+    <header className={`flex h-14 items-center gap-3 border-b border-border bg-white px-4 shrink-0${standalone ? " sticky top-[68px] z-40" : ""}`}>
+      {standalone && (
+        <a href={homeHref} className="flex-shrink-0">
+          <img src="/zbs-logo.svg" alt="Zalo Business Solutions" className="h-9 w-auto" />
+        </a>
+      )}
+
       <div className="flex-1" />
 
-      <Button size="sm" className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm">
-        <Wallet className="h-4 w-4" />
-        Nạp tiền
-      </Button>
+      {!standalone && (
+        <Button
+          size="sm"
+          className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm"
+          onClick={() => router.push(`${basePath}/giao-dich/nap-tien`)}
+        >
+          <Wallet className="h-4 w-4" />
+          Nạp tiền
+        </Button>
+      )}
 
       <div className="flex items-center gap-2 pl-2 border-l border-border ml-1">
         <Avatar className="h-8 w-8">

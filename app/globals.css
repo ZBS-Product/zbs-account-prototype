@@ -120,13 +120,17 @@
 [data-slot="sidebar-gap"] {
   width: 220px !important;
 }
+[data-slot="sidebar-wrapper"] {
+  /* 4.25rem = 32px PrototypeSwitcher + 36px GlobalHeader = 68px */
+  height: calc(100svh - 4.25rem) !important;
+  min-height: calc(100svh - 4.25rem) !important;
+}
 [data-slot="sidebar-container"] {
   width: 220px !important;
-  /* offset 32px cho prototype switcher bar — dùng cả physical + logical property */
-  top: 2rem !important;
-  inset-block-start: 2rem !important;
-  height: calc(100svh - 2rem) !important;
-  inset-block-size: calc(100svh - 2rem) !important;
+  top: 4.25rem !important;
+  inset-block-start: 4.25rem !important;
+  height: calc(100svh - 4.25rem) !important;
+  inset-block-size: calc(100svh - 4.25rem) !important;
 }
 
 /* Sidebar collapse — Tailwind v4 doesn't generate these complex group-data selectors */
