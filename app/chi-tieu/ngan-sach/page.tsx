@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
   Search, Plus, ChevronDown, ChevronUp, X, Check,
-  HelpCircle, Trash2, MessageSquarePlus, ChevronLeft, ChevronRight,
+  HelpCircle, Trash2, MessageSquarePlus, ChevronLeft, ChevronRight, Pencil,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -429,7 +429,7 @@ function SuccessModal({ name, onViewList, onViewDetail }: { name: string; onView
 
 // ── Detail View ───────────────────────────────────────────────────────────────
 
-function DetailView({ budget, onBack }: { budget: Budget; onBack: () => void }) {
+function DetailView({ budget, onBack, onEdit }: { budget: Budget; onBack: () => void; onEdit: () => void }) {
   const pct     = Math.round((budget.spent / budget.limit) * 100)
   const remain  = budget.limit - budget.spent
   const barColor = budget.status === "vuot-muc" ? "bg-red-500" : budget.status === "canh-bao" ? "bg-orange-400" : budget.status === "da-ket-thuc" ? "bg-gray-400" : "bg-green-500"
@@ -442,7 +442,7 @@ function DetailView({ budget, onBack }: { budget: Budget; onBack: () => void }) 
         <button onClick={onBack} className="mt-0.5 h-8 w-8 rounded-lg border border-border flex items-center justify-center hover:bg-gray-50 shrink-0">
           <ChevronLeft className="h-4 w-4" />
         </button>
-        <div>
+        <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl font-bold">{budget.name}</h1>
             <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", statusCfg[budget.status].cls)}>
@@ -457,6 +457,9 @@ function DetailView({ budget, onBack }: { budget: Budget; onBack: () => void }) 
             <OaAvatarStack oas={budget.oas} />
           </div>
         </div>
+        <button onClick={onEdit} className="flex items-center gap-1.5 px-3 h-8 rounded-lg border border-border text-sm font-medium hover:bg-gray-50 shrink-0 mt-0.5">
+          <Pencil className="h-3.5 w-3.5" /> Chỉnh sửa
+        </button>
       </div>
 
       {/* Summary cards */}
@@ -574,7 +577,7 @@ export default function QuanLyNganSachPage() {
         <main className="flex-1 overflow-y-auto p-6 space-y-5 h-[calc(100vh-56px)]">
 
           {detailId !== null && detailBudget ? (
-            <DetailView budget={detailBudget} onBack={() => setDetailId(null)} />
+            <DetailView budget={detailBudget} onBack={() => setDetailId(null)} onEdit={() => setShowCreate(true)} />
           ) : isEmpty ? (
             /* ── Empty state ── */
             <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
@@ -636,7 +639,7 @@ export default function QuanLyNganSachPage() {
               ) : (
                 <div className="rounded-lg border border-border bg-white overflow-hidden">
                   <div className="grid text-xs font-semibold text-muted-foreground bg-gray-50 border-b border-border px-4 py-2.5"
-                    style={{ gridTemplateColumns: "2fr 1.5fr 1.5fr 1.5fr 2fr 1.2fr" }}>
+                    style={{ gridTemplateColumns: "2fr 1.4fr 1.8fr 1.6fr 1.8fr 1.4fr" }}>
                     <span>Tên ngân sách</span>
                     <span>Thời hạn</span>
                     <span className="flex items-center gap-0.5 cursor-pointer hover:text-foreground">Ngân sách (VNĐ) <ChevronDown className="h-3 w-3" /></span>
@@ -648,15 +651,15 @@ export default function QuanLyNganSachPage() {
                     <div key={b.id}
                       className={cn("grid items-center px-4 py-3 hover:bg-blue-50/40 transition-colors cursor-pointer",
                         i < paged.length - 1 ? "border-b border-border" : "")}
-                      style={{ gridTemplateColumns: "2fr 1.5fr 1.5fr 1.5fr 2fr 1.2fr" }}
+                      style={{ gridTemplateColumns: "2fr 1.4fr 1.8fr 1.6fr 1.8fr 1.4fr" }}
                       onClick={() => setDetailId(b.id)}>
                       <div>
                         <p className="text-sm font-medium" style={{ color: "oklch(0.45 0.22 265)" }}>{b.name}</p>
                         <OaAvatarStack oas={b.oas} />
                       </div>
                       <span className="text-xs text-muted-foreground">{b.fromDate}–{b.toDate}</span>
-                      <span className="text-sm font-medium tabular-nums">{fmtVnd(b.limit)}</span>
-                      <span className="text-sm tabular-nums">{fmtVnd(b.spent)}</span>
+                      <span className="text-xs font-medium tabular-nums">{fmtVnd(b.limit)}</span>
+                      <span className="text-xs tabular-nums">{fmtVnd(b.spent)}</span>
                       <ProgressBar limit={b.limit} spent={b.spent} status={b.status} />
                       <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium w-fit", statusCfg[b.status].cls)}>
                         {statusCfg[b.status].label}
