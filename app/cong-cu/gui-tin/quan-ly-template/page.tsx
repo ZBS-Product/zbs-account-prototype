@@ -184,7 +184,9 @@ function TemplateIcon({ type }: { type: TemplateType }) {
 export default function QuanLyTemplatePage() {
   const router = useRouter()
   const pathname = usePathname()
-  const basePath = `/${pathname.split("/")[1]}`
+  const ROOT_SECTIONS = new Set(["cong-cu", "chi-tieu", "cai-dat", "giao-dich", "bao-cao", ""])
+  const seg = pathname.split("/")[1] ?? ""
+  const basePath = ROOT_SECTIONS.has(seg) ? "" : `/${seg}`
   const [search, setSearch] = useState("")
   const [filterStatus, setFilterStatus] = useState("tat-ca")
   const [filterType, setFilterType] = useState("tat-ca")
