@@ -1,4 +1,4 @@
-import BaoCaoChiTietClient from "@/app/cong-cu/gui-tin/chat-luong-gui-tin/[id]/_client"
+import BaoCaoChiTietClient from "./_client"
 
 export function generateStaticParams() {
   return Array.from({ length: 12 }, (_, i) => ({ id: String(i + 1) }))
