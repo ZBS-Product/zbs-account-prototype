@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import PrototypeSwitcher from "@/components/prototype-switcher"
 import GlobalHeader from "@/components/global-header"
+import GlobalPhonePanel from "@/components/global-phone-panel"
 import { cn } from "@/lib/utils"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
@@ -18,11 +19,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <TooltipProvider>
             <PrototypeSwitcher />
             {/* pt-[68px] = 32px PrototypeSwitcher + 36px GlobalHeader */}
-            <div className="pt-[68px]">
+            <div id="app-content" className="pt-[68px]" style={{ transition: "padding-right 300ms ease" }}>
               {/* Global header — hiện trên mọi trang */}
               <GlobalHeader />
               {children}
             </div>
+            {/* Global phone panel — toggle từ GlobalHeader, dùng được mọi trang */}
+            <GlobalPhonePanel />
           </TooltipProvider>
         </ThemeProvider>
       </body>

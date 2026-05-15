@@ -6,9 +6,10 @@ import { useParams, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import {
-  ArrowLeft, Send, Copy, Download, Pencil, Trash2, AlertCircle,
+  ArrowLeft, Send, Copy, Download, Pencil, Trash2, AlertCircle, X,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { sendToPhone } from "@/components/global-phone-panel"
 
 type TemplateStatus = "Nháp" | "Đang duyệt" | "Đã duyệt" | "Bị từ chối" | "Bị khóa"
 
@@ -208,6 +209,90 @@ function TemplatePreview({ t, dark }: { t: TemplateDetail; dark: boolean }) {
   )
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function fillParams(text: string, params: Param[]): string {
+  let result = text
+  params.forEach(p => {
+    result = result.replaceAll(p.name, p.content)
+  })
+  return result
+}
+
+
+// ── Send Test Modal ────────────────────────────────────────────────────────────
+
+function SendTestModal({ t, onClose, onSend }: { t: TemplateDetail; onClose: () => void; onSend: () => void }) {
+  const filledTitle = fillParams(t.previewTitle, t.params)
+  const filledBody  = t.previewBody.map(line => fillParams(line, t.params))
+  const filledBtn   = t.previewButton ? fillParams(t.previewButton, t.params) : undefined
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-2xl w-[520px] max-h-[90vh] overflow-y-auto"
+           onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <h2 className="text-base font-bold">Gửi thử mẫu ZBS</h2>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="px-6 py-5 space-y-5">
+          {/* Template preview */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Nội dung mẫu ZBS</p>
+            <div className="rounded-xl border border-border bg-gray-50 p-4">
+              <div className="bg-white rounded-lg border border-border p-4 space-y-2 text-sm">
+                <div className="flex h-8 w-16 items-center justify-center rounded text-[9px] font-bold text-white" style={{ background: t.previewLogoBg }}>
+                  {t.previewLogoText}
+                </div>
+                <p className="font-semibold text-sm">{filledTitle}</p>
+                {filledBody.map((line, i) => (
+                  <p key={i} className="text-xs text-muted-foreground leading-relaxed">{line}</p>
+                ))}
+                {t.params.map((p, i) => (
+                  <div key={i} className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">{p.technical.replace(/\s*\(\d+\)/, "")}</span>
+                    <span className="font-semibold">{p.content}</span>
+                  </div>
+                ))}
+                {filledBtn && (
+                  <button className="w-full rounded py-2 text-xs font-semibold text-white mt-1" style={{ background: "oklch(0.488 0.243 264.376)" }}>
+                    {filledBtn}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Recipient */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Tài khoản Zalo nhận tin Template mẫu</p>
+            <div className="flex items-center gap-3 rounded-lg border border-border bg-white px-4 py-3">
+              <div className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
+                TP
+              </div>
+              <span className="text-sm font-semibold">Trường Phát</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border">
+          <Button variant="outline" onClick={onClose} className="text-sm">Huỷ</Button>
+          <Button onClick={onSend} className="text-sm text-white" style={{ background: "oklch(0.45 0.22 265)" }}>
+            Gửi thử
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Main Component ─────────────────────────────────────────────────────────────
+
 export default function TemplateDetailClient() {
   const params = useParams()
   const pathname = usePathname()
@@ -215,6 +300,20 @@ export default function TemplateDetailClient() {
   const id = Array.isArray(params.id) ? params.id[0] : params.id
   const t = detailMap[id ?? "1"] ?? detailMap["1"]
   const [dark, setDark] = useState(false)
+  const [showSendModal, setShowSendModal] = useState(false)
+
+  function handleSend() {
+    setShowSendModal(false)
+    sendToPhone({
+      oaName:    t.oaName,
+      oaColor:   t.oaColor,
+      logoText:  t.previewLogoText,
+      logoBg:    t.previewLogoBg,
+      title:     fillParams(t.previewTitle, t.params),
+      body:      t.previewBody.map(line => fillParams(line, t.params)),
+      button:    t.previewButton ? fillParams(t.previewButton, t.params) : undefined,
+    })
+  }
 
   const fieldRows = [
     { label: "ID mẫu ZBS",             value: t.zbsId || <span className="text-muted-foreground">—</span> },
@@ -232,6 +331,9 @@ export default function TemplateDetailClient() {
 
   return (
     <div className="flex-1 overflow-y-auto">
+          {/* Modals */}
+          {showSendModal && <SendTestModal t={t} onClose={() => setShowSendModal(false)} onSend={handleSend} />}
+
           {/* Top bar */}
           <div className="flex items-center gap-3 px-6 py-4 border-b border-border bg-white">
             <Link href={`${basePath}/cong-cu/gui-tin/quan-ly-template`} className="flex items-center text-muted-foreground hover:text-foreground transition-colors">
@@ -239,7 +341,9 @@ export default function TemplateDetailClient() {
             </Link>
             <h1 className="text-lg font-bold flex-1">Chi tiết mẫu Template</h1>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground"><Send className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setShowSendModal(true)} title="Gửi thử">
+                <Send className="h-4 w-4" />
+              </Button>
               <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground"><Copy className="h-4 w-4" /></Button>
               <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground"><Download className="h-4 w-4" /></Button>
               <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground"><Pencil className="h-4 w-4" /></Button>
@@ -327,15 +431,23 @@ export default function TemplateDetailClient() {
             </div>
 
             {/* Right — preview */}
-            <div className="w-72 shrink-0 border-l border-border bg-gray-50 overflow-y-auto p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold">Xem trước Template</h3>
+            <div className="w-72 shrink-0 border-l border-border bg-gray-50 overflow-y-auto">
+              <div className="p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold">Xem trước Template</h3>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Giao diện tối</span>
+                  <Switch checked={dark} onCheckedChange={setDark} size="sm" />
+                </div>
+                <TemplatePreview t={t} dark={dark} />
+                <button
+                  onClick={() => setShowSendModal(true)}
+                  className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-dashed border-border py-2 text-xs text-muted-foreground hover:text-foreground hover:border-gray-400 transition-colors"
+                >
+                  <Send className="h-3 w-3" /> Gửi thử
+                </button>
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Giao diện tối</span>
-                <Switch checked={dark} onCheckedChange={setDark} size="sm" />
-              </div>
-              <TemplatePreview t={t} dark={dark} />
             </div>
           </div>
     </div>
