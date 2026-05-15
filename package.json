@@ -6,14 +6,13 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "postbuild": "node scripts/copy-base-to-forks.mjs",
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
     "setup:hooks": "cp .github/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push && echo '✅ Git hooks installed'",
     "build:surge": "DEPLOY=1 next build",
-    "deploy": "DEPLOY=1 next build && node scripts/copy-base-to-forks.mjs && cp out/index.html out/200.html && surge out zbs-account.surge.sh"
+    "deploy": "DEPLOY=1 next build && cp out/index.html out/200.html && surge out zbs-prototype.surge.sh"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
