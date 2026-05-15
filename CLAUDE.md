@@ -186,9 +186,35 @@ File `app/globals.css` có các override quan trọng — **không xóa**:
 
 ## Deploy lên surge.sh
 
+**URL production:** https://zbs-prototype.surge.sh  
+**Surge account:** patricknewyen@gmail.com (credentials đã lưu trên máy sau lần login đầu)
+
 ```bash
-pnpm build:surge        # DEPLOY=1 next build → out/
-pnpm deploy             # build + surge out zbs-prototype.surge.sh
+# Build static export + deploy (chạy từ thư mục gốc project)
+pnpm build:surge && cp out/index.html out/200.html && surge out zbs-prototype.surge.sh
 ```
 
-Script `build:surge` set `DEPLOY=1` để next.config.mjs bật `output: "export"` và `trailingSlash: true`.
+Hoặc dùng shortcut:
+```bash
+pnpm deploy
+```
+
+**Lưu ý:**
+- Script `build:surge` set `DEPLOY=1` → next.config.mjs bật `output: "export"` và `trailingSlash: true`
+- `cp out/index.html out/200.html` là bắt buộc để surge phục vụ đúng client-side routing
+- Nếu surge hỏi login, credentials đã được lưu — chỉ cần nhấn Enter hoặc nhập lại email patricknewyen@gmail.com
+- Sau deploy, verify tại https://zbs-prototype.surge.sh/base
+
+## Setup môi trường dev
+
+```bash
+# Clone và cài (lần đầu)
+git clone https://github.com/ZBS-Product/zbs-account-prototype.git ~/code/zbs-account-ui
+cd ~/code/zbs-account-ui
+pnpm install
+
+# Chạy dev server (autoPort — tự tìm port trống nếu 3000 đã dùng)
+pnpm dev
+```
+
+Dev server chạy tại http://localhost:3000 (hoặc port khác nếu 3000 bận — xem log terminal).

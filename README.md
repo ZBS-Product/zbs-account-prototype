@@ -5,49 +5,47 @@
 
 ---
 
-## 🌐 Multi-prototype
+## 🌐 Xem prototype online
+
+**👉 https://zbs-prototype.surge.sh**
 
 Mỗi người có một URL riêng, chạy song song mà không ảnh hưởng nhau:
 
 | URL | Prototype |
 |---|---|
-| `/base` | Bản gốc — tham chiếu chuẩn |
-| `/phatnt11` | Fork của Phát |
-| `/viht2` | Fork của Vi |
-| `/hainlb` | Fork của Hải |
+| [/base](https://zbs-prototype.surge.sh/base) | Bản gốc — tham chiếu chuẩn |
+| [/phatnt11](https://zbs-prototype.surge.sh/phatnt11) | Fork của Phát |
+| [/viht2](https://zbs-prototype.surge.sh/viht2) | Fork của Vi |
+| [/hainlb](https://zbs-prototype.surge.sh/hainlb) | Fork của Hải |
 
-Góc trên cùng có thanh **Prototype Switcher** để chuyển nhanh giữa các môi trường, tự động giữ nguyên trang đang xem.
-
+> Góc trên cùng có thanh **Prototype Switcher** để chuyển nhanh giữa các môi trường.  
 > Trang nào chưa có bản riêng sẽ tự động dùng lại bản `/base`.
 
 ---
 
-## 🚀 Bắt đầu
+## 🚀 Chạy prototype trên máy (để chỉnh UI real-time)
 
-### 📦 Bước 1 — Cài Claude Code (chỉ làm 1 lần)
+> Cần làm nếu muốn thấy thay đổi ngay lập tức khi Claude Code chỉnh code.  
+> Nếu chỉ xem — dùng link online ở trên là đủ.
 
-Tải và cài **Claude Code** tại: **[claude.ai/code](https://claude.ai/code)**
+### Bước 1 — Cài Claude Code *(chỉ làm 1 lần)*
 
----
+Tải và cài tại: **[claude.ai/code](https://claude.ai/code)**
 
-### ⚡ Bước 2 — Mở Terminal, gõ `claude`, rồi paste prompt này
+### Bước 2 — Mở Terminal, gõ `claude`, paste prompt này
 
 ```
 Setup prototype ZBS Account UI cho mình:
 - Clone repo https://github.com/ZBS-Product/zbs-account-prototype.git vào ~/code/zbs-account-ui (nếu chưa có)
-- Cài Node.js LTS và pnpm nếu chưa có trên máy
+- Cài Node.js LTS và pnpm nếu chưa có
 - Chạy pnpm install
 - Chạy dev server
 Sau đó mở http://localhost:3000 và cho mình biết đang thấy gì.
 ```
 
-Claude Code sẽ tự cài đặt, clone repo, và chạy — không cần làm gì thêm. 🎉
+Claude Code sẽ tự làm hết — không cần thêm bước nào. 🎉
 
----
-
-### 🔁 Lần sau (đã setup rồi)
-
-Mở Terminal, gõ `claude`, paste:
+### Lần sau *(đã setup rồi)*
 
 ```
 Vào ~/code/zbs-account-ui, chạy dev server
@@ -57,41 +55,34 @@ Vào ~/code/zbs-account-ui, chạy dev server
 
 ## 💬 Làm gì với Claude Code?
 
-> **Quan trọng:** Luôn nói rõ bạn đang làm trên prototype nào để Claude không edit nhầm file của người khác.
+> **Quan trọng:** Luôn nói rõ bạn đang làm prototype nào để Claude không sửa nhầm file người khác.
 
-### ✏️ Làm tính năng trên prototype của bạn
-
-```
-Mình đang làm prototype viht2.
-Thêm trang Báo cáo tổng hợp vào /viht2/bao-cao — chỉ tạo file trong app/viht2/, không đụng app/base/
-```
-
-### 🖼️ Thêm trang mới từ Figma
+### ✏️ Thêm / chỉnh tính năng
 
 ```
 Mình đang làm prototype viht2.
-Làm trang này theo design: [kéo thả ảnh Figma vào đây]
-Trang đặt tại /viht2/giao-dich/hoa-don
+Thêm trang Báo cáo tổng hợp vào /viht2/bao-cao
 ```
 
-### 🎨 Chỉnh UI
+### 🖼️ Làm trang từ Figma / screenshot
 
 ```
-Card "Tổng chi tiêu" font số tiền quá nhỏ, tăng lên và thêm viền cam bên trái
-(đây là trang /viht2/...)
+Mình đang làm prototype viht2.
+Làm trang này theo design: [kéo thả ảnh vào đây]
+Đặt tại /viht2/giao-dich/hoa-don
 ```
 
-### 🌿 Luôn làm trên branch riêng
+### 🚢 Deploy lên surge sau khi làm xong
 
 ```
-Tạo branch prototype/viht2-ten-tinh-nang rồi làm ...
+Deploy prototype lên https://zbs-prototype.surge.sh
 ```
 
 ---
 
 ## 🗂️ Trang đã có (bản base)
 
-Tất cả trang đều có dạng `/<username>/...` — thay `base` bằng username của bạn.
+Thay `base` bằng username của bạn để xem bản riêng.
 
 | Route | Tên trang |
 |---|---|
@@ -125,8 +116,6 @@ Tất cả trang đều có dạng `/<username>/...` — thay `base` bằng user
 | `app/viht2/` | viht2 |
 | `app/hainlb/` | hainlb |
 
-Git hook sẽ chặn push thẳng lên `main` — mọi thay đổi phải qua branch + Pull Request.
-
 ---
 
 <details>
@@ -138,6 +127,7 @@ Git hook sẽ chặn push thẳng lên `main` — mọi thay đổi phải qua b
 | UI | shadcn/ui + Tailwind CSS v4 |
 | Charts | Recharts 3 |
 | Language | TypeScript |
-| Package Manager | pnpm |
+| Package manager | pnpm |
+| Hosting | surge.sh |
 
 </details>
