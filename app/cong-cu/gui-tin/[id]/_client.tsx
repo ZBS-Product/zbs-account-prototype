@@ -296,7 +296,7 @@ function SendTestModal({ t, onClose, onSend }: { t: TemplateDetail; onClose: () 
 export default function TemplateDetailClient() {
   const params = useParams()
   const pathname = usePathname()
-  const basePath = `/${pathname.split("/")[1]}`
+  const basePath = pathname.includes("/cong-cu/") ? pathname.substring(0, pathname.indexOf("/cong-cu/")) : ""
   const id = Array.isArray(params.id) ? params.id[0] : params.id
   const t = detailMap[id ?? "1"] ?? detailMap["1"]
   const [dark, setDark] = useState(false)
