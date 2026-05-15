@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { Sun, Moon, RefreshCw } from "lucide-react"
+import { Sun, Moon, RefreshCw, Smartphone } from "lucide-react"
+import { openPhone } from "@/components/global-phone-panel"
 
 type Quote = { text: string; author: string }
 
@@ -277,6 +278,17 @@ export default function GlobalHeader() {
         </p>
         <RefreshCw className={`h-3 w-3 shrink-0 text-white/20 group-hover:text-white/50 transition-all duration-300 ${spinning ? "rotate-180" : ""}`} />
       </button>
+
+      {/* Phone toggle */}
+      <button
+        onClick={openPhone}
+        className="flex items-center justify-center h-6 w-6 rounded hover:bg-white/10 transition-colors shrink-0"
+        title="Điện thoại thử nghiệm"
+      >
+        <Smartphone className="h-3.5 w-3.5 text-white/40 hover:text-white/70 transition-colors" />
+      </button>
+
+      <div className="h-3 w-px bg-white/15 mx-0.5" />
 
       {/* Time + icon */}
       <div className="flex items-center gap-1 shrink-0 font-mono text-[11px] tabular-nums text-white/50">

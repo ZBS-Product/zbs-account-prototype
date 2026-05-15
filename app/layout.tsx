@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import PrototypeSwitcher from "@/components/prototype-switcher"
 import GlobalHeader from "@/components/global-header"
+import GlobalPhonePanel from "@/components/global-phone-panel"
 import { cn } from "@/lib/utils"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
@@ -23,6 +24,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <GlobalHeader />
               {children}
             </div>
+            {/* Global phone panel — toggle từ GlobalHeader, dùng được mọi trang */}
+            <GlobalPhonePanel />
           </TooltipProvider>
         </ThemeProvider>
       </body>
