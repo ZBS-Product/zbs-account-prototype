@@ -272,7 +272,7 @@ export default function GlobalHeader() {
       {/* Nav search button */}
       <button
         onClick={openNavSearch}
-        className="flex items-center gap-1.5 h-6 rounded px-2 text-[11px] text-white/35 hover:text-white/70 hover:bg-white/10 transition-colors shrink-0 border border-white/10 hover:border-white/20"
+        className="flex items-center gap-1.5 h-6 rounded px-2 text-[11px] text-white/65 hover:text-white/90 hover:bg-white/10 transition-colors shrink-0 border border-white/20 hover:border-white/30"
         title="Tìm nhanh trang (⌘K)"
       >
         <Search className="h-3 w-3" />
@@ -288,7 +288,7 @@ export default function GlobalHeader() {
         className="flex-1 flex items-center gap-2 min-w-0 justify-center group cursor-pointer"
         title="Click để đổi quote"
       >
-        <p className="text-[11px] text-white/40 italic truncate max-w-[600px] group-hover:text-white/60 transition-colors" title={displayText}>
+        <p className="text-[11px] text-white/65 italic truncate max-w-[600px] group-hover:text-white/85 transition-colors" title={displayText}>
           {displayText}
         </p>
         <RefreshCw className={`h-3 w-3 shrink-0 text-white/20 group-hover:text-white/50 transition-all duration-300 ${spinning ? "rotate-180" : ""}`} />
@@ -311,7 +311,7 @@ export default function GlobalHeader() {
         className="flex items-center justify-center h-6 w-6 rounded hover:bg-white/10 transition-colors shrink-0"
         title="Điện thoại thử nghiệm"
       >
-        <Smartphone className="h-3.5 w-3.5 text-white/40 hover:text-white/70 transition-colors" />
+        <Smartphone className="h-3.5 w-3.5 text-white/65 hover:text-white/90 transition-colors" />
       </button>
 
       {/* Global nav search modal — mounted here, rendered via portal above everything */}
