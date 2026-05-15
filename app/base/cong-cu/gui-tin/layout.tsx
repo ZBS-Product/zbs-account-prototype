@@ -52,7 +52,7 @@ export default function ZbsTemplateLayout({ children }: { children: React.ReactN
   const secondarySections = buildSections(basePath)
 
   return (
-    <div className="flex flex-col h-screen bg-background overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-2rem)] bg-background overflow-hidden">
       {/* Header */}
       <header className="flex h-14 items-center gap-3 border-b border-border bg-white px-4 shrink-0 z-10">
         <Link href={basePath} className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors mr-2">
