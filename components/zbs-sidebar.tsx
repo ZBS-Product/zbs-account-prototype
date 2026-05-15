@@ -8,7 +8,6 @@ import {
   Receipt,
   Settings,
   ExternalLink,
-  Layers,
 } from "lucide-react"
 import {
   Sidebar,
@@ -68,13 +67,6 @@ function buildNavSections(basePath: string) {
         { label: "Quản lý tài sản", href: `${basePath}/cai-dat/tai-san` },
         { label: "Quản lý thành viên", href: `${basePath}/cai-dat/thanh-vien` },
         { label: "Quản lý thông báo", href: `${basePath}/cai-dat/thong-bao` },
-      ] as NavItem[],
-    },
-    {
-      label: "Design",
-      icon: Layers,
-      items: [
-        { label: "Design System", href: "/design-system", badge: "Ref" },
       ] as NavItem[],
     },
   ]

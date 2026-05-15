@@ -1,10 +1,12 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { Sun, Moon, RefreshCw, Smartphone, Search } from "lucide-react"
+import { Sun, Moon, RefreshCw, Smartphone, Search, Layers } from "lucide-react"
 import { openPhone } from "@/components/global-phone-panel"
 import { openNavSearch } from "@/components/global-nav-search"
 import GlobalNavSearch from "@/components/global-nav-search"
+import { openDesignPanel } from "@/components/global-design-panel"
+import GlobalDesignPanel from "@/components/global-design-panel"
 
 type Quote = { text: string; author: string }
 
@@ -305,17 +307,27 @@ export default function GlobalHeader() {
 
       <div className="h-3 w-px bg-white/15 mx-0.5" />
 
-      {/* Phone toggle — far right */}
-      <button
-        onClick={openPhone}
-        className="flex items-center justify-center h-6 w-6 rounded hover:bg-white/10 transition-colors shrink-0"
-        title="Điện thoại thử nghiệm"
-      >
-        <Smartphone className="h-3.5 w-3.5 text-white/65 hover:text-white/90 transition-colors" />
-      </button>
+      {/* Tool group: Design + Phone */}
+      <div className="flex items-center gap-0.5 shrink-0">
+        <button
+          onClick={openDesignPanel}
+          className="flex items-center justify-center h-6 w-6 rounded hover:bg-white/10 transition-colors"
+          title="Design System"
+        >
+          <Layers className="h-3.5 w-3.5 text-white/65 hover:text-white/90 transition-colors" />
+        </button>
+        <button
+          onClick={openPhone}
+          className="flex items-center justify-center h-6 w-6 rounded hover:bg-white/10 transition-colors"
+          title="Điện thoại thử nghiệm"
+        >
+          <Smartphone className="h-3.5 w-3.5 text-white/65 hover:text-white/90 transition-colors" />
+        </button>
+      </div>
 
       {/* Global nav search modal — mounted here, rendered via portal above everything */}
       <GlobalNavSearch />
+      <GlobalDesignPanel />
     </div>
   )
 }
