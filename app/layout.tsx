@@ -19,7 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <TooltipProvider>
             <PrototypeSwitcher />
             {/* pt-[68px] = 32px PrototypeSwitcher + 36px GlobalHeader */}
-            <div className="pt-[68px]">
+            <div id="app-content" className="pt-[68px]" style={{ transition: "padding-right 300ms ease" }}>
               {/* Global header — hiện trên mọi trang */}
               <GlobalHeader />
               {children}

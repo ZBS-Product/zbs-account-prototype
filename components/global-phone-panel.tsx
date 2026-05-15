@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   X, ChevronLeft, Phone, Menu, Smile, Mic, Sticker,
 } from "lucide-react"
@@ -19,6 +19,8 @@ export type PhoneMessage = {
   button?: string
 }
 
+type SentMessage = PhoneMessage & { sentAt: string; id: number }
+
 // ── Event helpers (used by other pages) ───────────────────────────────────────
 
 export function openPhone() {
@@ -29,23 +31,56 @@ export function sendToPhone(msg: PhoneMessage) {
   window.dispatchEvent(new CustomEvent("phone:send", { detail: msg }))
 }
 
+// ── Push / restore layout ─────────────────────────────────────────────────────
+
+const PANEL_W = 300
+
+function pushLayout(open: boolean) {
+  const el = document.getElementById("app-content")
+  if (el) el.style.paddingRight = open ? `${PANEL_W}px` : "0px"
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function GlobalPhonePanel() {
-  const [open, setOpen]       = useState(false)
-  const [message, setMessage] = useState<PhoneMessage | null>(null)
-  const [sent, setSent]       = useState(false)
+  const [open, setOpen]         = useState(false)
+  const [messages, setMessages] = useState<SentMessage[]>([])
+  const [animId, setAnimId]     = useState<number | null>(null)
+  const msgCounter              = useRef(0)
+  const chatRef                 = useRef<HTMLDivElement>(null)
+
+  // Scroll to bottom whenever messages change
+  useEffect(() => {
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight
+    }
+  }, [messages])
 
   useEffect(() => {
-    function onOpen() { setOpen(v => !v) }
+    function onOpen() {
+      setOpen(v => {
+        const next = !v
+        pushLayout(next)
+        return next
+      })
+    }
     function onSend(e: Event) {
       const msg = (e as CustomEvent<PhoneMessage>).detail
-      setMessage(msg)
-      setOpen(true)
-      setSent(false)
-      // animate "sending"
-      setTimeout(() => setSent(true), 600)
+      const id  = ++msgCounter.current
+      const now = new Date()
+      const sentAt = `${now.getHours()}:${String(now.getMinutes()).padStart(2, "0")}`
+
+      // Show panel if not open
+      setOpen(prev => {
+        if (!prev) pushLayout(true)
+        return true
+      })
+
+      // Append message, animate after 600ms
+      setMessages(prev => [...prev, { ...msg, sentAt, id }])
+      setTimeout(() => setAnimId(id), 50)   // tiny delay so CSS transition fires
     }
+
     window.addEventListener("phone:open", onOpen)
     window.addEventListener("phone:send", onSend)
     return () => {
@@ -54,50 +89,72 @@ export default function GlobalPhonePanel() {
     }
   }, [])
 
+  function handleClose() {
+    setOpen(false)
+    pushLayout(false)
+  }
+
   const now = new Date()
   const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, "0")}`
 
-  return (
-    <>
-      {/* Slide-in panel */}
-      <div
-        className={cn(
-          "fixed top-[68px] right-0 bottom-0 z-[44] flex flex-col bg-gray-100 border-l border-border transition-all duration-300 ease-in-out overflow-hidden",
-          open ? "w-[300px] opacity-100" : "w-0 opacity-0 pointer-events-none"
-        )}
-      >
-        {/* Panel header */}
-        <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-white shrink-0">
-          <span className="text-sm font-semibold">Điện thoại thử nghiệm</span>
-          <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground transition-colors">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+  // OA info from the last message (for the chat header)
+  const lastMsg = messages[messages.length - 1]
 
-        {/* Phone + content */}
-        <div className="flex-1 overflow-y-auto flex flex-col items-center py-5 px-3">
-          {!message ? (
-            <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-6">
-              <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
-                <Phone className="h-5 w-5 text-gray-400" />
-              </div>
-              <p className="text-sm font-medium text-muted-foreground">Chưa có tin nhắn</p>
-              <p className="text-xs text-muted-foreground/70">
-                Vào chi tiết Template và nhấn nút <strong>Gửi thử</strong> để xem tin hiển thị trên điện thoại.
-              </p>
-            </div>
-          ) : (
-            <PhoneMockup msg={message} timeStr={timeStr} sent={sent} />
-          )}
-        </div>
+  return (
+    <div
+      className={cn(
+        "fixed top-[68px] right-0 bottom-0 z-[44] flex flex-col bg-gray-100 border-l border-border transition-all duration-300 ease-in-out overflow-hidden",
+        open ? "opacity-100" : "opacity-0 pointer-events-none"
+      )}
+      style={{ width: open ? PANEL_W : 0 }}
+    >
+      {/* Panel header */}
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-white shrink-0">
+        <span className="text-sm font-semibold">Điện thoại thử nghiệm</span>
+        <button onClick={handleClose} className="text-muted-foreground hover:text-foreground transition-colors">
+          <X className="h-4 w-4" />
+        </button>
       </div>
-    </>
+
+      {/* Phone + content */}
+      <div className="flex-1 overflow-y-auto flex flex-col items-center py-5 px-3">
+        {messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-6">
+            <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
+              <Phone className="h-5 w-5 text-gray-400" />
+            </div>
+            <p className="text-sm font-medium text-muted-foreground">Chưa có tin nhắn</p>
+            <p className="text-xs text-muted-foreground/70">
+              Vào chi tiết Template và nhấn nút <strong>Gửi thử</strong> để xem tin hiển thị trên điện thoại.
+            </p>
+          </div>
+        ) : (
+          <PhoneMockup
+            messages={messages}
+            animId={animId}
+            timeStr={timeStr}
+            oaName={lastMsg.oaName}
+            oaColor={lastMsg.oaColor}
+            chatRef={chatRef}
+          />
+        )}
+      </div>
+    </div>
   )
 }
 
 // ── Phone mockup ──────────────────────────────────────────────────────────────
 
-function PhoneMockup({ msg, timeStr, sent }: { msg: PhoneMessage; timeStr: string; sent: boolean }) {
+function PhoneMockup({
+  messages, animId, timeStr, oaName, oaColor, chatRef,
+}: {
+  messages: SentMessage[]
+  animId: number | null
+  timeStr: string
+  oaName: string
+  oaColor: string
+  chatRef: React.RefObject<HTMLDivElement | null>
+}) {
   return (
     <div className="relative w-[240px] rounded-[30px] border-[6px] border-zinc-800 bg-zinc-800 shadow-2xl overflow-hidden">
       {/* Notch */}
@@ -116,15 +173,15 @@ function PhoneMockup({ msg, timeStr, sent }: { msg: PhoneMessage; timeStr: strin
         </div>
 
         {/* Chat header */}
-        <div className="flex items-center gap-1.5 px-2 py-2 bg-[#0068FF] text-white">
+        <div className="flex items-center gap-1.5 px-2 py-2 bg-[#0068FF] text-white shrink-0">
           <ChevronLeft className="h-4 w-4 shrink-0" />
           <div className="h-6 w-6 rounded-full flex items-center justify-center text-[8px] font-bold shrink-0 text-white"
-               style={{ background: msg.oaColor }}>
-            {msg.oaName.slice(0, 2).toUpperCase()}
+               style={{ background: oaColor }}>
+            {oaName.slice(0, 2).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-0.5">
-              <span className="text-[10px] font-semibold truncate">{msg.oaName}</span>
+              <span className="text-[10px] font-semibold truncate">{oaName}</span>
               <svg viewBox="0 0 12 12" className="h-2.5 w-2.5 shrink-0 fill-yellow-300"><circle cx="6" cy="6" r="6"/><path d="M4 6l1.5 1.5L8 4" stroke="white" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
             <span className="text-[8px] opacity-70">Official Account</span>
@@ -133,50 +190,67 @@ function PhoneMockup({ msg, timeStr, sent }: { msg: PhoneMessage; timeStr: strin
           <Menu className="h-3 w-3 shrink-0 opacity-80" />
         </div>
 
-        {/* Chat body */}
-        <div className="flex-1 bg-[#EBF0F5] px-2 py-2 space-y-2 overflow-y-auto">
-          <div className="text-center text-[9px] text-gray-400 bg-white/70 rounded-full px-2 py-0.5 w-fit mx-auto">
-            {timeStr} Today
-          </div>
+        {/* Chat body — scrollable, shows all messages */}
+        <div ref={chatRef} className="flex-1 bg-[#EBF0F5] px-2 py-2 space-y-2 overflow-y-auto" style={{ maxHeight: 340 }}>
+          {messages.map((msg, i) => {
+            const isAnimated = animId !== null && msg.id <= animId
+            const isFirst    = i === 0
+            return (
+              <div key={msg.id}>
+                {/* Time separator: show for first, or if OA changes */}
+                {(isFirst || messages[i - 1].oaName !== msg.oaName) && (
+                  <div className="text-center text-[9px] text-gray-400 bg-white/70 rounded-full px-2 py-0.5 w-fit mx-auto mb-1">
+                    {msg.sentAt} Today
+                  </div>
+                )}
 
-          {/* ZNS card — animate in */}
-          <div className={cn(
-            "bg-white rounded-xl shadow-sm overflow-hidden mx-auto border border-gray-100 transition-all duration-500",
-            sent ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
-          )} style={{ maxWidth: 210 }}>
-            <div className="px-2.5 pt-2.5 pb-1">
-              <div className="h-6 w-14 rounded flex items-center justify-center text-[8px] font-bold text-white"
-                   style={{ background: msg.logoBg }}>
-                {msg.logoText}
-              </div>
-            </div>
-            <div className="px-2.5 pb-2.5 space-y-1">
-              <p className="text-[10px] font-bold text-gray-900 leading-snug">{msg.title}</p>
-              {msg.body.map((line, i) => (
-                <p key={i} className="text-[9px] text-gray-600 leading-relaxed">{line}</p>
-              ))}
-              {msg.tableRows && msg.tableRows.length > 0 && (
-                <div className="space-y-0.5 pt-0.5">
-                  {msg.tableRows.map((row, i) => (
-                    <div key={i} className="flex justify-between gap-2 text-[9px]">
-                      <span className="text-gray-500 shrink-0">{row.label}</span>
-                      <span className="font-semibold text-gray-800 text-right">{row.value}</span>
+                {/* ZNS card */}
+                <div
+                  className={cn(
+                    "bg-white rounded-xl shadow-sm overflow-hidden mx-auto border border-gray-100 transition-all duration-500",
+                    isAnimated ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
+                  )}
+                  style={{ maxWidth: 210 }}
+                >
+                  <div className="px-2.5 pt-2.5 pb-1">
+                    <div className="h-6 w-14 rounded flex items-center justify-center text-[8px] font-bold text-white"
+                         style={{ background: msg.logoBg }}>
+                      {msg.logoText}
                     </div>
-                  ))}
+                  </div>
+                  <div className="px-2.5 pb-2.5 space-y-1">
+                    <p className="text-[10px] font-bold text-gray-900 leading-snug">{msg.title}</p>
+                    {msg.body.map((line, j) => (
+                      <p key={j} className="text-[9px] text-gray-600 leading-relaxed">{line}</p>
+                    ))}
+                    {msg.tableRows && msg.tableRows.length > 0 && (
+                      <div className="space-y-0.5 pt-0.5">
+                        {msg.tableRows.map((row, j) => (
+                          <div key={j} className="flex justify-between gap-2 text-[9px]">
+                            <span className="text-gray-500 shrink-0">{row.label}</span>
+                            <span className="font-semibold text-gray-800 text-right">{row.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {msg.button && (
+                      <button className="w-full rounded py-1 text-[9px] font-semibold text-white mt-1"
+                              style={{ background: "oklch(0.488 0.243 264.376)" }}>
+                        {msg.button}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Timestamp below card */}
+                  <div className="px-2.5 pb-1.5 text-[8px] text-gray-400 text-right">{msg.sentAt}</div>
                 </div>
-              )}
-              {msg.button && (
-                <button className="w-full rounded py-1 text-[9px] font-semibold text-white mt-1"
-                        style={{ background: "oklch(0.488 0.243 264.376)" }}>
-                  {msg.button}
-                </button>
-              )}
-            </div>
-          </div>
+              </div>
+            )
+          })}
         </div>
 
         {/* Input bar */}
-        <div className="flex items-center gap-1 px-2 py-1.5 bg-white border-t border-gray-200">
+        <div className="flex items-center gap-1 px-2 py-1.5 bg-white border-t border-gray-200 shrink-0">
           <Smile className="h-3.5 w-3.5 text-gray-400 shrink-0" />
           <div className="flex-1 rounded-full bg-gray-100 px-2 py-0.5 text-[9px] text-gray-400">Message</div>
           <span className="text-gray-400 text-[9px]">•••</span>
