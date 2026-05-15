@@ -699,7 +699,7 @@ export default function TaoTemplatePage() {
   const canDone  = agreed
 
   if (done) return (
-    <div className="fixed top-[68px] inset-x-0 bottom-0 z-[90] bg-white flex flex-col items-center justify-center gap-4">
+    <div className="fixed top-[36px] inset-x-0 bottom-0 z-[90] bg-white flex flex-col items-center justify-center gap-4">
       <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
         <Check className="h-8 w-8 text-green-600" />
       </div>
@@ -713,7 +713,7 @@ export default function TaoTemplatePage() {
   )
 
   return (
-    <div className="fixed top-[68px] inset-x-0 bottom-0 z-[90] bg-white flex flex-col">
+    <div className="fixed top-[36px] inset-x-0 bottom-0 z-[90] bg-white flex flex-col">
       <StepHeader step={step} onExit={exit} saved={step > 0} />
 
       {step === 0 && (

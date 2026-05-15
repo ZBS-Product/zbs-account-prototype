@@ -29,7 +29,7 @@ export default function ZbsHeader({ standalone, inset }: { standalone?: boolean;
   const isSticky  = standalone && !inset
 
   return (
-    <header className={`flex h-14 items-center gap-3 border-b border-border bg-white px-4 shrink-0${isSticky ? " sticky top-[68px] z-40" : ""}`}>
+    <header className={`flex h-14 items-center gap-3 border-b border-border bg-white px-4 shrink-0${isSticky ? " sticky top-[36px] z-40" : ""}`}>
       {showLogo && (
         <a href={homeHref} className="flex-shrink-0">
           <img src="/zbs-logo.svg" alt="Zalo Business Solutions" className="h-9 w-auto" />

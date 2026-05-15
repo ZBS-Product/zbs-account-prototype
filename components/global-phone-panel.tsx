@@ -103,7 +103,7 @@ export default function GlobalPhonePanel() {
   return (
     <div
       className={cn(
-        "fixed top-[68px] right-0 bottom-0 z-[44] flex flex-col bg-gray-100 border-l border-border transition-all duration-300 ease-in-out overflow-hidden",
+        "fixed top-[36px] right-0 bottom-0 z-[44] flex flex-col bg-gray-100 border-l border-border transition-all duration-300 ease-in-out overflow-hidden",
         open ? "opacity-100" : "opacity-0 pointer-events-none"
       )}
       style={{ width: open ? PANEL_W : 0 }}

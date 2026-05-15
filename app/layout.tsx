@@ -2,7 +2,6 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import PrototypeSwitcher from "@/components/prototype-switcher"
 import GlobalHeader from "@/components/global-header"
 import GlobalPhonePanel from "@/components/global-phone-panel"
 import { cn } from "@/lib/utils"
@@ -17,9 +16,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <ThemeProvider>
           <TooltipProvider>
-            <PrototypeSwitcher />
-            {/* pt-[68px] = 32px PrototypeSwitcher + 36px GlobalHeader */}
-            <div id="app-content" className="pt-[68px]" style={{ transition: "padding-right 300ms ease" }}>
+            {/* pt-[36px] = 36px GlobalHeader */}
+            <div id="app-content" className="pt-[36px]" style={{ transition: "padding-right 300ms ease" }}>
               {/* Global header — hiện trên mọi trang */}
               <GlobalHeader />
               {children}

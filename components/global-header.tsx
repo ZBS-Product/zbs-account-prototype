@@ -254,7 +254,7 @@ export default function GlobalHeader() {
   return (
     <div
       className="flex h-9 items-center gap-3 px-4 fixed left-0 right-0 z-[45]"
-      style={{ top: "2rem", background: "oklch(0.14 0.05 265)" }}
+      style={{ top: "0", background: "oklch(0.14 0.05 265)" }}
     >
       {/* Brand */}
       <div className="flex items-center gap-1.5 shrink-0">
