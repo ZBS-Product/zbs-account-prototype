@@ -105,6 +105,8 @@ Tất cả trang đều có dạng `/<username>/...` — thay `base` bằng user
 | `/base/cong-cu/gui-tin/chat-luong-gui-tin` | 📶 Chất lượng gửi tin SĐT |
 | `/base/cong-cu/gui-tin/quan-ly-logo` | 🖼️ Quản lý Logo |
 | `/base/cong-cu/gui-tin/gui-theo-chien-dich` | 🎯 Gửi theo chiến dịch |
+| `/base/giao-dich/nap-tien` | 💳 Nạp tiền (4 hình thức) |
+| `/base/giao-dich/nap-tien/chuyen-khoan` | 🏦 Hướng dẫn chuyển khoản |
 | `/base/giao-dich/lich-su` | 🧾 Lịch sử giao dịch |
 | `/base/giao-dich/hoa-don` | 🧾 Quản lý hóa đơn |
 | `/base/cai-dat/tai-khoan` | 👤 Thông tin tài khoản |

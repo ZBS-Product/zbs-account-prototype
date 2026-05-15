@@ -34,7 +34,15 @@ Landing hub tại `/` liệt kê tất cả prototypes. Mỗi người có URL r
 <ZbsSidebar basePath="/phatnt11" />  // sidebar dẫn tới /phatnt11/chi-tieu/...
 ```
 
-## Layout pattern — áp dụng cho mọi page
+## Global header
+
+`components/global-header.tsx` — thanh dark `ZBS Product` fixed trên **tất cả mọi trang**, chứa quote PM (tự đổi 30s, click đổi ngay) và đồng hồ. Không xóa/di chuyển component này.
+
+- Height: **36px**, fixed tại `top: 2rem` (32px của PrototypeSwitcher), z-index 45
+- Tổng chiều cao fixed header = **68px** (32 + 36)
+- Quotes được hardcode trong file — ~170 PM quotes, không dùng API ngoài
+
+## Layout pattern — áp dụng cho mọi page thường (có sidebar)
 
 ```tsx
 export default function SomePage() {
@@ -53,6 +61,29 @@ export default function SomePage() {
 ```
 
 Không được thay đổi pattern này — sidebar toggle, layout gap fix đều phụ thuộc vào nó.
+
+## Standalone pages (không có sidebar)
+
+Dùng cho các flow multi-step (nạp tiền, tạo template…):
+
+```tsx
+export default function StandalonePage() {
+  return (
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      <ZbsHeader standalone />   {/* logo + user, sticky top-[68px], không có nút Nạp tiền */}
+      <div className="...">
+        {/* content */}
+      </div>
+    </div>
+  )
+}
+```
+
+`ZbsHeader` nhận prop `standalone?: boolean`:
+- `standalone={true}` → hiện Zalo logo (click về trang chủ), **ẩn** nút Nạp tiền, `sticky top-[68px] z-40`
+- Không truyền / `standalone={false}` → header bình thường với nút Nạp tiền
+
+Các route standalone phải được thêm vào `STANDALONE_ROUTES` trong layout cha nếu có (ví dụ gui-tin layout).
 
 ## Màu sắc & design tokens
 
@@ -137,14 +168,27 @@ git checkout main && git merge prototype/<ten-tinh-nang>
 
 ## Lưu ý CSS quan trọng
 
-File `app/globals.css` có 2 override quan trọng — **không xóa**:
+File `app/globals.css` có các override quan trọng — **không xóa**:
 
 ```css
 /* Fix sidebar gap */
 [data-slot="sidebar-gap"] { width: 220px !important; }
-[data-slot="sidebar-container"] { width: 220px !important; }
+[data-slot="sidebar-container"] {
+  width: 220px !important;
+  top: 4.25rem !important;          /* 68px = 32px PrototypeSwitcher + 36px GlobalHeader */
+  height: calc(100svh - 4.25rem) !important;
+}
 
 /* Fix sidebar collapse (Tailwind v4 không generate các class này) */
 .group[data-collapsible="offcanvas"] [data-slot="sidebar-gap"] { width: 0 !important; }
 .group[data-collapsible="offcanvas"] [data-slot="sidebar-container"][data-side="left"] { left: -220px !important; }
 ```
+
+## Deploy lên surge.sh
+
+```bash
+pnpm build:surge        # DEPLOY=1 next build → out/
+pnpm deploy             # build + surge out zbs-prototype.surge.sh
+```
+
+Script `build:surge` set `DEPLOY=1` để next.config.mjs bật `output: "export"` và `trailingSlash: true`.
