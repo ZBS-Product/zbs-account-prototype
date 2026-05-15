@@ -8,6 +8,7 @@ import {
   Receipt,
   Settings,
   ExternalLink,
+  Layers,
 } from "lucide-react"
 import {
   Sidebar,
@@ -69,11 +70,18 @@ function buildNavSections(basePath: string) {
         { label: "Quản lý thông báo", href: `${basePath}/cai-dat/thong-bao` },
       ] as NavItem[],
     },
+    {
+      label: "Design",
+      icon: Layers,
+      items: [
+        { label: "Design System", href: "/design-system", badge: "Ref" },
+      ] as NavItem[],
+    },
   ]
 }
 
 // Root-level section prefixes — không phải prototype name
-const ROOT_SECTIONS = new Set(["cong-cu", "chi-tieu", "cai-dat", "giao-dich", "bao-cao", ""])
+const ROOT_SECTIONS = new Set(["cong-cu", "chi-tieu", "cai-dat", "giao-dich", "bao-cao", "design-system", ""])
 
 export default function ZbsSidebar({ basePath: _ignored }: { basePath?: string }) {
   const pathname = usePathname()
