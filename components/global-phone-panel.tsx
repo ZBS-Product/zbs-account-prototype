@@ -145,7 +145,11 @@ export default function GlobalPhonePanel() {
 function PhoneEmpty({ timeStr }: { timeStr: string }) {
   return (
     <div className="relative w-[240px] rounded-[30px] border-[6px] border-zinc-800 bg-zinc-800 shadow-2xl overflow-hidden">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-4 bg-zinc-800 rounded-b-xl z-10" />
+      {/* Dynamic Island pill */}
+      <div className="absolute top-[6px] left-1/2 -translate-x-1/2 z-10 h-[13px] w-[50px] bg-zinc-950 rounded-full flex items-center justify-end pr-[4px] gap-[2px]">
+        <div className="h-[5px] w-[5px] rounded-full bg-zinc-700/80" />
+        <div className="h-[3px] w-[3px] rounded-full bg-blue-400/40" />
+      </div>
       <div className="bg-white flex flex-col rounded-[24px] overflow-hidden" style={{ minHeight: 480 }}>
         {/* Status bar */}
         <div className="flex items-center justify-between px-4 pt-2 pb-0.5 bg-[#0068FF] text-white text-[10px] font-medium">
@@ -202,7 +206,11 @@ function PhoneMockup({
   return (
     <div className="relative w-[240px] rounded-[30px] border-[6px] border-zinc-800 bg-zinc-800 shadow-2xl overflow-hidden">
       {/* Notch */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-4 bg-zinc-800 rounded-b-xl z-10" />
+      {/* Dynamic Island pill */}
+      <div className="absolute top-[6px] left-1/2 -translate-x-1/2 z-10 h-[13px] w-[50px] bg-zinc-950 rounded-full flex items-center justify-end pr-[4px] gap-[2px]">
+        <div className="h-[5px] w-[5px] rounded-full bg-zinc-700/80" />
+        <div className="h-[3px] w-[3px] rounded-full bg-blue-400/40" />
+      </div>
 
       {/* Screen */}
       <div className="bg-white flex flex-col rounded-[24px] overflow-hidden" style={{ minHeight: 480 }}>
@@ -224,11 +232,11 @@ function PhoneMockup({
             {oaName.slice(0, 2).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-0.5">
-              <span className="text-[10px] font-semibold truncate">{oaName}</span>
+            <div className="flex items-center gap-0.5 leading-none">
+              <span className="text-[10px] font-semibold truncate leading-none">{oaName}</span>
               <svg viewBox="0 0 12 12" className="h-2.5 w-2.5 shrink-0 fill-yellow-300"><circle cx="6" cy="6" r="6"/><path d="M4 6l1.5 1.5L8 4" stroke="white" strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
-            <span className="text-[8px] opacity-70">Official Account</span>
+            <span className="text-[8px] opacity-70 leading-none mt-0.5 block">Official Account</span>
           </div>
           <Phone className="h-3 w-3 shrink-0 opacity-80" />
           <Menu className="h-3 w-3 shrink-0 opacity-80" />

@@ -73,7 +73,7 @@ function buildNavSections(basePath: string) {
 }
 
 // Root-level section prefixes — không phải prototype name
-const ROOT_SECTIONS = new Set(["cong-cu", "chi-tieu", "cai-dat", "giao-dich", "bao-cao", ""])
+const ROOT_SECTIONS = new Set(["cong-cu", "chi-tieu", "cai-dat", "giao-dich", "bao-cao", "design-system", ""])
 
 export default function ZbsSidebar({ basePath: _ignored }: { basePath?: string }) {
   const pathname = usePathname()
