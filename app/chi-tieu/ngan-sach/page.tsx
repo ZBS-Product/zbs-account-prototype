@@ -156,13 +156,14 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
 function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () => void; onSuccess: (name: string) => void }) {
   const [useApi,     setUseApi]     = useState(true)
   const [useOaMgr,   setUseOaMgr]   = useState(true)
+  const [allApps,    setAllApps]    = useState(true)
   const [expandApps, setExpandApps] = useState(false)
+  const [allOas,     setAllOas]     = useState(true)
   const [expandOas,  setExpandOas]  = useState(false)
   const [appSearch,  setAppSearch]  = useState("")
   const [oaSearch,   setOaSearch]   = useState("")
   const [selApps,    setSelApps]    = useState<string[]>(MOCK_APPS.map(a => a.id))
   const [selOas,     setSelOas]     = useState<string[]>(MOCK_OAS.map(o => o.id))
-  const [allOas,     setAllOas]     = useState(true)
   const [budgetName, setBudgetName] = useState("")
   const [fromDate,   setFromDate]   = useState("")
   const [toDate,     setToDate]     = useState("")
@@ -216,10 +217,12 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
                     <label className="flex items-center gap-2 cursor-pointer">
                       <Checkbox checked={useApi} onChange={setUseApi} />
                       <span className="text-sm font-medium">API</span>
-                      <span className="text-xs text-muted-foreground">(Tất cả App)</span>
+                      <span className="text-xs text-muted-foreground">
+                        {allApps ? "(Tất cả App)" : `(${selApps.length}/${MOCK_APPS.length} app)`}
+                      </span>
                     </label>
                     <button className="text-xs font-medium" style={{ color: "oklch(0.488 0.243 264.376)" }}
-                      onClick={() => setExpandApps(v => !v)}>
+                      onClick={() => { setAllApps(false); setExpandApps(v => !v) }}>
                       {expandApps ? "Thu gọn" : "Tùy chỉnh App"}
                     </button>
                   </div>
@@ -230,6 +233,11 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
                         <input value={appSearch} onChange={e => setAppSearch(e.target.value)}
                           placeholder="Tìm kiếm App" className="w-full pl-6 pr-2 py-1 text-xs border border-border rounded outline-none focus:border-blue-400" />
                       </div>
+                      <label className="flex items-center gap-2 cursor-pointer py-0.5">
+                        <Checkbox checked={selApps.length === MOCK_APPS.length} onChange={v => { setSelApps(v ? MOCK_APPS.map(a => a.id) : []); setAllApps(v) }} />
+                        <span className="text-xs font-medium flex-1">Tất cả App</span>
+                      </label>
+                      <div className="border-t border-border" />
                       {filteredApps.map(app => (
                         <label key={app.id} className="flex items-center gap-2 cursor-pointer py-0.5">
                           <Checkbox checked={selApps.includes(app.id)} onChange={() => toggleApp(app.id)} />
@@ -237,7 +245,6 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
                           <span className="text-[10px] text-muted-foreground">{app.code}</span>
                         </label>
                       ))}
-                      <button className="text-xs font-medium mt-1" style={{ color: "oklch(0.488 0.243 264.376)" }}>Lưu lựa chọn</button>
                     </div>
                   )}
                   <div className="flex items-center px-3 py-2.5 border-t border-border">
@@ -253,12 +260,11 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
                 <p className="text-xs font-medium text-foreground mb-2">OA áp dụng</p>
                 <div className="rounded-lg border border-border overflow-hidden">
                   <div className="flex items-center justify-between px-3 py-2.5">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <Checkbox checked={allOas} onChange={v => { setAllOas(v); if (!v) setExpandOas(true) }} />
-                      <span className="text-sm font-medium">Tất cả OA</span>
-                    </label>
+                    <span className="text-sm font-medium">
+                      {allOas ? "Tất cả OA" : `${selOas.length}/${MOCK_OAS.length} OA`}
+                    </span>
                     <button className="text-xs font-medium" style={{ color: "oklch(0.488 0.243 264.376)" }}
-                      onClick={() => { setExpandOas(v => !v); setAllOas(false) }}>
+                      onClick={() => { setAllOas(false); setExpandOas(v => !v) }}>
                       {expandOas ? "Thu gọn" : "Tùy chỉnh OA"}
                     </button>
                   </div>
@@ -270,9 +276,14 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
                           placeholder="Tìm kiếm OA" className="w-full pl-6 pr-2 py-1 text-xs border border-border rounded outline-none focus:border-blue-400" />
                         {oaSearch && <button className="absolute right-2 top-1/2 -translate-y-1/2" onClick={() => setOaSearch("")}><X className="h-3 w-3 text-muted-foreground" /></button>}
                       </div>
+                      <label className="flex items-center gap-2 cursor-pointer py-0.5">
+                        <Checkbox checked={allOas} onChange={v => { setAllOas(v); if (v) setSelOas(MOCK_OAS.map(o => o.id)) }} />
+                        <span className="text-xs font-medium flex-1">Tất cả OA</span>
+                      </label>
+                      <div className="border-t border-border" />
                       {filteredOas.map(oa => (
                         <label key={oa.id} className="flex items-center gap-2 cursor-pointer py-0.5">
-                          <Checkbox checked={selOas.includes(oa.id)} onChange={() => toggleOa(oa.id)} />
+                          <Checkbox checked={selOas.includes(oa.id)} onChange={() => { setAllOas(false); toggleOa(oa.id) }} />
                           <span className="inline-flex h-4 w-4 rounded-full text-[7px] font-bold text-white items-center justify-center" style={{ background: oa.color }}>
                             {oa.label.slice(0,1)}
                           </span>
@@ -280,7 +291,6 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
                           <span className="text-[10px] text-muted-foreground">{oa.code}</span>
                         </label>
                       ))}
-                      <button className="text-xs font-medium mt-1" style={{ color: "oklch(0.488 0.243 264.376)" }}>Lưu lựa chọn</button>
                     </div>
                   )}
                 </div>
