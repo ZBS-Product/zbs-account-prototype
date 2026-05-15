@@ -453,8 +453,6 @@ function DetailView({ budget, onBack, onEdit }: { budget: Budget; onBack: () => 
             <span>{budget.fromDate}–{budget.toDate}</span>
             <span>·</span>
             <span>Tất cả App · OA Manager</span>
-            <span>·</span>
-            <OaAvatarStack oas={budget.oas} />
           </div>
         </div>
         <button onClick={onEdit} className="flex items-center gap-1.5 px-3 h-8 rounded-lg border border-border text-sm font-medium hover:bg-gray-50 shrink-0 mt-0.5">
@@ -655,7 +653,6 @@ export default function QuanLyNganSachPage() {
                       onClick={() => setDetailId(b.id)}>
                       <div>
                         <p className="text-sm font-medium" style={{ color: "oklch(0.45 0.22 265)" }}>{b.name}</p>
-                        <OaAvatarStack oas={b.oas} />
                       </div>
                       <span className="text-xs text-muted-foreground">{b.fromDate}–{b.toDate}</span>
                       <span className="text-xs font-medium tabular-nums">{fmtVnd(b.limit)}</span>
