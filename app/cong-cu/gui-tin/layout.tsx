@@ -62,8 +62,8 @@ function GuiTinShell({ children }: { children: React.ReactNode }) {
     /* 100vh - 32px (PrototypeSwitcher) - 36px (GlobalHeader) */
     <div className="flex flex-col bg-white overflow-hidden" style={{ height: "calc(100vh - 68px)" }}>
 
-      {/* ── Header — dùng lại ZbsHeader standalone (giống trang Nạp tiền) ── */}
-      <ZbsHeader standalone />
+      {/* ── Header — inset: logo + no-sticky (sticky phá layout trong overflow-hidden) ── */}
+      <ZbsHeader inset />
 
       {/* ── Body: secondary sidebar + content ── */}
       <div className="flex flex-1 overflow-hidden">

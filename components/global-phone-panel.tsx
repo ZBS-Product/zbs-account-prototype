@@ -119,13 +119,10 @@ export default function GlobalPhonePanel() {
       {/* Phone + content */}
       <div className="flex-1 overflow-y-auto flex flex-col items-center py-5 px-3">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-6">
-            <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
-              <Phone className="h-5 w-5 text-gray-400" />
-            </div>
-            <p className="text-sm font-medium text-muted-foreground">Chưa có tin nhắn</p>
-            <p className="text-xs text-muted-foreground/70">
-              Vào chi tiết Template và nhấn nút <strong>Gửi thử</strong> để xem tin hiển thị trên điện thoại.
+          <div className="flex flex-col items-center gap-3">
+            <PhoneEmpty timeStr={timeStr} />
+            <p className="text-xs text-muted-foreground/70 text-center px-2">
+              Vào chi tiết Template và nhấn <strong>Gửi thử</strong> để xem tin hiển thị trên điện thoại.
             </p>
           </div>
         ) : (
@@ -138,6 +135,53 @@ export default function GlobalPhonePanel() {
             chatRef={chatRef}
           />
         )}
+      </div>
+    </div>
+  )
+}
+
+// ── Phone empty state ─────────────────────────────────────────────────────────
+
+function PhoneEmpty({ timeStr }: { timeStr: string }) {
+  return (
+    <div className="relative w-[240px] rounded-[30px] border-[6px] border-zinc-800 bg-zinc-800 shadow-2xl overflow-hidden">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-4 bg-zinc-800 rounded-b-xl z-10" />
+      <div className="bg-white flex flex-col rounded-[24px] overflow-hidden" style={{ minHeight: 480 }}>
+        {/* Status bar */}
+        <div className="flex items-center justify-between px-4 pt-2 pb-0.5 bg-[#0068FF] text-white text-[10px] font-medium">
+          <span>{timeStr}</span>
+          <div className="flex items-center gap-0.5">
+            <svg viewBox="0 0 16 12" className="h-2 w-3 fill-white"><rect x="0" y="4" width="3" height="8" rx="0.5"/><rect x="4.5" y="2.5" width="3" height="9.5" rx="0.5"/><rect x="9" y="1" width="3" height="11" rx="0.5"/><rect x="13.5" y="0" width="2.5" height="12" rx="0.5" opacity="0.4"/></svg>
+            <svg viewBox="0 0 16 12" className="h-2 w-3 fill-white"><path d="M8 2.4C5.3 2.4 2.9 3.5 1.2 5.3L0 4C2.1 1.7 5 0.3 8 0.3s5.9 1.4 8 3.7L14.8 5.3C13.1 3.5 10.7 2.4 8 2.4z"/><path d="M8 5.5c-1.8 0-3.4.8-4.5 2L2.1 6.2C3.6 4.7 5.7 3.7 8 3.7s4.4 1 5.9 2.5L12.5 7.5C11.4 6.3 9.8 5.5 8 5.5z"/><circle cx="8" cy="10.5" r="1.5"/></svg>
+            <svg viewBox="0 0 20 12" className="h-2 w-3.5 fill-white"><rect x="0" y="1" width="17" height="10" rx="2" stroke="white" strokeWidth="1.2" fill="none"/><rect x="1.5" y="2.5" width="11" height="7" rx="1" fill="white"/><rect x="18" y="4" width="2" height="4" rx="1" fill="white" opacity="0.6"/></svg>
+          </div>
+        </div>
+        {/* Chat header placeholder */}
+        <div className="flex items-center gap-1.5 px-2 py-2 bg-[#0068FF] text-white shrink-0">
+          <ChevronLeft className="h-4 w-4 shrink-0" />
+          <div className="h-6 w-6 rounded-full bg-white/20 shrink-0" />
+          <div className="flex-1 min-w-0 space-y-0.5">
+            <div className="h-2 w-20 bg-white/30 rounded" />
+            <div className="h-1.5 w-14 bg-white/20 rounded" />
+          </div>
+          <Phone className="h-3 w-3 shrink-0 opacity-50" />
+          <Menu className="h-3 w-3 shrink-0 opacity-50" />
+        </div>
+        {/* Empty chat body */}
+        <div className="flex-1 bg-[#EBF0F5] flex flex-col items-center justify-center gap-2 px-4">
+          <div className="h-10 w-10 rounded-full bg-white/60 flex items-center justify-center">
+            <Phone className="h-4 w-4 text-gray-300" />
+          </div>
+          <p className="text-[9px] text-gray-400 text-center leading-relaxed">Chưa có tin nhắn nào</p>
+        </div>
+        {/* Input bar */}
+        <div className="flex items-center gap-1 px-2 py-1.5 bg-white border-t border-gray-200 shrink-0">
+          <Smile className="h-3.5 w-3.5 text-gray-300 shrink-0" />
+          <div className="flex-1 rounded-full bg-gray-100 px-2 py-0.5 text-[9px] text-gray-300">Message</div>
+          <span className="text-gray-300 text-[9px]">•••</span>
+          <Mic className="h-3.5 w-3.5 text-gray-300 shrink-0" />
+          <Sticker className="h-3.5 w-3.5 text-gray-300 shrink-0" />
+        </div>
       </div>
     </div>
   )
