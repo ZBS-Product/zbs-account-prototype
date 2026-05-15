@@ -221,7 +221,7 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
                         {allApps ? "(Tất cả App)" : `(${selApps.length}/${MOCK_APPS.length} app)`}
                       </span>
                     </label>
-                    <button className="text-xs font-medium" style={{ color: "oklch(0.488 0.243 264.376)" }}
+                    <button className="text-xs font-medium cursor-pointer rounded px-2 py-0.5 hover:bg-blue-50 transition-colors" style={{ color: "oklch(0.488 0.243 264.376)" }}
                       onClick={() => { setAllApps(false); setExpandApps(v => !v) }}>
                       {expandApps ? "Thu gọn" : "Tùy chỉnh App"}
                     </button>
@@ -263,7 +263,7 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
                     <span className="text-sm font-medium">
                       {allOas ? "Tất cả OA" : `${selOas.length}/${MOCK_OAS.length} OA`}
                     </span>
-                    <button className="text-xs font-medium" style={{ color: "oklch(0.488 0.243 264.376)" }}
+                    <button className="text-xs font-medium cursor-pointer rounded px-2 py-0.5 hover:bg-blue-50 transition-colors" style={{ color: "oklch(0.488 0.243 264.376)" }}
                       onClick={() => { setAllOas(false); setExpandOas(v => !v) }}>
                       {expandOas ? "Thu gọn" : "Tùy chỉnh OA"}
                     </button>
