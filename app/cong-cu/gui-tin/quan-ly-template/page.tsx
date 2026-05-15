@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { usePathname, useRouter } from "next/navigation"
 import {
   Download, Search, MoreHorizontal, ChevronUp, ChevronDown,
   FileText, FileCheck, Clock, AlertCircle
@@ -181,6 +182,9 @@ function TemplateIcon({ type }: { type: TemplateType }) {
 
 /* ---------- Page ---------- */
 export default function QuanLyTemplatePage() {
+  const router = useRouter()
+  const pathname = usePathname()
+  const basePath = `/${pathname.split("/")[1]}`
   const [search, setSearch] = useState("")
   const [filterStatus, setFilterStatus] = useState("tat-ca")
   const [filterType, setFilterType] = useState("tat-ca")
@@ -296,7 +300,10 @@ export default function QuanLyTemplatePage() {
 
                   {/* Actions */}
                   <div className="flex items-center gap-2 shrink-0">
-                    <Button variant="outline" size="sm" className="h-8 text-xs">
+                    <Button
+                      variant="outline" size="sm" className="h-8 text-xs"
+                      onClick={() => router.push(`${basePath}/cong-cu/gui-tin/${t.id}`)}
+                    >
                       Xem chi tiết
                     </Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
