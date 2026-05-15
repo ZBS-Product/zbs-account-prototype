@@ -12,7 +12,8 @@
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
     "setup:hooks": "cp .github/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push && echo '✅ Git hooks installed'",
-    "deploy": "pnpm build && surge out/ zbs-account.surge.sh"
+    "build:surge": "DEPLOY=1 next build",
+    "deploy": "DEPLOY=1 next build && node scripts/copy-base-to-forks.mjs && cp out/index.html out/200.html && surge out zbs-account.surge.sh"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
@@ -39,6 +40,7 @@
     "postcss": "^8",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
+    "surge": "^0.27.4",
     "tailwindcss": "^4.2.1",
     "typescript": "^5.9.3"
   }

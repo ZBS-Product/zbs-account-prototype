@@ -33,7 +33,7 @@ function copyDir(src, dest) {
 
 const baseDir = path.join(OUT_DIR, "base")
 if (!fs.existsSync(baseDir)) {
-  console.error("❌  out/base/ không tồn tại — chạy `next build` trước.")
+  console.error("❌  out/base/ không tồn tại — chạy `DEPLOY=1 pnpm build` trước.")
   process.exit(1)
 }
 

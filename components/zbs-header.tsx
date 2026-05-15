@@ -14,7 +14,7 @@ const PROTOTYPE_USERS: Record<string, { name: string; company: string; initials:
 
 const ROOT_SECTIONS = new Set(["cong-cu", "chi-tieu", "cai-dat", "giao-dich", "bao-cao", ""])
 
-export default function ZbsHeader({ standalone }: { standalone?: boolean } = {}) {
+export default function ZbsHeader({ standalone, inset }: { standalone?: boolean; inset?: boolean } = {}) {
   const pathname = usePathname()
   const router = useRouter()
   const seg = pathname.split("/")[1] ?? ""
@@ -23,9 +23,14 @@ export default function ZbsHeader({ standalone }: { standalone?: boolean } = {})
   const user = PROTOTYPE_USERS[protoId] ?? PROTOTYPE_USERS.base
   const homeHref = basePath === "" ? "/" : basePath
 
+  // standalone = logo + sticky (dùng cho trang full-page như Nạp tiền)
+  // inset      = logo + KHÔNG sticky (dùng khi nằm trong container overflow-hidden như GuiTinShell)
+  const showLogo  = standalone || inset
+  const isSticky  = standalone && !inset
+
   return (
-    <header className={`flex h-14 items-center gap-3 border-b border-border bg-white px-4 shrink-0${standalone ? " sticky top-[68px] z-40" : ""}`}>
-      {standalone && (
+    <header className={`flex h-14 items-center gap-3 border-b border-border bg-white px-4 shrink-0${isSticky ? " sticky top-[68px] z-40" : ""}`}>
+      {showLogo && (
         <a href={homeHref} className="flex-shrink-0">
           <img src="/zbs-logo.svg" alt="Zalo Business Solutions" className="h-9 w-auto" />
         </a>
@@ -33,7 +38,7 @@ export default function ZbsHeader({ standalone }: { standalone?: boolean } = {})
 
       <div className="flex-1" />
 
-      {!standalone && (
+      {!showLogo && (
         <Button
           size="sm"
           className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm"

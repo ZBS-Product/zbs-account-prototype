@@ -1,7 +1,10 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { Sun, Moon, RefreshCw } from "lucide-react"
+import { Sun, Moon, RefreshCw, Smartphone, Search } from "lucide-react"
+import { openPhone } from "@/components/global-phone-panel"
+import { openNavSearch } from "@/components/global-nav-search"
+import GlobalNavSearch from "@/components/global-nav-search"
 
 type Quote = { text: string; author: string }
 
@@ -266,6 +269,19 @@ export default function GlobalHeader() {
 
       <div className="h-3 w-px bg-white/15 mx-0.5" />
 
+      {/* Nav search button */}
+      <button
+        onClick={openNavSearch}
+        className="flex items-center gap-1.5 h-6 rounded px-2 text-[11px] text-white/35 hover:text-white/70 hover:bg-white/10 transition-colors shrink-0 border border-white/10 hover:border-white/20"
+        title="Tìm nhanh trang (⌘K)"
+      >
+        <Search className="h-3 w-3" />
+        <span className="hidden sm:inline">Tìm trang</span>
+        <kbd className="text-[9px] opacity-60 font-mono hidden md:inline">⌘K</kbd>
+      </button>
+
+      <div className="h-3 w-px bg-white/15 mx-0.5" />
+
       {/* Quote + refresh */}
       <button
         onClick={() => pickRandom()}
@@ -286,6 +302,20 @@ export default function GlobalHeader() {
         }
         <span>{time}</span>
       </div>
+
+      <div className="h-3 w-px bg-white/15 mx-0.5" />
+
+      {/* Phone toggle — far right */}
+      <button
+        onClick={openPhone}
+        className="flex items-center justify-center h-6 w-6 rounded hover:bg-white/10 transition-colors shrink-0"
+        title="Điện thoại thử nghiệm"
+      >
+        <Smartphone className="h-3.5 w-3.5 text-white/40 hover:text-white/70 transition-colors" />
+      </button>
+
+      {/* Global nav search modal — mounted here, rendered via portal above everything */}
+      <GlobalNavSearch />
     </div>
   )
 }
