@@ -4,7 +4,7 @@ import { useState, useMemo } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import {
   Check, X, Info, ChevronDown, ChevronUp, Minus, Plus,
-  Search, Zap, AlertCircle, Library,
+  Search, Zap, AlertCircle, Library, GripVertical,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -39,34 +39,107 @@ const BUTTON_OPTIONS = [
 ]
 const TECH_SETTINGS = ["Tên khách hàng (30)", "Tên sản phẩm / Thương hiệu (200)", "Số điện thoại (15)", "Mã giao dịch (50)", "Trạng thái (50)", "Ngày giờ (20)", "Số tiền (20)", "Địa chỉ (200)"]
 
-// ── Component Library ─────────────────────────────────────────────────────────
+// ── Verified Component types ───────────────────────────────────────────────────
 
-type ComponentStatus  = "ENABLE" | "PENDING" | "NEW"
-type ComponentKind    = "logo" | "image" | "button"
-type DrawerFilter     = "all" | "logo" | "image" | "button" | "body"
+type ComponentStatus = "ENABLE" | "PENDING" | "NEW"
+type VCKind          = "logo" | "content" | "button"
+type VCSource        = "predefined" | "user"
+type PreviewRender   = "logo" | "voucher" | "rating" | "payment-table" | "image" | "text" | "button"
+type DrawerTab       = "predefined" | "user"
 
-interface ComponentTag  { label: string; status: ComponentStatus }
-interface LibComponent  { id: string; kind: ComponentKind; name: string; initials: string; bgColor: string; tags: ComponentTag[] }
+interface ComponentTag { label: string; status: ComponentStatus }
+interface VComponent {
+  id: string
+  kind: VCKind
+  source: VCSource
+  name: string
+  description: string
+  initials: string
+  bgColor: string
+  tags: ComponentTag[]
+  previewRender: PreviewRender
+}
 
-const COMPONENT_LIBRARY: LibComponent[] = [
-  { id: "logo-1", kind: "logo", name: "Logo ATP Software",       initials: "ATP", bgColor: "oklch(0.92 0.06 50)",
-    tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "ENABLE" }, { label: "Hậu mãi", status: "ENABLE" }] },
-  { id: "logo-2", kind: "logo", name: "Logo ZBS Brandmark",      initials: "ZBS", bgColor: "oklch(0.92 0.05 265)",
-    tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "PENDING" }, { label: "Hậu mãi", status: "NEW" }] },
-  { id: "logo-3", kind: "logo", name: "Logo QC Test 1",          initials: "QC",  bgColor: "oklch(0.92 0.07 145)",
-    tags: [{ label: "Giao dịch", status: "PENDING" }, { label: "Chăm sóc KH", status: "NEW" }] },
-  { id: "image-1", kind: "image", name: "Banner khuyến mãi 2026", initials: "🎉", bgColor: "oklch(0.95 0.04 50)",
-    tags: [{ label: "Hậu mãi", status: "ENABLE" }, { label: "Chăm sóc KH", status: "ENABLE" }] },
-  { id: "image-2", kind: "image", name: "Ảnh sản phẩm mới",       initials: "🛍️", bgColor: "oklch(0.92 0.06 300)",
-    tags: [{ label: "Giao dịch", status: "PENDING" }, { label: "Hậu mãi", status: "NEW" }] },
-  { id: "image-3", kind: "image", name: "Ảnh xác nhận đơn hàng",  initials: "📦", bgColor: "oklch(0.92 0.06 185)",
-    tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "ENABLE" }, { label: "Hậu mãi", status: "ENABLE" }] },
-  { id: "button-1", kind: "button", name: "CTA Xem đơn hàng",     initials: "→",  bgColor: "oklch(0.88 0.08 265)",
-    tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "ENABLE" }] },
-  { id: "button-2", kind: "button", name: "CTA Đánh giá dịch vụ", initials: "⭐", bgColor: "oklch(0.92 0.07 50)",
-    tags: [{ label: "Chăm sóc KH", status: "ENABLE" }, { label: "Hậu mãi", status: "PENDING" }] },
-  { id: "button-3", kind: "button", name: "CTA Nhận ưu đãi",      initials: "🎁", bgColor: "oklch(0.92 0.07 145)",
-    tags: [{ label: "Hậu mãi", status: "NEW" }] },
+// ── Predefined library (Mẫu — platform-provided, always ENABLE) ───────────────
+
+const ALL_ENABLE: ComponentTag[] = [
+  { label: "Giao dịch", status: "ENABLE" },
+  { label: "Chăm sóc KH", status: "ENABLE" },
+  { label: "Hậu mãi", status: "ENABLE" },
+]
+
+const PREDEFINED: VComponent[] = [
+  {
+    id: "pre-voucher", kind: "content", source: "predefined",
+    name: "Voucher giảm giá", description: "Hiển thị voucher với mã code",
+    initials: "🎟️", bgColor: "oklch(0.95 0.05 50)",
+    tags: ALL_ENABLE, previewRender: "voucher",
+  },
+  {
+    id: "pre-payment", kind: "content", source: "predefined",
+    name: "Thông tin thanh toán", description: "Bảng chi tiết thanh toán",
+    initials: "💳", bgColor: "oklch(0.93 0.04 185)",
+    tags: ALL_ENABLE, previewRender: "payment-table",
+  },
+  {
+    id: "pre-rating", kind: "content", source: "predefined",
+    name: "Đánh giá dịch vụ", description: "Giao diện đánh giá 5 sao",
+    initials: "⭐", bgColor: "oklch(0.95 0.06 80)",
+    tags: ALL_ENABLE, previewRender: "rating",
+  },
+  {
+    id: "pre-banner", kind: "content", source: "predefined",
+    name: "Banner hình ảnh", description: "Ảnh banner tuỳ chỉnh",
+    initials: "🖼️", bgColor: "oklch(0.92 0.06 300)",
+    tags: ALL_ENABLE, previewRender: "image",
+  },
+]
+
+// ── User-approved library (Đã duyệt — user's own approved assets) ─────────────
+
+const USER_APPROVED: VComponent[] = [
+  {
+    id: "user-logo-atp", kind: "logo", source: "user",
+    name: "Logo ATP Software", description: "Logo thương hiệu ATP",
+    initials: "ATP", bgColor: "oklch(0.92 0.06 50)",
+    tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "ENABLE" }, { label: "Hậu mãi", status: "ENABLE" }],
+    previewRender: "logo",
+  },
+  {
+    id: "user-logo-zbs", kind: "logo", source: "user",
+    name: "Logo ZBS Brandmark", description: "Logo Zalo Business",
+    initials: "ZBS", bgColor: "oklch(0.92 0.05 265)",
+    tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "PENDING" }, { label: "Hậu mãi", status: "NEW" }],
+    previewRender: "logo",
+  },
+  {
+    id: "user-content-welcome", kind: "content", source: "user",
+    name: "Nội dung chào mừng", description: "Văn bản chào thành viên mới",
+    initials: "👋", bgColor: "oklch(0.94 0.04 145)",
+    tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "ENABLE" }],
+    previewRender: "text",
+  },
+  {
+    id: "user-content-voucher", kind: "content", source: "user",
+    name: "Voucher mùa hè", description: "Voucher ATP20 giảm 20%",
+    initials: "🌞", bgColor: "oklch(0.95 0.07 60)",
+    tags: [{ label: "Hậu mãi", status: "ENABLE" }, { label: "Chăm sóc KH", status: "PENDING" }],
+    previewRender: "voucher",
+  },
+  {
+    id: "user-btn-order", kind: "button", source: "user",
+    name: "CTA Xem đơn hàng", description: "Nút xem chi tiết đơn hàng",
+    initials: "→", bgColor: "oklch(0.88 0.08 265)",
+    tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "ENABLE" }],
+    previewRender: "button",
+  },
+  {
+    id: "user-btn-rating", kind: "button", source: "user",
+    name: "CTA Đánh giá dịch vụ", description: "Nút đánh giá dịch vụ",
+    initials: "⭐", bgColor: "oklch(0.92 0.07 50)",
+    tags: [{ label: "Chăm sóc KH", status: "ENABLE" }, { label: "Hậu mãi", status: "PENDING" }],
+    previewRender: "button",
+  },
 ]
 
 // ── Block types ───────────────────────────────────────────────────────────────
@@ -109,86 +182,117 @@ function TagBadge({ tag, tiny }: { tag: ComponentTag; tiny?: boolean }) {
   )
 }
 
-// ── Component Library Drawer (bottom panel) ───────────────────────────────────
+// ── Preview item renderer (per VComponent type) ────────────────────────────────
 
-const DRAWER_FILTER_LABELS: Record<DrawerFilter, string> = {
-  all: "Tất cả", logo: "Logo", image: "Images", button: "Buttons", body: "Body",
+function PreviewItem({ vc, dark }: { vc: VComponent; dark: boolean }) {
+  switch (vc.previewRender) {
+    case "voucher":
+      return (
+        <div className={cn("rounded-lg border-2 border-dashed p-3 text-center", dark ? "border-orange-700 bg-orange-950/30" : "border-orange-300 bg-orange-50")}>
+          <div className={cn("text-[10px] font-bold uppercase tracking-wider mb-1", dark ? "text-orange-400" : "text-orange-600")}>VOUCHER</div>
+          <div className={cn("text-lg font-black", dark ? "text-white" : "text-gray-900")}>-20%</div>
+          <div className={cn("text-[9px] font-mono mt-1 px-2 py-0.5 rounded border border-dashed inline-block", dark ? "border-orange-700 text-orange-300" : "border-orange-300 text-orange-700")}>SUMMER20</div>
+        </div>
+      )
+    case "rating":
+      return (
+        <div className={cn("rounded-lg p-3 text-center", dark ? "bg-gray-800" : "bg-gray-50")}>
+          <div className={cn("text-[10px] mb-1.5", dark ? "text-gray-400" : "text-gray-500")}>Bạn có hài lòng với dịch vụ?</div>
+          <div className="flex justify-center gap-1 text-base">⭐⭐⭐⭐⭐</div>
+        </div>
+      )
+    case "payment-table":
+      return (
+        <div className="rounded text-[10px]">
+          {[["Mã đơn", "#DH20240531"], ["Tổng tiền", "500.000đ"], ["Trạng thái", "Đã thanh toán"]].map(([k, v]) => (
+            <div key={k} className={cn("flex justify-between py-1 border-b last:border-0", dark ? "border-gray-700" : "border-gray-100")}>
+              <span className={dark ? "text-gray-400" : "text-gray-500"}>{k}</span>
+              <span className="font-semibold">{v}</span>
+            </div>
+          ))}
+        </div>
+      )
+    case "image":
+      return (
+        <div className={cn("h-14 rounded-lg flex items-center justify-center text-2xl", dark ? "bg-gray-700" : "bg-gray-100")}>
+          🖼️
+        </div>
+      )
+    case "text":
+      return (
+        <p className={cn("text-[11px] leading-relaxed", dark ? "text-gray-400" : "text-gray-600")}>
+          Chào mừng bạn đã trở thành thành viên! Khám phá ngay các ưu đãi độc quyền.
+        </p>
+      )
+    default:
+      return null
+  }
 }
 
+// ── Component Library Drawer (bottom panel) ────────────────────────────────────
+
 function ComponentLibraryDrawer({
-  open, onClose, filter, setFilter,
-  logoComp, imageComp, buttonComp,
-  onSelect,
+  open, onClose, drawerTab, setDrawerTab, addedIds, onAdd,
 }: {
-  open: boolean; onClose: () => void
-  filter: DrawerFilter; setFilter: (f: DrawerFilter) => void
-  logoComp: LibComponent | null; imageComp: LibComponent | null; buttonComp: LibComponent | null
-  onSelect: (c: LibComponent) => void
+  open: boolean
+  onClose: () => void
+  drawerTab: DrawerTab
+  setDrawerTab: (t: DrawerTab) => void
+  addedIds: Set<string>
+  onAdd: (c: VComponent) => void
 }) {
   const [search, setSearch] = useState("")
-  const [hoverId, setHoverId] = useState<string | null>(null)
 
-  const selectedIds = new Set([logoComp?.id, imageComp?.id, buttonComp?.id].filter(Boolean) as string[])
-
-  const filtered = COMPONENT_LIBRARY.filter((c) => {
-    if (filter === "body") return false          // body = empty for now
-    if (filter !== "all" && c.kind !== filter) return false
-    if (search && !c.name.toLowerCase().includes(search.toLowerCase())) return false
-    return true
-  })
-
-  const isFullyEnabled = (c: LibComponent) => c.tags.every((t) => t.status === "ENABLE")
+  const pool     = drawerTab === "predefined" ? PREDEFINED : USER_APPROVED
+  const filtered = pool.filter((c) => !search || c.name.toLowerCase().includes(search.toLowerCase()))
 
   return (
     <>
-      {/* Scrim */}
-      {open && (
-        <div
-          className="absolute inset-0 bg-black/20 z-10 transition-opacity"
-          onClick={onClose}
-        />
-      )}
-
-      {/* Drawer */}
+      {open && <div className="absolute inset-0 bg-black/20 z-10" onClick={onClose} />}
       <div
         className={cn(
           "absolute left-0 right-0 bottom-0 bg-white border-t border-border shadow-2xl z-20 flex flex-col transition-transform duration-300 ease-out",
-          open ? "translate-y-0" : "translate-y-full"
+          open ? "translate-y-0" : "translate-y-full",
         )}
-        style={{ height: "42%" }}
+        style={{ height: "44%" }}
       >
         {/* Drag handle */}
-        <div className="flex justify-center pt-2.5 pb-1 shrink-0 cursor-grab">
+        <div className="flex justify-center pt-2.5 pb-1 shrink-0">
           <div className="h-1 w-10 rounded-full bg-gray-300" />
         </div>
 
-        {/* Header bar */}
-        <div className="flex items-center gap-4 px-6 py-2.5 border-b border-border shrink-0">
-          <div className="flex items-center gap-1.5">
-            <Library className="h-4 w-4 text-blue-600" />
-            <span className="text-sm font-semibold">Thư viện Component</span>
+        {/* Header */}
+        <div className="flex items-center gap-3 px-6 py-2.5 border-b border-border shrink-0">
+          {/* Tab switcher */}
+          <div className="flex gap-1 p-0.5 bg-gray-100 rounded-lg shrink-0">
+            <button
+              onClick={() => setDrawerTab("predefined")}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all",
+                drawerTab === "predefined" ? "bg-white shadow text-blue-600" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              📐 Mẫu
+            </button>
+            <button
+              onClick={() => setDrawerTab("user")}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all",
+                drawerTab === "user" ? "bg-white shadow text-blue-600" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              ✅ Đã duyệt
+            </button>
           </div>
 
-          {/* Filter tabs */}
-          <div className="flex gap-1.5">
-            {(["all", "logo", "image", "button", "body"] as DrawerFilter[]).map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={cn(
-                  "px-3 py-1 text-xs rounded-full border font-medium transition-colors",
-                  filter === f
-                    ? "border-blue-500 bg-blue-50 text-blue-600"
-                    : "border-border text-muted-foreground hover:border-gray-300 bg-white"
-                )}
-              >
-                {DRAWER_FILTER_LABELS[f]}
-              </button>
-            ))}
-          </div>
+          <span className="text-xs text-muted-foreground">
+            {drawerTab === "predefined"
+              ? "Tài sản nền tảng do Zalo cung cấp — luôn ENABLE"
+              : "Component đã được Zalo duyệt của bạn"}
+          </span>
 
           {/* Search */}
-          <div className="relative ml-2">
+          <div className="relative ml-auto">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <input
               value={search}
@@ -198,148 +302,130 @@ function ComponentLibraryDrawer({
             />
           </div>
 
-          <div className="ml-auto">
-            <button onClick={onClose} className="p-1.5 rounded hover:bg-gray-100 transition-colors">
-              <X className="h-4 w-4 text-muted-foreground" />
-            </button>
-          </div>
+          <button onClick={onClose} className="p-1.5 rounded hover:bg-gray-100 transition-colors">
+            <X className="h-4 w-4 text-muted-foreground" />
+          </button>
         </div>
 
         {/* Grid */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
-          {filter === "body" || filtered.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-              {filter === "body" ? "Body component — sắp ra mắt" : "Không tìm thấy component"}
-            </div>
-          ) : (
-            <div className="grid grid-cols-6 gap-3">
-              {filtered.map((c) => {
-                const isSelected = selectedIds.has(c.id)
-                const enabled    = isFullyEnabled(c)
-                const isHovered  = hoverId === c.id
-
-                return (
-                  <button
-                    key={c.id}
-                    onClick={() => onSelect(c)}
-                    onMouseEnter={() => setHoverId(c.id)}
-                    onMouseLeave={() => setHoverId(null)}
-                    title={!enabled ? "Một số tag chưa được duyệt — sẽ cần duyệt thủ công" : undefined}
-                    className={cn(
-                      "rounded-xl border-2 p-3 text-left relative transition-all",
-                      isSelected
-                        ? "border-blue-600 bg-blue-50 shadow-sm"
-                        : isHovered && enabled
-                        ? "border-blue-300 bg-white shadow-sm"
-                        : isHovered && !enabled
-                        ? "border-yellow-300 bg-yellow-50"
-                        : enabled
-                        ? "border-border bg-white hover:shadow-sm"
-                        : "border-border bg-white opacity-60",
-                    )}
+          <div className="grid grid-cols-4 gap-3">
+            {filtered.map((c) => {
+              const isAdded = addedIds.has(c.id)
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => !isAdded && onAdd(c)}
+                  className={cn(
+                    "rounded-xl border-2 p-3 text-left relative transition-all",
+                    isAdded
+                      ? "border-blue-600 bg-blue-50 cursor-default"
+                      : "border-border bg-white hover:border-blue-300 hover:shadow-sm cursor-pointer",
+                  )}
+                >
+                  {isAdded && (
+                    <div className="absolute top-2 right-2 h-4 w-4 rounded-full bg-blue-600 flex items-center justify-center">
+                      <Check className="h-2.5 w-2.5 text-white" />
+                    </div>
+                  )}
+                  <div
+                    className="h-11 rounded-lg flex items-center justify-center mb-2 text-base font-bold border border-black/5"
+                    style={{ background: c.bgColor }}
                   >
-                    {isSelected && (
-                      <div className="absolute top-2 right-2 h-4 w-4 rounded-full bg-blue-600 flex items-center justify-center">
-                        <Check className="h-2.5 w-2.5 text-white" />
-                      </div>
-                    )}
-                    {/* Thumbnail */}
-                    <div
-                      className="h-11 rounded-lg flex items-center justify-center mb-2 text-base font-bold border border-black/5"
-                      style={{ background: c.bgColor }}
-                    >
-                      {c.initials}
-                    </div>
-                    <p className="text-[11px] font-semibold truncate mb-1">{c.name}</p>
-                    <div className="flex flex-wrap gap-0.5">
-                      {c.tags.map((t) => <TagBadge key={t.label} tag={t} tiny />)}
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-          )}
+                    {c.initials}
+                  </div>
+                  <p className="text-[11px] font-semibold truncate mb-0.5">{c.name}</p>
+                  <p className="text-[10px] text-muted-foreground truncate mb-1.5">{c.description}</p>
+                  <div className="flex flex-wrap gap-0.5">
+                    {c.tags.map((t) => <TagBadge key={t.label} tag={t} tiny />)}
+                  </div>
+                  <div className={cn("mt-2 text-center text-[10px] font-semibold", isAdded ? "text-blue-600" : "text-blue-500")}>
+                    {isAdded ? "Đã thêm" : "+ Thêm vào template"}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
     </>
   )
 }
 
-// ── Approval Check (right panel tab content) ──────────────────────────────────
+// ── Approval check (right-panel Library tab) ─────────────────────────────────
 
-function ApprovalCheckContent({
-  logoComp, imageComp, buttonComp,
-}: {
-  logoComp: LibComponent | null
-  imageComp: LibComponent | null
-  buttonComp: LibComponent | null
-}) {
-  const sections = [
-    { label: "Logo", comp: logoComp },
-    { label: "Hình ảnh", comp: imageComp },
-    { label: "Nút CTA", comp: buttonComp },
-  ].filter((s) => s.comp !== null) as { label: string; comp: LibComponent }[]
-
-  const allTags        = sections.flatMap((s) => s.comp.tags)
+function ApprovalCheckContent({ verifiedComponents }: { verifiedComponents: VComponent[] }) {
+  const allTags        = verifiedComponents.flatMap((c) => c.tags)
   const nonEnableCount = allTags.filter((t) => t.status !== "ENABLE").length
-  const isEligible     = sections.length > 0 && nonEnableCount === 0
+  const isEligible     = verifiedComponents.length > 0 && nonEnableCount === 0
+
+  const byKind: Record<VCKind, VComponent[]> = {
+    logo:    verifiedComponents.filter((c) => c.kind === "logo"),
+    content: verifiedComponents.filter((c) => c.kind === "content"),
+    button:  verifiedComponents.filter((c) => c.kind === "button"),
+  }
+  const kindLabel: Record<VCKind, string> = { logo: "Logo", content: "Nội dung", button: "Nút CTA" }
 
   return (
     <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
       <div>
-        <p className="text-xs font-semibold text-foreground mb-0.5">Kiểm tra tự động duyệt</p>
-        <p className="text-[10px] text-muted-foreground leading-relaxed">Cập nhật ngay khi bạn chọn component</p>
+        <p className="text-xs font-semibold mb-0.5">Kiểm tra tự động duyệt</p>
+        <p className="text-[10px] text-muted-foreground leading-relaxed">Cập nhật theo component đã thêm</p>
       </div>
 
-      {sections.length === 0 ? (
+      {verifiedComponents.length === 0 ? (
         <div className="rounded-lg border border-dashed border-gray-300 p-5 text-center">
           <Library className="h-6 w-6 text-gray-300 mx-auto mb-2" />
-          <p className="text-xs text-muted-foreground">Chưa chọn component từ thư viện</p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">Mở Thư viện Component để thêm</p>
+          <p className="text-xs text-muted-foreground">Chưa có component nào</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">Nhấn "Thư viện Component" để thêm</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {sections.map(({ label, comp }) => (
-            <div key={label}>
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">{label}</p>
-              <div className="rounded-lg border border-border bg-white p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <div
-                    className="h-7 w-7 rounded text-[10px] font-bold flex items-center justify-center shrink-0"
-                    style={{ background: comp.bgColor }}
-                  >
-                    {comp.initials.slice(0, 2)}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold truncate">{comp.name}</p>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {comp.tags.map((t) => <TagBadge key={t.label} tag={t} />)}
+          {(["logo", "content", "button"] as VCKind[]).map((kind) => {
+            const items = byKind[kind]
+            if (!items.length) return null
+            return (
+              <div key={kind}>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">{kindLabel[kind]}</p>
+                <div className="space-y-1.5">
+                  {items.map((vc) => (
+                    <div key={vc.id} className="rounded-lg border border-border bg-white p-2.5">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <div
+                          className="h-6 w-6 rounded text-[10px] font-bold flex items-center justify-center shrink-0"
+                          style={{ background: vc.bgColor }}
+                        >
+                          {vc.initials.slice(0, 2)}
+                        </div>
+                        <p className="text-xs font-semibold truncate flex-1">{vc.name}</p>
+                        <span className="text-[9px] text-muted-foreground shrink-0">{vc.source === "predefined" ? "Mẫu" : "Của bạn"}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {vc.tags.map((t) => <TagBadge key={t.label} tag={t} />)}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
-      {/* Summary — pinned to bottom of flex column */}
-      {sections.length > 0 && (
+      {verifiedComponents.length > 0 && (
         <div className={cn("rounded-lg p-3 text-xs mt-auto",
-          isEligible ? "bg-green-50 border border-green-200" : "bg-yellow-50 border border-yellow-200"
+          isEligible ? "bg-green-50 border border-green-200" : "bg-yellow-50 border border-yellow-200",
         )}>
           {isEligible ? (
             <div className="flex items-center gap-1.5 font-semibold text-green-700">
-              <Zap className="h-3.5 w-3.5" />
-              Đủ điều kiện tự động duyệt ⚡
+              <Zap className="h-3.5 w-3.5" /> Đủ điều kiện tự động duyệt ⚡
             </div>
           ) : (
             <div>
               <div className="flex items-center gap-1.5 font-semibold text-yellow-800 mb-0.5">
-                <AlertCircle className="h-3.5 w-3.5" />
-                Cần duyệt thủ công
+                <AlertCircle className="h-3.5 w-3.5" /> Cần duyệt thủ công
               </div>
-              <p className="text-yellow-700">{nonEnableCount} component chưa được duyệt ở đủ tag</p>
+              <p className="text-yellow-700">{nonEnableCount} tag chưa được duyệt</p>
             </div>
           )}
         </div>
@@ -348,25 +434,25 @@ function ApprovalCheckContent({
   )
 }
 
-// ── Step 2 right panel (tabbed: Xem trước / Thư viện→ApprovalCheck) ───────────
+// ── Step 2 right panel (tabbed Xem trước / Thư viện) ─────────────────────────
 
 function Step2RightPanel({
-  dark, setDark, title, blocks, actionButtonId, templateType,
-  logoComp, imageComp, buttonComp,
+  dark, setDark, title, blocks, actionButtonId, templateType, verifiedComponents,
 }: {
   dark: boolean; setDark: (v: boolean) => void
   title: string; blocks: Block[]; actionButtonId: string; templateType: string
-  logoComp: LibComponent | null
-  imageComp: LibComponent | null
-  buttonComp: LibComponent | null
+  verifiedComponents: VComponent[]
 }) {
   const [tab, setTab] = useState<"preview" | "library">("preview")
-  const activeBtn = BUTTON_OPTIONS.flatMap((g) => g.options).find((o) => o.id === actionButtonId)
-  const typeInfo  = TEMPLATE_TYPES.find((t) => t.id === templateType)
+  const activeBtn  = BUTTON_OPTIONS.flatMap((g) => g.options).find((o) => o.id === actionButtonId)
+  const typeInfo   = TEMPLATE_TYPES.find((t) => t.id === templateType)
 
-  const hasLibrary = logoComp || imageComp || buttonComp
-  const allTags    = [logoComp, imageComp, buttonComp].flatMap((c) => c ? c.tags : [])
+  const allTags    = verifiedComponents.flatMap((c) => c.tags)
   const isEligible = allTags.length > 0 && allTags.every((t) => t.status === "ENABLE")
+
+  const logoVC     = verifiedComponents.find((c) => c.kind === "logo")
+  const contentVCs = verifiedComponents.filter((c) => c.kind === "content")
+  const buttonVC   = verifiedComponents.find((c) => c.kind === "button")
 
   return (
     <div className="w-[300px] shrink-0 border-l border-border bg-gray-50 flex flex-col overflow-hidden">
@@ -374,8 +460,7 @@ function Step2RightPanel({
       <div className="flex border-b border-border bg-white shrink-0">
         <button
           onClick={() => setTab("preview")}
-          className={cn(
-            "flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium border-b-2 transition-colors",
+          className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium border-b-2 transition-colors",
             tab === "preview" ? "border-blue-600 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"
           )}
         >
@@ -383,44 +468,55 @@ function Step2RightPanel({
         </button>
         <button
           onClick={() => setTab("library")}
-          className={cn(
-            "flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium border-b-2 transition-colors",
+          className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium border-b-2 transition-colors",
             tab === "library" ? "border-blue-600 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"
           )}
         >
-          {isEligible && hasLibrary
+          {isEligible && verifiedComponents.length > 0
             ? <Zap className="h-3 w-3 text-green-600" />
-            : hasLibrary
+            : verifiedComponents.length > 0
             ? <AlertCircle className="h-3 w-3 text-yellow-500" />
-            : <Library className="h-3 w-3" />
-          }
+            : <Library className="h-3 w-3" />}
           Thư viện
-          {tab !== "library" && (
-            <span className="text-[8px] font-bold px-1 py-0.5 rounded bg-blue-100 text-blue-600">NEW</span>
+          {verifiedComponents.length > 0 && tab !== "library" && (
+            <span className="ml-0.5 h-4 w-4 rounded-full bg-blue-100 text-blue-600 text-[9px] font-bold flex items-center justify-center">
+              {verifiedComponents.length}
+            </span>
           )}
         </button>
       </div>
 
       {tab === "preview" ? (
-        /* ── Preview tab (unchanged) ── */
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Giao diện tối</span>
-            <button
-              onClick={() => setDark(!dark)}
-              className={cn("relative h-5 w-9 rounded-full transition-colors", dark ? "bg-blue-600" : "bg-gray-300")}
-            >
+            <button onClick={() => setDark(!dark)}
+              className={cn("relative h-5 w-9 rounded-full transition-colors", dark ? "bg-blue-600" : "bg-gray-300")}>
               <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform", dark ? "translate-x-4" : "translate-x-0.5")} />
             </button>
           </div>
+
           <div className={cn("rounded-lg border border-border overflow-hidden text-sm", dark ? "bg-gray-900 text-white" : "bg-white text-gray-900")}>
-            <div className={cn("px-4 py-3 flex items-center", dark ? "bg-gray-800" : "bg-orange-50")}>
-              <div className={cn("text-xs font-bold", dark ? "text-orange-400" : "text-orange-600")}>
-                ATP <span className={dark ? "text-white" : "text-gray-800"}>SOFTWARE</span>
-              </div>
+            {/* Header — shows logoVC if present */}
+            <div className={cn("px-4 py-3 flex items-center gap-2", dark ? "bg-gray-800" : "bg-orange-50")}>
+              {logoVC ? (
+                <>
+                  <div className="h-6 w-6 rounded text-[9px] font-bold flex items-center justify-center shrink-0"
+                    style={{ background: logoVC.bgColor }}>
+                    {logoVC.initials.slice(0, 2)}
+                  </div>
+                  <div className={cn("text-xs font-bold", dark ? "text-orange-400" : "text-orange-600")}>{logoVC.name}</div>
+                </>
+              ) : (
+                <div className={cn("text-xs font-bold", dark ? "text-orange-400" : "text-orange-600")}>
+                  ATP <span className={dark ? "text-white" : "text-gray-800"}>SOFTWARE</span>
+                </div>
+              )}
             </div>
+
             <div className="px-4 py-3 space-y-2">
               <p className="text-[13px] font-semibold leading-snug">{title || "Tiêu đề template"}</p>
+
               {blocks.map((b) => {
                 if (b.type === "text") return (
                   <p key={b.id} className={cn("text-[12px] leading-relaxed", dark ? "text-gray-300" : "text-gray-700")}>
@@ -440,13 +536,29 @@ function Step2RightPanel({
                   </table>
                 )
               })}
-              {activeBtn && (
-                <button className="w-full mt-2 py-2 rounded text-xs font-semibold text-white" style={{ background: "oklch(0.488 0.243 264.376)" }}>
+
+              {/* Verified content components rendered inline */}
+              {contentVCs.map((vc) => (
+                <div key={vc.id} className={cn("border-l-2 pl-2.5 rounded-r", dark ? "border-blue-500" : "border-blue-400")}>
+                  <PreviewItem vc={vc} dark={dark} />
+                </div>
+              ))}
+
+              {/* Button slot */}
+              {buttonVC ? (
+                <button className="w-full mt-2 py-2 rounded text-xs font-semibold text-white"
+                  style={{ background: "oklch(0.488 0.243 264.376)" }}>
+                  {buttonVC.name}
+                </button>
+              ) : activeBtn ? (
+                <button className="w-full mt-2 py-2 rounded text-xs font-semibold text-white"
+                  style={{ background: "oklch(0.488 0.243 264.376)" }}>
                   {activeBtn.label.split(" (+")[0]}
                 </button>
-              )}
+              ) : null}
             </div>
           </div>
+
           <div className="rounded border p-3 space-y-1.5 text-xs">
             <div className="flex justify-between">
               <span className="text-muted-foreground">{typeInfo?.label ?? "Mẫu tuỳ chỉnh"}</span>
@@ -456,9 +568,6 @@ function Step2RightPanel({
               <span className="text-muted-foreground">Nút thao tác 1</span><span className="font-semibold">0 VNĐ</span>
             </div>
             <div className="border-t border-border pt-1.5 mt-1.5 space-y-1">
-              <div className="flex justify-between font-semibold">
-                <span className="flex items-center gap-1">Đơn giá dự kiến <Info className="h-3 w-3 text-muted-foreground" /></span>
-              </div>
               <div className="flex justify-between text-muted-foreground">
                 <span>Gửi qua SĐT</span><span className="font-semibold text-foreground">300 VNĐ/tin</span>
               </div>
@@ -472,8 +581,7 @@ function Step2RightPanel({
           </button>
         </div>
       ) : (
-        /* ── Library tab → Approval Check ── */
-        <ApprovalCheckContent logoComp={logoComp} imageComp={imageComp} buttonComp={buttonComp} />
+        <ApprovalCheckContent verifiedComponents={verifiedComponents} />
       )}
     </div>
   )
@@ -595,6 +703,66 @@ function PreviewPanel({ dark, setDark, title, blocks, actionButtonId, templateTy
   )
 }
 
+// ── Added components list (in Step 2 form) ────────────────────────────────────
+
+function AddedComponentsSection({
+  verifiedComponents,
+  onRemove,
+  onMove,
+}: {
+  verifiedComponents: VComponent[]
+  onRemove: (id: string) => void
+  onMove: (index: number, dir: -1 | 1) => void
+}) {
+  if (verifiedComponents.length === 0) return null
+
+  return (
+    <section className="mb-4 rounded-lg border border-blue-200 bg-blue-50/40 overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-blue-100">
+        <div className="flex items-center gap-2">
+          <Library className="h-4 w-4 text-blue-600" />
+          <span className="text-sm font-semibold text-blue-700">Component đã thêm</span>
+          <span className="h-5 min-w-5 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center px-1">
+            {verifiedComponents.length}
+          </span>
+        </div>
+      </div>
+      <div className="p-3 space-y-2">
+        {verifiedComponents.map((vc, idx) => (
+          <div key={vc.id} className="flex items-center gap-2 rounded-lg border border-border bg-white px-3 py-2">
+            <GripVertical className="h-4 w-4 text-gray-300 shrink-0" />
+            <div className="h-7 w-7 rounded text-[10px] font-bold flex items-center justify-center shrink-0"
+              style={{ background: vc.bgColor }}>
+              {vc.initials.slice(0, 2)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold truncate">{vc.name}</p>
+              <p className="text-[10px] text-muted-foreground">{vc.source === "predefined" ? "Mẫu nền tảng" : "Của bạn"} · {vc.kind === "logo" ? "Logo" : vc.kind === "content" ? "Nội dung" : "Nút CTA"}</p>
+            </div>
+            <div className="flex flex-wrap gap-0.5 shrink-0 max-w-[120px]">
+              {vc.tags.slice(0, 2).map((t) => <TagBadge key={t.label} tag={t} tiny />)}
+            </div>
+            <div className="flex flex-col gap-0.5 shrink-0">
+              <button onClick={() => onMove(idx, -1)} disabled={idx === 0}
+                className="p-0.5 rounded hover:bg-gray-100 disabled:opacity-30 transition-colors">
+                <ChevronUp className="h-3 w-3" />
+              </button>
+              <button onClick={() => onMove(idx, 1)} disabled={idx === verifiedComponents.length - 1}
+                className="p-0.5 rounded hover:bg-gray-100 disabled:opacity-30 transition-colors">
+                <ChevronDown className="h-3 w-3" />
+              </button>
+            </div>
+            <button onClick={() => onRemove(vc.id)}
+              className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors shrink-0">
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 // ── Step 1 ────────────────────────────────────────────────────────────────────
 
 function Step1({ templateName, setTemplateName, selectedApp, setSelectedApp, selectedOA, setSelectedOA }: {
@@ -603,7 +771,7 @@ function Step1({ templateName, setTemplateName, selectedApp, setSelectedApp, sel
   selectedOA: string; setSelectedOA: (v: string) => void
 }) {
   return (
-    <div className="flex flex-1 overflow-hidden">
+    <div className="flex h-full overflow-hidden">
       <div className="flex-1 overflow-y-auto px-10 py-8">
         <h1 className="text-2xl font-bold mb-1">Thông tin chung</h1>
         <p className="text-sm text-muted-foreground mb-8">Khai báo các thông tin bên dưới để tạo Template</p>
@@ -645,8 +813,7 @@ function Step2({
   templateType, setTemplateType, purpose, setPurpose,
   title, setTitle, blocks, setBlocks,
   actionButtonId, setActionButtonId, dark, setDark,
-  logoComp, imageComp, buttonComp,
-  openDrawer,
+  verifiedComponents, onRemoveVC, onMoveVC,
 }: {
   templateType: string; setTemplateType: (v: string) => void
   purpose: string; setPurpose: (v: string) => void
@@ -654,10 +821,9 @@ function Step2({
   blocks: Block[]; setBlocks: (b: Block[]) => void
   actionButtonId: string; setActionButtonId: (v: string) => void
   dark: boolean; setDark: (v: boolean) => void
-  logoComp: LibComponent | null
-  imageComp: LibComponent | null
-  buttonComp: LibComponent | null
-  openDrawer: (filter: DrawerFilter) => void
+  verifiedComponents: VComponent[]
+  onRemoveVC: (id: string) => void
+  onMoveVC: (index: number, dir: -1 | 1) => void
 }) {
   const [logoOpen, setLogoOpen]               = useState(true)
   const [btnOpen, setBtnOpen]                 = useState(true)
@@ -688,25 +854,10 @@ function Step2({
     .filter((g) => g.options.length > 0)
 
   return (
-    <div className="flex flex-1 overflow-hidden">
-      {/* ── Main form ── */}
+    <div className="flex h-full overflow-hidden">
       <div className="flex-1 overflow-y-auto px-10 py-8">
-
-        {/* Title row — "Chọn từ thư viện Component" replaces "Chọn từ thư viện Template" */}
-        <div className="flex items-start justify-between mb-1">
-          <div>
-            <h1 className="text-2xl font-bold mb-1">Khai báo nội dung</h1>
-            <p className="text-sm text-muted-foreground mb-6">Chọn loại Template, mục đích và các thành phần cần thiết</p>
-          </div>
-          <Button
-            variant="outline" size="sm"
-            className="gap-1.5 shrink-0 mt-1 border-blue-300 text-blue-600 hover:bg-blue-50"
-            onClick={() => openDrawer("all")}
-          >
-            <Library className="h-3.5 w-3.5" />
-            Chọn từ thư viện Component
-          </Button>
-        </div>
+        <h1 className="text-2xl font-bold mb-1">Khai báo nội dung</h1>
+        <p className="text-sm text-muted-foreground mb-6">Chọn loại Template, mục đích và các thành phần cần thiết</p>
 
         {/* Template type */}
         <section className="mb-6">
@@ -753,7 +904,7 @@ function Step2({
           </div>
         </section>
 
-        {/* Logo — original + "Chọn từ thư viện" shortcut */}
+        {/* Logo */}
         <section className="mb-4 rounded-lg border border-border bg-white overflow-hidden">
           <button onClick={() => setLogoOpen(!logoOpen)}
             className="flex items-center justify-between w-full px-4 py-3 text-sm font-semibold">
@@ -762,32 +913,7 @@ function Step2({
           </button>
           {logoOpen && (
             <div className="px-4 pb-4 border-t border-border">
-              <div className="flex items-center justify-between mt-3 mb-3">
-                <p className="text-xs text-muted-foreground">Tối đa 1 logo hoặc 3 hình ảnh</p>
-                <button
-                  onClick={() => openDrawer("logo")}
-                  className="text-xs text-blue-600 hover:underline flex items-center gap-1 font-medium"
-                >
-                  <Library className="h-3 w-3" /> Chọn từ thư viện
-                </button>
-              </div>
-
-              {/* If a logo is selected from library, show it */}
-              {logoComp && (
-                <div className="mb-3 flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
-                  <div className="h-6 w-6 rounded text-[10px] font-bold flex items-center justify-center shrink-0" style={{ background: logoComp.bgColor }}>
-                    {logoComp.initials.slice(0, 2)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold truncate">{logoComp.name}</p>
-                    <div className="flex flex-wrap gap-0.5 mt-0.5">
-                      {logoComp.tags.map((t) => <TagBadge key={t.label} tag={t} tiny />)}
-                    </div>
-                  </div>
-                  <span className="text-[10px] text-blue-500 font-medium shrink-0">Từ thư viện</span>
-                </div>
-              )}
-
+              <p className="text-xs text-muted-foreground mt-3 mb-3">Tối đa 1 logo hoặc 3 hình ảnh</p>
               <div className="rounded border border-border p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-semibold">Logo</span>
@@ -868,30 +994,7 @@ function Step2({
           </button>
           {btnOpen && (
             <div className="px-4 pb-4 border-t border-border">
-              <div className="flex items-center justify-between mt-3 mb-3">
-                <span />
-                <button onClick={() => openDrawer("button")} className="text-xs text-blue-600 hover:underline flex items-center gap-1 font-medium">
-                  <Library className="h-3 w-3" /> Chọn từ thư viện
-                </button>
-              </div>
-
-              {/* If a CTA button is selected from library */}
-              {buttonComp && (
-                <div className="mb-3 flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
-                  <div className="h-6 w-6 rounded text-[10px] font-bold flex items-center justify-center shrink-0" style={{ background: buttonComp.bgColor }}>
-                    {buttonComp.initials.slice(0, 2)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold truncate">{buttonComp.name}</p>
-                    <div className="flex flex-wrap gap-0.5 mt-0.5">
-                      {buttonComp.tags.map((t) => <TagBadge key={t.label} tag={t} tiny />)}
-                    </div>
-                  </div>
-                  <span className="text-[10px] text-blue-500 font-medium shrink-0">Từ thư viện</span>
-                </div>
-              )}
-
-              <div className="rounded border border-border p-3 relative">
+              <div className="rounded border border-border p-3 relative mt-3">
                 <div className="text-xs font-semibold mb-2">Nút thao tác 1</div>
                 <div className="text-xs text-muted-foreground mb-2">Loại nút</div>
                 <div className="relative">
@@ -923,14 +1026,21 @@ function Step2({
             </div>
           )}
         </section>
+
+        {/* Added components list */}
+        <AddedComponentsSection
+          verifiedComponents={verifiedComponents}
+          onRemove={onRemoveVC}
+          onMove={onMoveVC}
+        />
       </div>
 
-      {/* ── Right panel: Preview + ApprovalCheck tab ── */}
+      {/* Right panel */}
       <Step2RightPanel
         dark={dark} setDark={setDark}
         title={title} blocks={blocks}
         actionButtonId={actionButtonId} templateType={templateType}
-        logoComp={logoComp} imageComp={imageComp} buttonComp={buttonComp}
+        verifiedComponents={verifiedComponents}
       />
     </div>
   )
@@ -948,7 +1058,7 @@ function Step3({ title, blocks, note, setNote, agreed, setAgreed, dark, setDark,
   const [sampleValues, setSampleValues] = useState<Record<string, string>>({})
 
   return (
-    <div className="flex flex-1 overflow-hidden">
+    <div className="flex h-full overflow-hidden">
       <div className="flex-1 overflow-y-auto px-10 py-8">
         <h1 className="text-2xl font-bold mb-1">Gửi duyệt</h1>
         <p className="text-sm text-muted-foreground mb-8">Chọn cài đặt tham số tương ứng và điền ghi chú nhằm hỗ trợ kiểm duyệt chính xác</p>
@@ -1041,28 +1151,35 @@ export default function TaoTemplatePage() {
   const [note, setNote]     = useState("")
   const [agreed, setAgreed] = useState(false)
 
-  // NEW — Library components (default = mixed for demo of Screen 2)
-  const [logoComp, setLogoComp]     = useState<LibComponent | null>(COMPONENT_LIBRARY.find((c) => c.id === "logo-2")!)
-  const [imageComp, setImageComp]   = useState<LibComponent | null>(COMPONENT_LIBRARY.find((c) => c.id === "image-2")!)
-  const [buttonComp, setButtonComp] = useState<LibComponent | null>(COMPONENT_LIBRARY.find((c) => c.id === "button-2")!)
+  // Verified components — default: ZBS logo (PENDING) + Voucher predefined (ENABLE) + CTA Đánh giá (PENDING)
+  const [verifiedComponents, setVerifiedComponents] = useState<VComponent[]>([
+    USER_APPROVED[1],  // Logo ZBS — has PENDING tags
+    PREDEFINED[0],     // Voucher giảm giá — all ENABLE
+    USER_APPROVED[5],  // CTA Đánh giá — has PENDING tag
+  ])
 
-  // NEW — Bottom drawer
-  const [drawerOpen, setDrawerOpen]     = useState(false)
-  const [drawerFilter, setDrawerFilter] = useState<DrawerFilter>("all")
+  // Drawer
+  const [drawerOpen, setDrawerOpen]   = useState(false)
+  const [drawerTab, setDrawerTab]     = useState<DrawerTab>("predefined")
 
-  function openDrawer(filter: DrawerFilter) {
-    setDrawerFilter(filter)
-    setDrawerOpen(true)
+  function handleAddVC(c: VComponent) {
+    setVerifiedComponents((prev) => prev.find((v) => v.id === c.id) ? prev : [...prev, c])
+  }
+  function handleRemoveVC(id: string) {
+    setVerifiedComponents((prev) => prev.filter((c) => c.id !== id))
+  }
+  function handleMoveVC(index: number, dir: -1 | 1) {
+    setVerifiedComponents((prev) => {
+      const arr = [...prev]
+      const ni = index + dir
+      if (ni < 0 || ni >= arr.length) return arr
+      ;[arr[index], arr[ni]] = [arr[ni], arr[index]]
+      return arr
+    })
   }
 
-  function handleLibrarySelect(c: LibComponent) {
-    if (c.kind === "logo")   setLogoComp(c)
-    if (c.kind === "image")  setImageComp(c)
-    if (c.kind === "button") setButtonComp(c)
-  }
-
-  // Eligibility across all three library slots
-  const allTags    = [logoComp, imageComp, buttonComp].flatMap((c) => c ? c.tags : [])
+  const addedIds   = new Set(verifiedComponents.map((c) => c.id))
+  const allTags    = verifiedComponents.flatMap((c) => c.tags)
   const isEligible = allTags.length > 0 && allTags.every((t) => t.status === "ENABLE")
 
   function exit() { router.push(`${basePath}/cong-cu/gui-tin/quan-ly-template`) }
@@ -1092,8 +1209,8 @@ export default function TaoTemplatePage() {
     <div className="fixed top-[36px] inset-x-0 bottom-0 z-[90] bg-white flex flex-col">
       <StepHeader step={step} onExit={exit} saved={step > 0} />
 
-      {/* Main content area — relative so drawer can be absolute inside */}
-      <div className="flex-1 overflow-hidden relative">
+      {/* Main content — relative for drawer */}
+      <div className="flex-1 overflow-hidden relative flex flex-col">
         {step === 0 && (
           <Step1
             templateName={templateName} setTemplateName={setTemplateName}
@@ -1109,8 +1226,9 @@ export default function TaoTemplatePage() {
             blocks={blocks} setBlocks={setBlocks}
             actionButtonId={actionButtonId} setActionButtonId={setActionButtonId}
             dark={dark} setDark={setDark}
-            logoComp={logoComp} imageComp={imageComp} buttonComp={buttonComp}
-            openDrawer={openDrawer}
+            verifiedComponents={verifiedComponents}
+            onRemoveVC={handleRemoveVC}
+            onMoveVC={handleMoveVC}
           />
         )}
         {step === 2 && (
@@ -1124,28 +1242,46 @@ export default function TaoTemplatePage() {
           />
         )}
 
-        {/* ── Bottom drawer (only on Step 2) ── */}
+        {/* Bottom drawer — only on Step 2 */}
         {step === 1 && (
           <ComponentLibraryDrawer
             open={drawerOpen}
             onClose={() => setDrawerOpen(false)}
-            filter={drawerFilter}
-            setFilter={setDrawerFilter}
-            logoComp={logoComp} imageComp={imageComp} buttonComp={buttonComp}
-            onSelect={handleLibrarySelect}
+            drawerTab={drawerTab}
+            setDrawerTab={setDrawerTab}
+            addedIds={addedIds}
+            onAdd={handleAddVC}
           />
         )}
       </div>
 
-      {/* Bottom bar */}
+      {/* Footer bar */}
       <div className="flex items-center justify-between px-8 py-4 border-t border-border bg-white shrink-0">
+        {/* Left */}
         {step === 0
           ? <Button variant="outline" onClick={exit}>Hủy</Button>
           : <Button variant="outline" onClick={() => setStep(step - 1)}>Quay lại</Button>
         }
 
+        {/* Center — Library button (Step 2 only) */}
+        {step === 1 && (
+          <Button
+            variant="outline"
+            className="gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400"
+            onClick={() => setDrawerOpen(true)}
+          >
+            <Library className="h-4 w-4" />
+            Thư viện Component
+            {verifiedComponents.length > 0 && (
+              <span className="h-5 min-w-5 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center px-1">
+                {verifiedComponents.length}
+              </span>
+            )}
+          </Button>
+        )}
+
+        {/* Right */}
         {step < 2 ? (
-          /* Step 2 "Tiếp tục" — dynamic when library components present */
           <div className="flex items-center gap-3">
             {step === 1 && !isEligible && allTags.length > 0 && (
               <span className="text-xs text-muted-foreground">Dự kiến 1–2 ngày làm việc</span>
@@ -1157,7 +1293,7 @@ export default function TaoTemplatePage() {
                 "px-8 text-white transition-all",
                 step === 1 && isEligible
                   ? "bg-green-600 hover:bg-green-700 shadow-md shadow-green-200"
-                  : "bg-blue-600 hover:bg-blue-700"
+                  : "bg-blue-600 hover:bg-blue-700",
               )}
             >
               {step === 1 && isEligible
@@ -1173,7 +1309,7 @@ export default function TaoTemplatePage() {
               disabled={!canDone}
               className={cn(
                 "px-8 text-white transition-all",
-                isEligible && agreed ? "bg-green-600 hover:bg-green-700 shadow-md shadow-green-200" : "bg-blue-600 hover:bg-blue-700"
+                isEligible && agreed ? "bg-green-600 hover:bg-green-700 shadow-md shadow-green-200" : "bg-blue-600 hover:bg-blue-700",
               )}
             >
               {isEligible ? <><Zap className="h-4 w-4 mr-1.5" />Gửi duyệt · Tự động duyệt</> : "Gửi duyệt"}
