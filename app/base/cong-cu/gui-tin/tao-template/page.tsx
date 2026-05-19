@@ -47,9 +47,7 @@ interface ActionButton {
   type: string    // id from ALL_BUTTON_TYPES
   label: string   // display text in message
   url: string     // URL or link value
-  verified?: boolean   // was originally from library VC
-  edited?: boolean     // modified after adding — disables auto-approval
-  vcId?: string        // source VC id
+  // verified/edited derived from content match — no state needed
 }
 
 const MAX_BUTTONS = 3
@@ -80,35 +78,47 @@ const ALL_ENABLE: ComponentTag[] = [
 ]
 
 const PREDEFINED: VComponent[] = [
-  { id: "pre-voucher",  kind: "content", source: "predefined", name: "Voucher giảm giá",     description: "Hiển thị voucher với mã code",   initials: "🎟️", bgColor: "oklch(0.95 0.05 50)",  tags: ALL_ENABLE, previewRender: "voucher"       },
-  { id: "pre-payment",  kind: "content", source: "predefined", name: "Thông tin thanh toán", description: "Bảng chi tiết thanh toán",        initials: "💳", bgColor: "oklch(0.93 0.04 185)", tags: ALL_ENABLE, previewRender: "payment-table" },
-  { id: "pre-rating",   kind: "content", source: "predefined", name: "Đánh giá dịch vụ",    description: "Giao diện đánh giá 5 sao",        initials: "⭐", bgColor: "oklch(0.95 0.06 80)",  tags: ALL_ENABLE, previewRender: "rating"        },
-  { id: "pre-banner",   kind: "content", source: "predefined", name: "Banner hình ảnh",      description: "Ảnh banner tuỳ chỉnh",            initials: "🖼️", bgColor: "oklch(0.92 0.06 300)", tags: ALL_ENABLE, previewRender: "image"         },
-  { id: "pre-carousel", kind: "content", source: "predefined", name: "Carousel ảnh",         description: "Bộ ảnh tự động chuyển slide",     initials: "▶", bgColor: "oklch(0.91 0.05 240)",  tags: ALL_ENABLE, previewRender: "carousel"      },
-  { id: "pre-btn-view", kind: "button",  source: "predefined", name: "Nút Xem chi tiết",     description: "CTA mặc định Zalo",               initials: "→", bgColor: "oklch(0.88 0.08 265)",  tags: ALL_ENABLE, previewRender: "button"        },
-  { id: "pre-btn-confirm", kind: "button", source: "predefined", name: "Nút Xác nhận",       description: "CTA xác nhận giao dịch",          initials: "✓", bgColor: "oklch(0.88 0.08 145)",  tags: ALL_ENABLE, previewRender: "button"        },
+  { id: "pre-banner",      kind: "content", source: "predefined", name: "Banner hình ảnh",  description: "Ảnh banner tuỳ chỉnh",         initials: "🖼️", bgColor: "oklch(0.92 0.06 300)", tags: ALL_ENABLE, previewRender: "image"   },
+  { id: "pre-carousel",   kind: "content", source: "predefined", name: "Carousel ảnh",     description: "Bộ ảnh tự động chuyển slide",  initials: "▶",  bgColor: "oklch(0.91 0.05 240)", tags: ALL_ENABLE, previewRender: "carousel" },
+  { id: "pre-btn-view",   kind: "button",  source: "predefined", name: "Nút Xem chi tiết", description: "CTA mặc định Zalo",            initials: "→",  bgColor: "oklch(0.88 0.08 265)", tags: ALL_ENABLE, previewRender: "button"  },
+  { id: "pre-btn-confirm",kind: "button",  source: "predefined", name: "Nút Xác nhận",     description: "CTA xác nhận giao dịch",       initials: "✓",  bgColor: "oklch(0.88 0.08 145)", tags: ALL_ENABLE, previewRender: "button"  },
 ]
 
 const USER_APPROVED: VComponent[] = [
-  { id: "user-logo-atp",       kind: "logo",    source: "user", name: "Logo ATP Software",    description: "Logo thương hiệu ATP",           initials: "ATP", bgColor: "oklch(0.92 0.06 50)",
+  { id: "user-logo-atp",       kind: "logo",    source: "user", name: "Logo ATP Software",    description: "Logo thương hiệu ATP",
+    initials: "AT", bgColor: "oklch(0.92 0.06 50)",
     tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "ENABLE" }, { label: "Hậu mãi", status: "ENABLE" }], previewRender: "logo" },
-  { id: "user-logo-zbs",       kind: "logo",    source: "user", name: "Logo ZBS Brandmark",   description: "Logo Zalo Business",             initials: "ZBS", bgColor: "oklch(0.92 0.05 265)",
+  { id: "user-logo-zbs",       kind: "logo",    source: "user", name: "Logo ZBS Brandmark",   description: "Logo Zalo Business",
+    initials: "ZB", bgColor: "oklch(0.92 0.05 265)",
     tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "PENDING" }, { label: "Hậu mãi", status: "NEW" }], previewRender: "logo" },
-  { id: "user-content-welcome",kind: "content", source: "user", name: "Nội dung chào mừng",  description: "Văn bản chào thành viên mới",    initials: "👋", bgColor: "oklch(0.94 0.04 145)",
+  { id: "user-content-welcome",kind: "content", source: "user", name: "Nội dung chào mừng",  description: "Văn bản chào thành viên mới",
+    initials: "👋", bgColor: "oklch(0.94 0.04 145)",
     tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "ENABLE" }], previewRender: "text" },
-  { id: "user-content-voucher",kind: "content", source: "user", name: "Voucher mùa hè",       description: "Voucher ATP20 giảm 20%",         initials: "🌞", bgColor: "oklch(0.95 0.07 60)",
-    tags: [{ label: "Hậu mãi", status: "ENABLE" }, { label: "Chăm sóc KH", status: "PENDING" }], previewRender: "voucher" },
-  { id: "user-btn-order",      kind: "button",  source: "user", name: "CTA Xem đơn hàng",     description: "Nút xem chi tiết đơn hàng",      initials: "→", bgColor: "oklch(0.88 0.08 265)",
+  { id: "user-btn-order",      kind: "button",  source: "user", name: "CTA Xem đơn hàng",     description: "Nút xem chi tiết đơn hàng",
+    initials: "→",  bgColor: "oklch(0.88 0.08 265)",
     tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "ENABLE" }], previewRender: "button" },
-  { id: "user-btn-rating",     kind: "button",  source: "user", name: "CTA Đánh giá dịch vụ", description: "Nút đánh giá dịch vụ",           initials: "⭐", bgColor: "oklch(0.92 0.07 50)",
+  { id: "user-btn-rating",     kind: "button",  source: "user", name: "CTA Đánh giá dịch vụ", description: "Nút đánh giá dịch vụ",
+    initials: "⭐", bgColor: "oklch(0.92 0.07 50)",
     tags: [{ label: "Chăm sóc KH", status: "ENABLE" }, { label: "Hậu mãi", status: "PENDING" }], previewRender: "button" },
 ]
+
+// All library items — used for content-based verified matching
+const ALL_LIBRARY = [...PREDEFINED, ...USER_APPROVED]
+
+// Derive verified status purely from content match — no state needed
+function isLabelVerified(label: string): boolean {
+  return ALL_LIBRARY.some((vc) => vc.kind === "button" && vc.name === label.trim())
+}
+function isTextVerified(value: string): boolean {
+  return ALL_LIBRARY.some((vc) => vc.previewRender === "text" &&
+    (vc.name === value.trim() || vc.description === value.trim()))
+}
 
 // ── Block types ───────────────────────────────────────────────────────────────
 
 type BlockType = "text" | "table"
-interface TextBlock  { type: "text";  id: number; value: string; verified?: boolean; edited?: boolean; vcId?: string }
-interface TableBlock { type: "table"; id: number; rows: { label: string; value: string }[]; verified?: boolean; edited?: boolean; vcId?: string }
+interface TextBlock  { type: "text";  id: number; value: string }
+interface TableBlock { type: "table"; id: number; rows: { label: string; value: string }[] }
 type Block = TextBlock | TableBlock
 
 function extractParams(title: string, blocks: Block[]): string[] {
@@ -211,8 +221,6 @@ function PreviewItem({ vc, dark }: { vc: VComponent; dark: boolean }) {
 }
 
 // ── Component Library Drawer ──────────────────────────────────────────────────
-
-const ALL_LIBRARY = [...PREDEFINED, ...USER_APPROVED]
 
 const LIB_CATEGORIES: { id: LibCategory; label: string }[] = [
   { id: "all",           label: "Tất cả" },
@@ -727,9 +735,8 @@ function ActionButtonCard({
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold">Nút thao tác {index + 1}</span>
-          {btn.verified && (
-            <span className={cn("flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full",
-              btn.edited ? "text-gray-400 bg-gray-100 line-through" : "text-green-700 bg-green-100")}>
+          {isLabelVerified(btn.label) && (
+            <span className="flex items-center gap-1 text-[10px] font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
               <Check className="h-2.5 w-2.5" /> Đã duyệt
             </span>
           )}
@@ -767,7 +774,7 @@ function ActionButtonCard({
                     <div className="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider bg-gray-50 border-b border-border">{group.group}</div>
                     {group.items.map((item) => (
                       <button key={item.id}
-                        onClick={() => { onChange({ ...btn, type: item.id, edited: true }); setTypeOpen(false) }}
+                        onClick={() => { onChange({ ...btn, type: item.id }); setTypeOpen(false) }}
                         className={cn("w-full flex items-center justify-between px-3 py-2.5 hover:bg-blue-50 transition-colors text-left",
                           btn.type === item.id && "bg-blue-50"
                         )}
@@ -796,7 +803,7 @@ function ActionButtonCard({
           <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Nội dung nút <span className="text-red-500">*</span></label>
           <Input
             value={btn.label}
-            onChange={(e) => onChange({ ...btn, label: e.target.value, edited: true })}
+            onChange={(e) => onChange({ ...btn, label: e.target.value })}
             placeholder="VD: Xem đơn hàng, Tìm hiểu thêm..."
             className="h-9 text-sm"
           />
@@ -815,9 +822,9 @@ function ActionButtonCard({
           </div>
         )}
 
-        {btn.verified && btn.edited && (
+        {btn.label.trim() && !isLabelVerified(btn.label) && (
           <p className="text-[10px] text-amber-600 pt-1">
-            ⚠ Đã chỉnh sửa — nút này sẽ không được tự động duyệt
+            ⚠ Nội dung chỉnh sửa sẽ không được tự động duyệt
           </p>
         )}
       </div>
@@ -914,9 +921,6 @@ function Step2({
   }
   function removeBlock(id: number) {
     setBlocks(blocks.filter((b) => b.id !== id))
-  }
-  function markBlockEdited(id: number) {
-    setBlocks(blocks.map((b) => b.id === id ? { ...b, edited: true } : b))
   }
   function addActionButton() {
     setActionButtons([...actionButtons, { id: nextBtnId, type: "oa-profile", label: "", url: "" }])
@@ -1052,23 +1056,22 @@ function Step2({
                 <div className="flex items-center justify-between mb-1">
                   <div className="text-xs font-semibold">Văn bản <span className="text-red-500">*</span></div>
                   <div className="flex items-center gap-2">
-                    {b.verified && (
-                      <span className={cn("flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full",
-                        b.edited ? "text-gray-400 bg-gray-100 line-through" : "text-green-700 bg-green-100")}>
+                    {isTextVerified(b.value) ? (
+                      <span className="flex items-center gap-1 text-[10px] font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
                         <Check className="h-2.5 w-2.5" /> Đã duyệt
                       </span>
-                    )}
+                    ) : null}
                     <button onClick={() => removeBlock(b.id)} className="text-gray-300 hover:text-red-400 transition-colors">
                       <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </div>
                 <textarea value={b.value}
-                  onChange={(e) => { if (b.verified && !b.edited) markBlockEdited(b.id); updateTextBlock(b.id, e.target.value.slice(0, 400)) }}
+                  onChange={(e) => updateTextBlock(b.id, e.target.value.slice(0, 400))}
                   rows={3} className="w-full text-sm border-0 resize-none focus:outline-none" placeholder="Nhập nội dung văn bản..." />
                 <div className="flex items-center justify-between">
-                  {b.verified && b.edited
-                    ? <p className="text-[10px] text-amber-600">⚠ Đã chỉnh sửa — nội dung này sẽ không được tự động duyệt</p>
+                  {!isTextVerified(b.value) && b.value.trim()
+                    ? <p className="text-[10px] text-amber-600">⚠ Nội dung chỉnh sửa sẽ không được tự động duyệt</p>
                     : <span />}
                   <div className="text-[10px] text-muted-foreground">{b.value.length}/400</div>
                 </div>
@@ -1279,9 +1282,9 @@ export default function TaoTemplatePage() {
       setVerifiedComponents((prev) => [...prev.filter((v) => v.kind !== "logo"), c])
     } else if (c.kind === "button") {
       if (actionButtons.length >= MAX_BUTTONS) return
-      setActionButtons((prev) => [...prev, { id: Date.now(), type: "oa-profile", label: c.name, url: "", verified: true, vcId: c.id }])
+      setActionButtons((prev) => [...prev, { id: Date.now(), type: "oa-profile", label: c.name, url: "" }])
     } else if (c.previewRender === "text") {
-      setBlocks((prev) => [...prev, { type: "text", id: Date.now(), value: c.description || c.name, verified: true, vcId: c.id }])
+      setBlocks((prev) => [...prev, { type: "text", id: Date.now(), value: c.name }])
     } else {
       setVerifiedComponents((prev) => prev.find((v) => v.id === c.id) ? prev : [...prev, c])
     }
@@ -1296,11 +1299,8 @@ export default function TaoTemplatePage() {
     })
   }
 
-  const addedIds   = new Set([
-    ...verifiedComponents.map((c) => c.id),
-    ...actionButtons.filter((b) => b.vcId).map((b) => b.vcId!),
-    ...blocks.filter((b) => b.vcId).map((b) => b.vcId!),
-  ])
+  // addedIds only needed for logo VCs (button/text verified is derived from content)
+  const addedIds = new Set(verifiedComponents.map((c) => c.id))
   const allTags    = verifiedComponents.flatMap((c) => c.tags)
   const isEligible = allTags.length > 0 && allTags.every((t) => t.status === "ENABLE")
 
