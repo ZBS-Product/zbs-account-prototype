@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import {
   Check, X, Info, ChevronDown, ChevronUp, Minus, Plus,
-  Search, Zap, AlertCircle, Library,
+  Search, Zap, AlertCircle, Library, Trash2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,16 +27,30 @@ const PURPOSES = [
   { id: "cap-do-2", label: "Cấp độ 2", sub: "Chăm sóc khách hàng" },
   { id: "cap-do-3", label: "Cấp độ 3", sub: "Hậu mãi" },
 ]
-const BUTTON_OPTIONS = [
-  { group: "ĐẾN TÀI SẢN CỦA DOANH NGHIỆP TRÊN HỆ SINH THÁI ZALO", options: [
-    { id: "oa-profile", label: "Đến trang thông tin OA (+0đ)",                       sub: "Xem trang thông tin OA trên Zalo" },
-    { id: "mini-app",   label: "Đến ứng dụng Zalo Mini App của Doanh nghiệp (+0/100đ)", sub: "Truy cập Mini App" },
-    { id: "oa-post",    label: "Đến bài viết của OA (+0/100đ)",                      sub: "Truy cập bài viết của doanh nghiệp" },
+
+// Button types — each has an id, display label, cost, and whether it needs a URL field
+const BUTTON_TYPES = [
+  { group: "ĐẾN TÀI SẢN ZALO", items: [
+    { id: "oa-profile", label: "Đến trang thông tin OA",       cost: 0,   hasUrl: false, placeholder: "Chọn OA" },
+    { id: "mini-app",   label: "Đến Zalo Mini App",            cost: 100, hasUrl: false, placeholder: "Chọn Mini App" },
+    { id: "oa-post",    label: "Đến bài viết OA",              cost: 100, hasUrl: false, placeholder: "Chọn bài viết" },
   ]},
-  { group: "ĐẾN LIÊN KẾT TÙY CHỈNH", options: [
-    { id: "custom-url", label: "Đến URL (+0/100đ)", sub: "Đường dẫn tùy chỉnh" },
+  { group: "LIÊN KẾT TÙY CHỈNH", items: [
+    { id: "custom-url", label: "Đến URL tùy chỉnh",            cost: 100, hasUrl: true,  placeholder: "https://..." },
   ]},
 ]
+const ALL_BUTTON_TYPES = BUTTON_TYPES.flatMap((g) => g.items)
+
+// ActionButton — each button in a template
+interface ActionButton {
+  id: number
+  type: string    // id from ALL_BUTTON_TYPES
+  label: string   // display text in message
+  url: string     // URL or link value
+}
+
+const MAX_BUTTONS = 3
+
 const TECH_SETTINGS = ["Tên khách hàng (30)", "Tên sản phẩm / Thương hiệu (200)", "Số điện thoại (15)", "Mã giao dịch (50)", "Trạng thái (50)", "Ngày giờ (20)", "Số tiền (20)", "Địa chỉ (200)"]
 
 // ── Verified Component types ───────────────────────────────────────────────────
@@ -49,18 +63,12 @@ type DrawerTab       = "predefined" | "user"
 
 interface ComponentTag { label: string; status: ComponentStatus }
 interface VComponent {
-  id: string
-  kind: VCKind
-  source: VCSource
-  name: string
-  description: string
-  initials: string
-  bgColor: string
-  tags: ComponentTag[]
-  previewRender: PreviewRender
+  id: string; kind: VCKind; source: VCSource
+  name: string; description: string; initials: string; bgColor: string
+  tags: ComponentTag[]; previewRender: PreviewRender
 }
 
-// ── Predefined library (Mẫu — platform-provided, always ENABLE) ───────────────
+// ── Predefined library ─────────────────────────────────────────────────────────
 
 const ALL_ENABLE: ComponentTag[] = [
   { label: "Giao dịch", status: "ENABLE" },
@@ -69,95 +77,28 @@ const ALL_ENABLE: ComponentTag[] = [
 ]
 
 const PREDEFINED: VComponent[] = [
-  {
-    id: "pre-voucher", kind: "content", source: "predefined",
-    name: "Voucher giảm giá", description: "Hiển thị voucher với mã code",
-    initials: "🎟️", bgColor: "oklch(0.95 0.05 50)",
-    tags: ALL_ENABLE, previewRender: "voucher",
-  },
-  {
-    id: "pre-payment", kind: "content", source: "predefined",
-    name: "Thông tin thanh toán", description: "Bảng chi tiết thanh toán",
-    initials: "💳", bgColor: "oklch(0.93 0.04 185)",
-    tags: ALL_ENABLE, previewRender: "payment-table",
-  },
-  {
-    id: "pre-rating", kind: "content", source: "predefined",
-    name: "Đánh giá dịch vụ", description: "Giao diện đánh giá 5 sao",
-    initials: "⭐", bgColor: "oklch(0.95 0.06 80)",
-    tags: ALL_ENABLE, previewRender: "rating",
-  },
-  {
-    id: "pre-banner", kind: "content", source: "predefined",
-    name: "Banner hình ảnh", description: "Ảnh banner tuỳ chỉnh",
-    initials: "🖼️", bgColor: "oklch(0.92 0.06 300)",
-    tags: ALL_ENABLE, previewRender: "image",
-  },
-  {
-    id: "pre-carousel", kind: "content", source: "predefined",
-    name: "Carousel ảnh", description: "Bộ ảnh tự động chuyển slide",
-    initials: "▶", bgColor: "oklch(0.91 0.05 240)",
-    tags: ALL_ENABLE, previewRender: "carousel",
-  },
-  {
-    id: "pre-btn-view", kind: "button", source: "predefined",
-    name: "Nút Xem chi tiết", description: "CTA mặc định Zalo",
-    initials: "→", bgColor: "oklch(0.88 0.08 265)",
-    tags: ALL_ENABLE, previewRender: "button",
-  },
-  {
-    id: "pre-btn-confirm", kind: "button", source: "predefined",
-    name: "Nút Xác nhận", description: "CTA xác nhận giao dịch",
-    initials: "✓", bgColor: "oklch(0.88 0.08 145)",
-    tags: ALL_ENABLE, previewRender: "button",
-  },
+  { id: "pre-voucher",  kind: "content", source: "predefined", name: "Voucher giảm giá",     description: "Hiển thị voucher với mã code",   initials: "🎟️", bgColor: "oklch(0.95 0.05 50)",  tags: ALL_ENABLE, previewRender: "voucher"       },
+  { id: "pre-payment",  kind: "content", source: "predefined", name: "Thông tin thanh toán", description: "Bảng chi tiết thanh toán",        initials: "💳", bgColor: "oklch(0.93 0.04 185)", tags: ALL_ENABLE, previewRender: "payment-table" },
+  { id: "pre-rating",   kind: "content", source: "predefined", name: "Đánh giá dịch vụ",    description: "Giao diện đánh giá 5 sao",        initials: "⭐", bgColor: "oklch(0.95 0.06 80)",  tags: ALL_ENABLE, previewRender: "rating"        },
+  { id: "pre-banner",   kind: "content", source: "predefined", name: "Banner hình ảnh",      description: "Ảnh banner tuỳ chỉnh",            initials: "🖼️", bgColor: "oklch(0.92 0.06 300)", tags: ALL_ENABLE, previewRender: "image"         },
+  { id: "pre-carousel", kind: "content", source: "predefined", name: "Carousel ảnh",         description: "Bộ ảnh tự động chuyển slide",     initials: "▶", bgColor: "oklch(0.91 0.05 240)",  tags: ALL_ENABLE, previewRender: "carousel"      },
+  { id: "pre-btn-view", kind: "button",  source: "predefined", name: "Nút Xem chi tiết",     description: "CTA mặc định Zalo",               initials: "→", bgColor: "oklch(0.88 0.08 265)",  tags: ALL_ENABLE, previewRender: "button"        },
+  { id: "pre-btn-confirm", kind: "button", source: "predefined", name: "Nút Xác nhận",       description: "CTA xác nhận giao dịch",          initials: "✓", bgColor: "oklch(0.88 0.08 145)",  tags: ALL_ENABLE, previewRender: "button"        },
 ]
 
-// ── User-approved library (Đã duyệt — user's own approved assets) ─────────────
-
 const USER_APPROVED: VComponent[] = [
-  {
-    id: "user-logo-atp", kind: "logo", source: "user",
-    name: "Logo ATP Software", description: "Logo thương hiệu ATP",
-    initials: "ATP", bgColor: "oklch(0.92 0.06 50)",
-    tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "ENABLE" }, { label: "Hậu mãi", status: "ENABLE" }],
-    previewRender: "logo",
-  },
-  {
-    id: "user-logo-zbs", kind: "logo", source: "user",
-    name: "Logo ZBS Brandmark", description: "Logo Zalo Business",
-    initials: "ZBS", bgColor: "oklch(0.92 0.05 265)",
-    tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "PENDING" }, { label: "Hậu mãi", status: "NEW" }],
-    previewRender: "logo",
-  },
-  {
-    id: "user-content-welcome", kind: "content", source: "user",
-    name: "Nội dung chào mừng", description: "Văn bản chào thành viên mới",
-    initials: "👋", bgColor: "oklch(0.94 0.04 145)",
-    tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "ENABLE" }],
-    previewRender: "text",
-  },
-  {
-    id: "user-content-voucher", kind: "content", source: "user",
-    name: "Voucher mùa hè", description: "Voucher ATP20 giảm 20%",
-    initials: "🌞", bgColor: "oklch(0.95 0.07 60)",
-    tags: [{ label: "Hậu mãi", status: "ENABLE" }, { label: "Chăm sóc KH", status: "PENDING" }],
-    previewRender: "voucher",
-  },
-  {
-    id: "user-btn-order", kind: "button", source: "user",
-    name: "CTA Xem đơn hàng", description: "Nút xem chi tiết đơn hàng",
-    initials: "→", bgColor: "oklch(0.88 0.08 265)",
-    tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "ENABLE" }],
-    previewRender: "button",
-  },
-  {
-    id: "user-btn-rating", kind: "button", source: "user",
-    name: "CTA Đánh giá dịch vụ", description: "Nút đánh giá dịch vụ",
-    initials: "⭐", bgColor: "oklch(0.92 0.07 50)",
-    tags: [{ label: "Chăm sóc KH", status: "ENABLE" }, { label: "Hậu mãi", status: "PENDING" }],
-    previewRender: "button",
-  },
+  { id: "user-logo-atp",       kind: "logo",    source: "user", name: "Logo ATP Software",    description: "Logo thương hiệu ATP",           initials: "ATP", bgColor: "oklch(0.92 0.06 50)",
+    tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "ENABLE" }, { label: "Hậu mãi", status: "ENABLE" }], previewRender: "logo" },
+  { id: "user-logo-zbs",       kind: "logo",    source: "user", name: "Logo ZBS Brandmark",   description: "Logo Zalo Business",             initials: "ZBS", bgColor: "oklch(0.92 0.05 265)",
+    tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "PENDING" }, { label: "Hậu mãi", status: "NEW" }], previewRender: "logo" },
+  { id: "user-content-welcome",kind: "content", source: "user", name: "Nội dung chào mừng",  description: "Văn bản chào thành viên mới",    initials: "👋", bgColor: "oklch(0.94 0.04 145)",
+    tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "ENABLE" }], previewRender: "text" },
+  { id: "user-content-voucher",kind: "content", source: "user", name: "Voucher mùa hè",       description: "Voucher ATP20 giảm 20%",         initials: "🌞", bgColor: "oklch(0.95 0.07 60)",
+    tags: [{ label: "Hậu mãi", status: "ENABLE" }, { label: "Chăm sóc KH", status: "PENDING" }], previewRender: "voucher" },
+  { id: "user-btn-order",      kind: "button",  source: "user", name: "CTA Xem đơn hàng",     description: "Nút xem chi tiết đơn hàng",      initials: "→", bgColor: "oklch(0.88 0.08 265)",
+    tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "ENABLE" }], previewRender: "button" },
+  { id: "user-btn-rating",     kind: "button",  source: "user", name: "CTA Đánh giá dịch vụ", description: "Nút đánh giá dịch vụ",           initials: "⭐", bgColor: "oklch(0.92 0.07 50)",
+    tags: [{ label: "Chăm sóc KH", status: "ENABLE" }, { label: "Hậu mãi", status: "PENDING" }], previewRender: "button" },
 ]
 
 // ── Block types ───────────────────────────────────────────────────────────────
@@ -186,28 +127,24 @@ const STATUS_CFG: Record<ComponentStatus, { bg: string; text: string; dotCls: st
   PENDING: { bg: "bg-yellow-100", text: "text-yellow-700", dotCls: "bg-yellow-400", shortLabel: "Chờ duyệt" },
   NEW:     { bg: "bg-gray-100",   text: "text-gray-600",   dotCls: "bg-gray-400",   shortLabel: "Mới" },
 }
-
 function TagBadge({ tag, tiny }: { tag: ComponentTag; tiny?: boolean }) {
   const cfg = STATUS_CFG[tag.status]
   return (
     <span className={cn("inline-flex items-center gap-1 rounded-full font-medium",
-      tiny ? "text-[9px] px-1.5 py-0.5" : "text-[10px] px-2 py-0.5",
-      cfg.bg, cfg.text,
-    )}>
+      tiny ? "text-[9px] px-1.5 py-0.5" : "text-[10px] px-2 py-0.5", cfg.bg, cfg.text)}>
       <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", cfg.dotCls)} />
       {tag.label} {cfg.shortLabel}
     </span>
   )
 }
 
-// ── Carousel auto-swipe preview ───────────────────────────────────────────────
+// ── Carousel auto-swipe ───────────────────────────────────────────────────────
 
 const CAROUSEL_SLIDES = [
   { emoji: "🏖️", label: "Hè rực rỡ 2024" },
   { emoji: "🎁", label: "Ưu đãi đặc biệt" },
   { emoji: "✨", label: "Khuyến mãi tháng 6" },
 ]
-
 function CarouselPreview({ dark }: { dark: boolean }) {
   const [idx, setIdx] = useState(0)
   useEffect(() => {
@@ -216,23 +153,20 @@ function CarouselPreview({ dark }: { dark: boolean }) {
   }, [])
   return (
     <div className={cn("rounded-lg overflow-hidden relative h-16", dark ? "bg-gray-700" : "bg-gradient-to-br from-blue-50 to-indigo-100")}>
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 transition-all duration-500">
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
         <span className="text-xl">{CAROUSEL_SLIDES[idx].emoji}</span>
         <span className={cn("text-[10px] font-semibold", dark ? "text-gray-200" : "text-indigo-700")}>{CAROUSEL_SLIDES[idx].label}</span>
       </div>
-      {/* Dots */}
       <div className="absolute bottom-1.5 left-0 right-0 flex justify-center gap-1">
         {CAROUSEL_SLIDES.map((_, i) => (
-          <div key={i} className={cn("h-1 rounded-full transition-all duration-300",
-            i === idx ? "w-4 bg-blue-500" : "w-1.5 bg-gray-400/60"
-          )} />
+          <div key={i} className={cn("h-1 rounded-full transition-all duration-300", i === idx ? "w-4 bg-blue-500" : "w-1.5 bg-gray-400/60")} />
         ))}
       </div>
     </div>
   )
 }
 
-// ── Preview item renderer (per VComponent type) ────────────────────────────────
+// ── Preview item renderer ─────────────────────────────────────────────────────
 
 function PreviewItem({ vc, dark }: { vc: VComponent; dark: boolean }) {
   switch (vc.previewRender) {
@@ -253,7 +187,7 @@ function PreviewItem({ vc, dark }: { vc: VComponent; dark: boolean }) {
       )
     case "payment-table":
       return (
-        <div className="rounded text-[10px]">
+        <div className="text-[10px]">
           {[["Mã đơn", "#DH20240531"], ["Tổng tiền", "500.000đ"], ["Trạng thái", "Đã thanh toán"]].map(([k, v]) => (
             <div key={k} className={cn("flex justify-between py-1 border-b last:border-0", dark ? "border-gray-700" : "border-gray-100")}>
               <span className={dark ? "text-gray-400" : "text-gray-500"}>{k}</span>
@@ -263,118 +197,78 @@ function PreviewItem({ vc, dark }: { vc: VComponent; dark: boolean }) {
         </div>
       )
     case "image":
-      return (
-        <div className={cn("h-14 rounded-lg flex items-center justify-center text-2xl", dark ? "bg-gray-700" : "bg-gray-100")}>🖼️</div>
-      )
+      return <div className={cn("h-14 rounded-lg flex items-center justify-center text-2xl", dark ? "bg-gray-700" : "bg-gray-100")}>🖼️</div>
     case "carousel":
       return <CarouselPreview dark={dark} />
     case "text":
-      return (
-        <p className={cn("text-[11px] leading-relaxed", dark ? "text-gray-400" : "text-gray-600")}>
-          Chào mừng bạn đã trở thành thành viên! Khám phá ngay các ưu đãi độc quyền.
-        </p>
-      )
+      return <p className={cn("text-[11px] leading-relaxed", dark ? "text-gray-400" : "text-gray-600")}>Chào mừng bạn đã trở thành thành viên! Khám phá ngay các ưu đãi độc quyền.</p>
     default:
       return null
   }
 }
 
-// ── Component Library Drawer (bottom panel) ────────────────────────────────────
+// ── Component Library Drawer ──────────────────────────────────────────────────
 
-function ComponentLibraryDrawer({
-  open, onClose, drawerTab, setDrawerTab, addedIds, onAdd,
-}: {
-  open: boolean
-  onClose: () => void
-  drawerTab: DrawerTab
-  setDrawerTab: (t: DrawerTab) => void
-  addedIds: Set<string>
-  onAdd: (c: VComponent) => void
+function ComponentLibraryDrawer({ open, onClose, drawerTab, setDrawerTab, addedIds, onAdd }: {
+  open: boolean; onClose: () => void
+  drawerTab: DrawerTab; setDrawerTab: (t: DrawerTab) => void
+  addedIds: Set<string>; onAdd: (c: VComponent) => void
 }) {
   const [search, setSearch] = useState("")
-
   const pool     = drawerTab === "predefined" ? PREDEFINED : USER_APPROVED
   const filtered = pool.filter((c) => !search || c.name.toLowerCase().includes(search.toLowerCase()))
 
   return (
     <>
       {open && <div className="absolute inset-0 bg-black/20 z-10" onClick={onClose} />}
-      <div
-        className={cn(
-          "absolute left-0 right-0 bottom-0 bg-white border-t border-border shadow-2xl z-20 flex flex-col transition-transform duration-300 ease-out",
-          open ? "translate-y-0" : "translate-y-full",
-        )}
-        style={{ height: "44%" }}
-      >
-        {/* Drag handle */}
+      <div className={cn(
+        "absolute left-0 right-0 bottom-0 bg-white border-t border-border shadow-2xl z-20 flex flex-col transition-transform duration-300 ease-out",
+        open ? "translate-y-0" : "translate-y-full",
+      )} style={{ height: "44%" }}>
         <div className="flex justify-center pt-2.5 pb-1 shrink-0">
           <div className="h-1 w-10 rounded-full bg-gray-300" />
         </div>
-
-        {/* Header */}
         <div className="flex items-center gap-3 px-6 py-2.5 border-b border-border shrink-0">
           <div className="flex gap-1 p-0.5 bg-gray-100 rounded-lg shrink-0">
-            <button
-              onClick={() => setDrawerTab("predefined")}
-              className={cn("flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all",
-                drawerTab === "predefined" ? "bg-white shadow text-blue-600" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              📐 Mẫu
-            </button>
-            <button
-              onClick={() => setDrawerTab("user")}
-              className={cn("flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all",
-                drawerTab === "user" ? "bg-white shadow text-blue-600" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              ✅ Đã duyệt
-            </button>
+            {(["predefined", "user"] as DrawerTab[]).map((t) => (
+              <button key={t} onClick={() => setDrawerTab(t)}
+                className={cn("flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all",
+                  drawerTab === t ? "bg-white shadow text-blue-600" : "text-muted-foreground hover:text-foreground")}>
+                {t === "predefined" ? "📐 Mẫu" : "✅ Đã duyệt"}
+              </button>
+            ))}
           </div>
           <span className="text-xs text-muted-foreground">
             {drawerTab === "predefined" ? "Tài sản nền tảng do Zalo cung cấp — luôn ENABLE" : "Component đã được Zalo duyệt của bạn"}
           </span>
           <div className="relative ml-auto">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <input
-              value={search} onChange={(e) => setSearch(e.target.value)}
-              placeholder="Tìm component..."
-              className="pl-8 pr-3 py-1.5 text-xs border border-border rounded-md w-44 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm component..."
+              className="pl-8 pr-3 py-1.5 text-xs border border-border rounded-md w-44 focus:outline-none focus:ring-1 focus:ring-blue-500" />
           </div>
           <button onClick={onClose} className="p-1.5 rounded hover:bg-gray-100 transition-colors">
             <X className="h-4 w-4 text-muted-foreground" />
           </button>
         </div>
-
-        {/* Grid */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
           <div className="grid grid-cols-4 gap-3">
             {filtered.map((c) => {
               const isAdded = addedIds.has(c.id)
               return (
-                <button
-                  key={c.id}
-                  onClick={() => onAdd(c)}
-                  className={cn(
-                    "rounded-xl border-2 p-3 text-left relative transition-all",
-                    isAdded
-                      ? "border-blue-600 bg-blue-50"
-                      : "border-border bg-white hover:border-blue-300 hover:shadow-sm",
-                  )}
-                >
+                <button key={c.id} onClick={() => onAdd(c)}
+                  className={cn("rounded-xl border-2 p-3 text-left relative transition-all",
+                    isAdded ? "border-blue-600 bg-blue-50" : "border-border bg-white hover:border-blue-300 hover:shadow-sm")}>
                   {isAdded && (
                     <div className="absolute top-2 right-2 h-4 w-4 rounded-full bg-blue-600 flex items-center justify-center">
                       <Check className="h-2.5 w-2.5 text-white" />
                     </div>
                   )}
-                  <div className="h-11 rounded-lg flex items-center justify-center mb-2 text-base font-bold border border-black/5"
-                    style={{ background: c.bgColor }}>
+                  <div className="h-11 rounded-lg flex items-center justify-center mb-2 text-base font-bold border border-black/5" style={{ background: c.bgColor }}>
                     {c.initials}
                   </div>
                   <p className="text-[11px] font-semibold truncate mb-0.5">{c.name}</p>
                   <p className="text-[10px] text-muted-foreground truncate mb-1.5">{c.description}</p>
-                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                  <p className="text-[10px] text-muted-foreground">
                     <span className="font-medium text-foreground">Tag được duyệt:</span>{" "}
                     {c.tags.map((t, i) => (
                       <span key={t.label}>
@@ -398,13 +292,12 @@ function ComponentLibraryDrawer({
   )
 }
 
-// ── Approval check (right-panel Library tab) ──────────────────────────────────
+// ── Approval check ────────────────────────────────────────────────────────────
 
 function ApprovalCheckContent({ verifiedComponents }: { verifiedComponents: VComponent[] }) {
   const allTags        = verifiedComponents.flatMap((c) => c.tags)
   const nonEnableCount = allTags.filter((t) => t.status !== "ENABLE").length
   const isEligible     = verifiedComponents.length > 0 && nonEnableCount === 0
-
   const byKind: Record<VCKind, VComponent[]> = {
     logo:    verifiedComponents.filter((c) => c.kind === "logo"),
     content: verifiedComponents.filter((c) => c.kind === "content"),
@@ -416,14 +309,12 @@ function ApprovalCheckContent({ verifiedComponents }: { verifiedComponents: VCom
     <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
       <div>
         <p className="text-xs font-semibold mb-0.5">Kiểm tra tự động duyệt</p>
-        <p className="text-[10px] text-muted-foreground leading-relaxed">Cập nhật theo component đã thêm</p>
+        <p className="text-[10px] text-muted-foreground">Cập nhật theo component đã thêm</p>
       </div>
-
       {verifiedComponents.length === 0 ? (
         <div className="rounded-lg border border-dashed border-gray-300 p-5 text-center">
           <Library className="h-6 w-6 text-gray-300 mx-auto mb-2" />
           <p className="text-xs text-muted-foreground">Chưa có component nào</p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">Nhấn "Thư viện Component" để thêm</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -454,11 +345,9 @@ function ApprovalCheckContent({ verifiedComponents }: { verifiedComponents: VCom
           })}
         </div>
       )}
-
       {verifiedComponents.length > 0 && (
         <div className={cn("rounded-lg p-3 text-xs mt-auto",
-          isEligible ? "bg-green-50 border border-green-200" : "bg-yellow-50 border border-yellow-200"
-        )}>
+          isEligible ? "bg-green-50 border border-green-200" : "bg-yellow-50 border border-yellow-200")}>
           {isEligible ? (
             <div className="flex items-center gap-1.5 font-semibold text-green-700">
               <Zap className="h-3.5 w-3.5" /> Đủ điều kiện tự động duyệt ⚡
@@ -477,43 +366,71 @@ function ApprovalCheckContent({ verifiedComponents }: { verifiedComponents: VCom
   )
 }
 
-// ── Step 2 right panel (tabbed Xem trước / Thư viện) ──────────────────────────
+// ── VC chip ───────────────────────────────────────────────────────────────────
 
-function Step2RightPanel({
-  dark, setDark, title, blocks, actionButtonId, templateType, verifiedComponents,
-}: {
+function VCChip({ vc, onRemove, showMove, onMoveUp, onMoveDown, isFirst, isLast }: {
+  vc: VComponent; onRemove: () => void
+  showMove?: boolean; onMoveUp?: () => void; onMoveDown?: () => void
+  isFirst?: boolean; isLast?: boolean
+}) {
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
+      <div className="h-6 w-6 rounded text-[10px] font-bold flex items-center justify-center shrink-0" style={{ background: vc.bgColor }}>
+        {vc.initials.slice(0, 2)}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-semibold truncate">{vc.name}</p>
+        <p className="text-[10px] text-muted-foreground">{vc.source === "predefined" ? "Mẫu nền tảng" : "Của bạn"}</p>
+      </div>
+      {showMove && (
+        <div className="flex flex-col gap-0.5 shrink-0">
+          <button onClick={onMoveUp} disabled={isFirst} className="p-0.5 rounded hover:bg-blue-100 disabled:opacity-30"><ChevronUp className="h-3 w-3" /></button>
+          <button onClick={onMoveDown} disabled={isLast} className="p-0.5 rounded hover:bg-blue-100 disabled:opacity-30"><ChevronDown className="h-3 w-3" /></button>
+        </div>
+      )}
+      <button onClick={onRemove} className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors shrink-0">
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  )
+}
+
+// ── Step 2 right panel ────────────────────────────────────────────────────────
+
+function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, templateType, verifiedComponents }: {
   dark: boolean; setDark: (v: boolean) => void
-  title: string; blocks: Block[]; actionButtonId: string; templateType: string
+  title: string; blocks: Block[]; actionButtons: ActionButton[]; templateType: string
   verifiedComponents: VComponent[]
 }) {
   const [tab, setTab] = useState<"preview" | "library">("preview")
-  const activeBtn  = BUTTON_OPTIONS.flatMap((g) => g.options).find((o) => o.id === actionButtonId)
   const typeInfo   = TEMPLATE_TYPES.find((t) => t.id === templateType)
-
   const allTags    = verifiedComponents.flatMap((c) => c.tags)
   const isEligible = allTags.length > 0 && allTags.every((t) => t.status === "ENABLE")
-
   const logoVC     = verifiedComponents.find((c) => c.kind === "logo")
   const contentVCs = verifiedComponents.filter((c) => c.kind === "content")
   const buttonVC   = verifiedComponents.find((c) => c.kind === "button")
+
+  // Pricing
+  const btnCost = actionButtons.reduce((sum, b) => {
+    const type = ALL_BUTTON_TYPES.find((t) => t.id === b.type)
+    return sum + (type?.cost ?? 0)
+  }, 0)
+  const basePrice = 300
+  const totalPrice = basePrice + btnCost
 
   return (
     <div className="w-[300px] shrink-0 border-l border-border bg-gray-50 flex flex-col overflow-hidden">
       <div className="flex border-b border-border bg-white shrink-0">
         <button onClick={() => setTab("preview")}
           className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium border-b-2 transition-colors",
-            tab === "preview" ? "border-blue-600 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"
-          )}>
+            tab === "preview" ? "border-blue-600 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground")}>
           📋 Xem trước
         </button>
         <button onClick={() => setTab("library")}
           className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium border-b-2 transition-colors",
-            tab === "library" ? "border-blue-600 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"
-          )}>
-          {isEligible && verifiedComponents.length > 0
-            ? <Zap className="h-3 w-3 text-green-600" />
-            : verifiedComponents.length > 0
-            ? <AlertCircle className="h-3 w-3 text-yellow-500" />
+            tab === "library" ? "border-blue-600 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground")}>
+          {isEligible && verifiedComponents.length > 0 ? <Zap className="h-3 w-3 text-green-600" />
+            : verifiedComponents.length > 0 ? <AlertCircle className="h-3 w-3 text-yellow-500" />
             : <Library className="h-3 w-3" />}
           Thư viện
           {verifiedComponents.length > 0 && tab !== "library" && (
@@ -528,8 +445,7 @@ function Step2RightPanel({
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Giao diện tối</span>
-            <button onClick={() => setDark(!dark)}
-              className={cn("relative h-5 w-9 rounded-full transition-colors", dark ? "bg-blue-600" : "bg-gray-300")}>
+            <button onClick={() => setDark(!dark)} className={cn("relative h-5 w-9 rounded-full transition-colors", dark ? "bg-blue-600" : "bg-gray-300")}>
               <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform", dark ? "translate-x-4" : "translate-x-0.5")} />
             </button>
           </div>
@@ -575,32 +491,49 @@ function Step2RightPanel({
                   <PreviewItem vc={vc} dark={dark} />
                 </div>
               ))}
+              {/* Buttons */}
               {buttonVC ? (
                 <button className="w-full mt-2 py-2 rounded text-xs font-semibold text-white" style={{ background: "oklch(0.488 0.243 264.376)" }}>
                   {buttonVC.name}
                 </button>
-              ) : activeBtn ? (
-                <button className="w-full mt-2 py-2 rounded text-xs font-semibold text-white" style={{ background: "oklch(0.488 0.243 264.376)" }}>
-                  {activeBtn.label.split(" (+")[0]}
-                </button>
+              ) : actionButtons.length > 0 ? (
+                <div className="mt-2 space-y-1.5">
+                  {actionButtons.map((ab, i) => (
+                    <button key={ab.id} className={cn("w-full py-2 rounded text-xs font-semibold transition-colors",
+                      i === 0 ? "text-white" : dark ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-700"
+                    )} style={i === 0 ? { background: "oklch(0.488 0.243 264.376)" } : undefined}>
+                      {ab.label || `Nút thao tác ${i + 1}`}
+                    </button>
+                  ))}
+                </div>
               ) : null}
             </div>
           </div>
 
+          {/* Pricing */}
           <div className="rounded border p-3 space-y-1.5 text-xs">
             <div className="flex justify-between">
               <span className="text-muted-foreground">{typeInfo?.label ?? "Mẫu tuỳ chỉnh"}</span>
               <span className="font-semibold">300 VNĐ</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Nút thao tác 1</span><span className="font-semibold">0 VNĐ</span>
-            </div>
+            {actionButtons.map((ab, i) => {
+              const type = ALL_BUTTON_TYPES.find((t) => t.id === ab.type)
+              return (
+                <div key={ab.id} className="flex justify-between">
+                  <span className="text-muted-foreground">Nút thao tác {i + 1}</span>
+                  <span className="font-semibold">{type?.cost ?? 0} VNĐ</span>
+                </div>
+              )
+            })}
             <div className="border-t border-border pt-1.5 mt-1.5 space-y-1">
               <div className="flex justify-between text-muted-foreground">
-                <span>Gửi qua SĐT</span><span className="font-semibold text-foreground">300 VNĐ/tin</span>
+                <span className="flex items-center gap-1">Đơn giá dự kiến <Info className="h-3 w-3" /></span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>Gửi qua UID</span><span className="font-semibold text-foreground">210 VNĐ/tin</span>
+                <span>Gửi qua SĐT</span><span className="font-semibold text-foreground">{totalPrice} VNĐ/tin</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Gửi qua UID</span><span className="font-semibold text-foreground">{totalPrice - 50} VNĐ/tin</span>
               </div>
             </div>
           </div>
@@ -618,7 +551,6 @@ function Step2RightPanel({
 // ── Step header ───────────────────────────────────────────────────────────────
 
 const STEP_LABELS = ["Thông tin chung", "Khai báo nội dung", "Gửi duyệt"]
-
 function StepHeader({ step, onExit, saved }: { step: number; onExit: () => void; saved: boolean }) {
   return (
     <div className="flex items-center h-14 px-8 border-b border-border shrink-0 bg-white">
@@ -629,8 +561,7 @@ function StepHeader({ step, onExit, saved }: { step: number; onExit: () => void;
             <div key={i} className="flex items-center">
               <div className="flex items-center gap-2">
                 <div className={cn("h-7 w-7 rounded-full flex items-center justify-center text-sm font-semibold border-2 shrink-0",
-                  done || active ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-gray-300 text-gray-400"
-                )}>
+                  done || active ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-gray-300 text-gray-400")}>
                   {done ? <Check className="h-3.5 w-3.5" /> : i + 1}
                 </div>
                 <span className={cn("text-sm font-medium", active || done ? "text-foreground" : "text-muted-foreground")}>{label}</span>
@@ -648,7 +579,7 @@ function StepHeader({ step, onExit, saved }: { step: number; onExit: () => void;
   )
 }
 
-// ── Tips panel (Step 1) ───────────────────────────────────────────────────────
+// ── Tips panel ────────────────────────────────────────────────────────────────
 
 function TipsPanel() {
   return (
@@ -675,12 +606,12 @@ function TipsPanel() {
 
 // ── Preview panel (Step 3) ────────────────────────────────────────────────────
 
-function PreviewPanel({ dark, setDark, title, blocks, actionButtonId, templateType }: {
+function PreviewPanel({ dark, setDark, title, blocks, actionButtons, templateType }: {
   dark: boolean; setDark: (v: boolean) => void
-  title: string; blocks: Block[]; actionButtonId: string; templateType: string
+  title: string; blocks: Block[]; actionButtons: ActionButton[]; templateType: string
 }) {
-  const activeBtn = BUTTON_OPTIONS.flatMap((g) => g.options).find((o) => o.id === actionButtonId)
-  const typeInfo  = TEMPLATE_TYPES.find((t) => t.id === templateType)
+  const typeInfo = TEMPLATE_TYPES.find((t) => t.id === templateType)
+  const btnCost  = actionButtons.reduce((sum, b) => sum + (ALL_BUTTON_TYPES.find((t) => t.id === b.type)?.cost ?? 0), 0)
   return (
     <div className="w-[300px] shrink-0 border-l border-border bg-gray-50 overflow-y-auto p-5 space-y-4">
       <span className="text-sm font-semibold block">Xem trước Template</span>
@@ -692,9 +623,7 @@ function PreviewPanel({ dark, setDark, title, blocks, actionButtonId, templateTy
       </div>
       <div className={cn("rounded-lg border border-border overflow-hidden text-sm", dark ? "bg-gray-900 text-white" : "bg-white text-gray-900")}>
         <div className={cn("px-4 py-3", dark ? "bg-gray-800" : "bg-orange-50")}>
-          <div className={cn("text-xs font-bold", dark ? "text-orange-400" : "text-orange-600")}>
-            ATP <span className={dark ? "text-white" : "text-gray-800"}>SOFTWARE</span>
-          </div>
+          <div className={cn("text-xs font-bold", dark ? "text-orange-400" : "text-orange-600")}>ATP <span className={dark ? "text-white" : "text-gray-800"}>SOFTWARE</span></div>
         </div>
         <div className="px-4 py-3 space-y-2">
           <p className="text-[13px] font-semibold leading-snug">{title || "Tiêu đề template"}</p>
@@ -710,19 +639,28 @@ function PreviewPanel({ dark, setDark, title, blocks, actionButtonId, templateTy
               ))}</tbody>
             </table>
           ))}
-          {activeBtn && (
-            <button className="w-full mt-2 py-2 rounded text-xs font-semibold text-white" style={{ background: "oklch(0.488 0.243 264.376)" }}>
-              {activeBtn.label.split(" (+")[0]}
-            </button>
+          {actionButtons.length > 0 && (
+            <div className="mt-2 space-y-1.5">
+              {actionButtons.map((ab, i) => (
+                <button key={ab.id} className={cn("w-full py-2 rounded text-xs font-semibold",
+                  i === 0 ? "text-white" : dark ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-700"
+                )} style={i === 0 ? { background: "oklch(0.488 0.243 264.376)" } : undefined}>
+                  {ab.label || `Nút thao tác ${i + 1}`}
+                </button>
+              ))}
+            </div>
           )}
         </div>
       </div>
       <div className="rounded border p-3 text-xs space-y-1.5">
         <div className="flex justify-between"><span className="text-muted-foreground">{typeInfo?.label}</span><span className="font-semibold">300 VNĐ</span></div>
-        <div className="flex justify-between"><span className="text-muted-foreground">Nút thao tác 1</span><span className="font-semibold">0 VNĐ</span></div>
+        {actionButtons.map((ab, i) => {
+          const type = ALL_BUTTON_TYPES.find((t) => t.id === ab.type)
+          return <div key={ab.id} className="flex justify-between"><span className="text-muted-foreground">Nút thao tác {i + 1}</span><span className="font-semibold">{type?.cost ?? 0} VNĐ</span></div>
+        })}
         <div className="border-t border-border pt-1.5 mt-1.5 space-y-1">
-          <div className="flex justify-between text-muted-foreground"><span>Gửi qua SĐT</span><span className="font-semibold text-foreground">300 VNĐ/tin</span></div>
-          <div className="flex justify-between text-muted-foreground"><span>Gửi qua UID</span><span className="font-semibold text-foreground">210 VNĐ/tin</span></div>
+          <div className="flex justify-between text-muted-foreground"><span>Gửi qua SĐT</span><span className="font-semibold text-foreground">{300 + btnCost} VNĐ/tin</span></div>
+          <div className="flex justify-between text-muted-foreground"><span>Gửi qua UID</span><span className="font-semibold text-foreground">{250 + btnCost} VNĐ/tin</span></div>
         </div>
       </div>
       <button className="w-full text-sm font-medium py-2 rounded border border-blue-300 text-blue-600 hover:bg-blue-50">Gửi thử mẫu ZBS</button>
@@ -730,35 +668,104 @@ function PreviewPanel({ dark, setDark, title, blocks, actionButtonId, templateTy
   )
 }
 
-// ── VC chip — reusable inline component chip with remove button ────────────────
+// ── Action Button Card (one per button in the form) ───────────────────────────
 
-function VCChip({ vc, onRemove, showMove, onMoveUp, onMoveDown, isFirst, isLast }: {
-  vc: VComponent; onRemove: () => void
-  showMove?: boolean; onMoveUp?: () => void; onMoveDown?: () => void
-  isFirst?: boolean; isLast?: boolean
+function ActionButtonCard({
+  btn, index, total, onChange, onRemove,
+}: {
+  btn: ActionButton; index: number; total: number
+  onChange: (updated: ActionButton) => void
+  onRemove: () => void
 }) {
+  const [typeOpen, setTypeOpen] = useState(false)
+  const selectedType = ALL_BUTTON_TYPES.find((t) => t.id === btn.type)
+
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
-      <div className="h-6 w-6 rounded text-[10px] font-bold flex items-center justify-center shrink-0" style={{ background: vc.bgColor }}>
-        {vc.initials.slice(0, 2)}
+    <div className="rounded-lg border border-border bg-white overflow-visible">
+      {/* Card header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+        <span className="text-sm font-semibold">Nút thao tác {index + 1}</span>
+        <button onClick={onRemove} className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors">
+          <Trash2 className="h-4 w-4" />
+        </button>
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-semibold truncate">{vc.name}</p>
-        <p className="text-[10px] text-muted-foreground">{vc.source === "predefined" ? "Mẫu nền tảng" : "Của bạn"}</p>
-      </div>
-      {showMove && (
-        <div className="flex flex-col gap-0.5 shrink-0">
-          <button onClick={onMoveUp} disabled={isFirst} className="p-0.5 rounded hover:bg-blue-100 disabled:opacity-30 transition-colors">
-            <ChevronUp className="h-3 w-3" />
-          </button>
-          <button onClick={onMoveDown} disabled={isLast} className="p-0.5 rounded hover:bg-blue-100 disabled:opacity-30 transition-colors">
-            <ChevronDown className="h-3 w-3" />
-          </button>
+
+      <div className="px-4 py-4 space-y-4">
+        {/* Loại nút — custom dropdown */}
+        <div>
+          <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Loại nút</label>
+          <div className="relative">
+            <button
+              onClick={() => setTypeOpen(!typeOpen)}
+              className={cn("w-full flex items-center justify-between border border-border rounded-lg px-3 h-10 text-sm bg-white hover:border-blue-400 transition-colors", typeOpen && "border-blue-500 ring-1 ring-blue-500")}
+            >
+              <span className={selectedType ? "text-foreground font-medium" : "text-muted-foreground"}>
+                {selectedType ? selectedType.label : "Chọn loại nút..."}
+              </span>
+              <div className="flex items-center gap-2">
+                {selectedType && (
+                  <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded",
+                    selectedType.cost === 0 ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
+                  )}>+{selectedType.cost}đ</span>
+                )}
+                <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", typeOpen && "rotate-180")} />
+              </div>
+            </button>
+            {typeOpen && (
+              <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-border rounded-lg shadow-lg overflow-hidden">
+                {BUTTON_TYPES.map((group) => (
+                  <div key={group.group}>
+                    <div className="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider bg-gray-50 border-b border-border">{group.group}</div>
+                    {group.items.map((item) => (
+                      <button key={item.id}
+                        onClick={() => { onChange({ ...btn, type: item.id }); setTypeOpen(false) }}
+                        className={cn("w-full flex items-center justify-between px-3 py-2.5 hover:bg-blue-50 transition-colors text-left",
+                          btn.type === item.id && "bg-blue-50"
+                        )}
+                      >
+                        <div>
+                          <div className="text-sm font-medium">{item.label}</div>
+                          <div className="text-[11px] text-muted-foreground">{item.placeholder}</div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0 ml-3">
+                          <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded",
+                            item.cost === 0 ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
+                          )}>+{item.cost}đ</span>
+                          {btn.type === item.id && <Check className="h-3.5 w-3.5 text-blue-600" />}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      )}
-      <button onClick={onRemove} className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors shrink-0">
-        <X className="h-3.5 w-3.5" />
-      </button>
+
+        {/* Nội dung nút */}
+        <div>
+          <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Nội dung nút <span className="text-red-500">*</span></label>
+          <Input
+            value={btn.label}
+            onChange={(e) => onChange({ ...btn, label: e.target.value })}
+            placeholder="VD: Xem đơn hàng, Tìm hiểu thêm..."
+            className="h-9 text-sm"
+          />
+        </div>
+
+        {/* URL (chỉ hiện khi type = custom-url) */}
+        {selectedType?.hasUrl && (
+          <div>
+            <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Đường dẫn liên kết <span className="text-red-500">*</span></label>
+            <Input
+              value={btn.url}
+              onChange={(e) => onChange({ ...btn, url: e.target.value })}
+              placeholder="https://..."
+              className="h-9 text-sm"
+            />
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -812,33 +819,31 @@ function Step1({ templateName, setTemplateName, selectedApp, setSelectedApp, sel
 function Step2({
   templateType, setTemplateType, purpose, setPurpose,
   title, setTitle, blocks, setBlocks,
-  actionButtonId, setActionButtonId, dark, setDark,
+  actionButtons, setActionButtons, dark, setDark,
   verifiedComponents, onRemoveVC, onMoveVC,
 }: {
   templateType: string; setTemplateType: (v: string) => void
   purpose: string; setPurpose: (v: string) => void
   title: string; setTitle: (v: string) => void
   blocks: Block[]; setBlocks: (b: Block[]) => void
-  actionButtonId: string; setActionButtonId: (v: string) => void
+  actionButtons: ActionButton[]; setActionButtons: (b: ActionButton[]) => void
   dark: boolean; setDark: (v: boolean) => void
   verifiedComponents: VComponent[]
   onRemoveVC: (id: string) => void
   onMoveVC: (index: number, dir: -1 | 1) => void
 }) {
-  const [logoOpen, setLogoOpen]               = useState(true)
-  const [btnOpen, setBtnOpen]                 = useState(true)
-  const [showBtnDropdown, setShowBtnDropdown] = useState(false)
-  const [btnSearch, setBtnSearch]             = useState("")
-  const nextId = useMemo(() => Math.max(0, ...blocks.map((b) => b.id)) + 1, [blocks])
+  const [logoOpen, setLogoOpen] = useState(true)
+  const [btnOpen, setBtnOpen]   = useState(true)
+  const nextBtnId = useMemo(() => Math.max(0, ...actionButtons.map((b) => b.id)) + 1, [actionButtons])
+  const nextBlockId = useMemo(() => Math.max(0, ...blocks.map((b) => b.id)) + 1, [blocks])
 
-  // Derive slots from verifiedComponents
   const logoVC     = verifiedComponents.find((c) => c.kind === "logo")
   const contentVCs = verifiedComponents.filter((c) => c.kind === "content")
   const buttonVC   = verifiedComponents.find((c) => c.kind === "button")
 
   function addBlock(type: BlockType) {
-    if (type === "text") setBlocks([...blocks, { type: "text", id: nextId, value: "" }])
-    else setBlocks([...blocks, { type: "table", id: nextId, rows: [{ label: "", value: "" }] }])
+    if (type === "text") setBlocks([...blocks, { type: "text", id: nextBlockId, value: "" }])
+    else setBlocks([...blocks, { type: "table", id: nextBlockId, rows: [{ label: "", value: "" }] }])
   }
   function updateTextBlock(id: number, value: string) {
     setBlocks(blocks.map((b) => b.id === id && b.type === "text" ? { ...b, value } : b))
@@ -852,11 +857,15 @@ function Step2({
   function removeTableRow(id: number, ri: number) {
     setBlocks(blocks.map((b) => b.id === id && b.type === "table" ? { ...b, rows: b.rows.filter((_, i) => i !== ri) } : b))
   }
-
-  const activeBtn = BUTTON_OPTIONS.flatMap((g) => g.options).find((o) => o.id === actionButtonId)
-  const filteredBtnOptions = BUTTON_OPTIONS
-    .map((g) => ({ ...g, options: g.options.filter((o) => !btnSearch || o.label.toLowerCase().includes(btnSearch.toLowerCase())) }))
-    .filter((g) => g.options.length > 0)
+  function addActionButton() {
+    setActionButtons([...actionButtons, { id: nextBtnId, type: "oa-profile", label: "", url: "" }])
+  }
+  function updateActionButton(id: number, updated: ActionButton) {
+    setActionButtons(actionButtons.map((b) => b.id === id ? updated : b))
+  }
+  function removeActionButton(id: number) {
+    setActionButtons(actionButtons.filter((b) => b.id !== id))
+  }
 
   return (
     <div className="flex h-full overflow-hidden">
@@ -919,18 +928,15 @@ function Step2({
           {logoOpen && (
             <div className="px-4 pb-4 border-t border-border">
               <p className="text-xs text-muted-foreground mt-3 mb-3">Tối đa 1 logo hoặc 3 hình ảnh</p>
-
-              {/* Selected logo from library — overrides default */}
               {logoVC && (
                 <div className="mb-3">
                   <VCChip vc={logoVC} onRemove={() => onRemoveVC(logoVC.id)} />
                   <p className="text-[10px] text-blue-600 mt-1 ml-1">↑ Logo từ thư viện — ghi đè logo mặc định trong preview</p>
                 </div>
               )}
-
               <div className={cn("rounded border border-border p-4", logoVC && "opacity-50 pointer-events-none")}>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-semibold">Logo {logoVC && <span className="text-[10px] text-muted-foreground font-normal">(bị ghi đè bởi thư viện)</span>}</span>
+                  <span className="text-sm font-semibold">Logo {logoVC && <span className="text-[10px] text-muted-foreground font-normal">(bị ghi đè)</span>}</span>
                   <button className="text-red-400 hover:text-red-600"><X className="h-4 w-4" /></button>
                 </div>
                 <p className="text-xs text-muted-foreground mb-4">Logo sau khi được duyệt sẽ được tự động cập nhật cho các mẫu ZBS của OA, xem gợi ý <span className="text-blue-600 cursor-pointer hover:underline">tại đây</span></p>
@@ -991,29 +997,20 @@ function Step2({
                 </button>
               </div>
             ))}
-
-            {/* Content VCs from library — inline after blocks */}
             {contentVCs.length > 0 && (
               <div className="space-y-2">
                 {contentVCs.map((vc) => {
                   const globalIdx = verifiedComponents.findIndex((v) => v.id === vc.id)
-                  const vcContent = contentVCs
-                  const localIdx  = vcContent.findIndex((v) => v.id === vc.id)
+                  const localIdx  = contentVCs.findIndex((v) => v.id === vc.id)
                   return (
-                    <VCChip
-                      key={vc.id} vc={vc}
-                      onRemove={() => onRemoveVC(vc.id)}
-                      showMove
-                      onMoveUp={() => onMoveVC(globalIdx, -1)}
-                      onMoveDown={() => onMoveVC(globalIdx, 1)}
-                      isFirst={localIdx === 0}
-                      isLast={localIdx === vcContent.length - 1}
+                    <VCChip key={vc.id} vc={vc} onRemove={() => onRemoveVC(vc.id)} showMove
+                      onMoveUp={() => onMoveVC(globalIdx, -1)} onMoveDown={() => onMoveVC(globalIdx, 1)}
+                      isFirst={localIdx === 0} isLast={localIdx === contentVCs.length - 1}
                     />
                   )
                 })}
               </div>
             )}
-
             <div className="flex items-center gap-2">
               <Plus className="h-4 w-4 text-muted-foreground" />
               <button onClick={() => addBlock("text")} className="flex items-center gap-1 text-xs border border-border rounded px-2 py-1 hover:bg-gray-50"><span>☰</span> Văn bản</button>
@@ -1022,69 +1019,62 @@ function Step2({
           </div>
         </section>
 
-        {/* Action button */}
-        <section className="mb-6 rounded-lg border border-border bg-white overflow-visible">
-          <button onClick={() => setBtnOpen(!btnOpen)}
-            className="flex items-center justify-between w-full px-4 py-3 text-sm font-semibold">
-            <span>Nút thao tác</span>
-            {btnOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </button>
+        {/* Action buttons */}
+        <section className="mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <button onClick={() => setBtnOpen(!btnOpen)} className="flex items-center gap-2 text-sm font-semibold hover:text-blue-600 transition-colors">
+              Nút thao tác
+              <span className="text-[10px] font-normal text-muted-foreground">({actionButtons.length}/{MAX_BUTTONS})</span>
+              {btnOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </button>
+          </div>
+
           {btnOpen && (
-            <div className="px-4 pb-4 border-t border-border">
+            <div className="space-y-3">
               {/* Button VC from library */}
               {buttonVC && (
-                <div className="mt-3 mb-3">
+                <div>
                   <VCChip vc={buttonVC} onRemove={() => onRemoveVC(buttonVC.id)} />
-                  <p className="text-[10px] text-blue-600 mt-1 ml-1">↑ Nút từ thư viện — ghi đè cấu hình bên dưới</p>
+                  <p className="text-[10px] text-blue-600 mt-1 ml-1">↑ Nút từ thư viện — sẽ override nút tự khai báo</p>
                 </div>
               )}
 
-              <div className={cn("rounded border border-border p-3 relative mt-3", buttonVC && "opacity-50 pointer-events-none")}>
-                <div className="text-xs font-semibold mb-2">
-                  Nút thao tác 1 {buttonVC && <span className="text-muted-foreground font-normal">(bị ghi đè bởi thư viện)</span>}
-                </div>
-                <div className="text-xs text-muted-foreground mb-2">Loại nút</div>
-                <div className="relative">
-                  <div
-                    className={cn("flex items-center border border-border rounded px-3 h-9 text-sm cursor-pointer", showBtnDropdown && "border-blue-500 ring-1 ring-blue-500")}
-                    onClick={() => setShowBtnDropdown(!showBtnDropdown)}
-                  >
-                    <Search className="h-4 w-4 text-muted-foreground mr-2 shrink-0" />
-                    <input
-                      value={btnSearch}
-                      onChange={(e) => { setBtnSearch(e.target.value); setShowBtnDropdown(true) }}
-                      placeholder={activeBtn ? activeBtn.label.split(" (+")[0] : "Đến trang thông tin OA (+0đ)"}
-                      className="flex-1 text-sm focus:outline-none bg-transparent"
-                    />
-                  </div>
-                  {showBtnDropdown && (
-                    <div className="absolute top-full left-0 right-0 z-50 border border-border bg-white rounded shadow-lg mt-1 max-h-48 overflow-y-auto">
-                      {filteredBtnOptions.map((g) => (
-                        <div key={g.group}>
-                          <div className="px-3 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider bg-gray-50">{g.group}</div>
-                          {g.options.map((o) => (
-                            <button key={o.id} onClick={() => { setActionButtonId(o.id); setShowBtnDropdown(false); setBtnSearch("") }}
-                              className="w-full px-3 py-2 text-left hover:bg-blue-50">
-                              <div className="text-xs font-semibold text-blue-600">{o.label}</div>
-                              <div className="text-[11px] text-muted-foreground">{o.sub}</div>
-                            </button>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
+              {/* Button cards */}
+              {actionButtons.map((btn, i) => (
+                <ActionButtonCard
+                  key={btn.id}
+                  btn={btn}
+                  index={i}
+                  total={actionButtons.length}
+                  onChange={(updated) => updateActionButton(btn.id, updated)}
+                  onRemove={() => removeActionButton(btn.id)}
+                />
+              ))}
+
+              {/* Add button */}
+              {actionButtons.length < MAX_BUTTONS && (
+                <button
+                  onClick={addActionButton}
+                  className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-gray-200 rounded-lg text-sm text-muted-foreground hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/40 transition-all"
+                >
+                  <Plus className="h-4 w-4" />
+                  Thêm nút thao tác
+                  <span className="text-[10px] text-muted-foreground">({actionButtons.length}/{MAX_BUTTONS})</span>
+                </button>
+              )}
+
+              {actionButtons.length === 0 && !buttonVC && (
+                <p className="text-xs text-muted-foreground text-center py-2">Chưa có nút nào — nhấn để thêm hoặc chọn từ Thư viện</p>
+              )}
             </div>
           )}
         </section>
       </div>
 
-      {/* Right panel */}
       <Step2RightPanel
         dark={dark} setDark={setDark}
         title={title} blocks={blocks}
-        actionButtonId={actionButtonId} templateType={templateType}
+        actionButtons={actionButtons} templateType={templateType}
         verifiedComponents={verifiedComponents}
       />
     </div>
@@ -1093,10 +1083,10 @@ function Step2({
 
 // ── Step 3 ────────────────────────────────────────────────────────────────────
 
-function Step3({ title, blocks, note, setNote, agreed, setAgreed, dark, setDark, templateType, actionButtonId, isEligible }: {
+function Step3({ title, blocks, note, setNote, agreed, setAgreed, dark, setDark, templateType, actionButtons, isEligible }: {
   title: string; blocks: Block[]; note: string; setNote: (v: string) => void
   agreed: boolean; setAgreed: (v: boolean) => void; dark: boolean; setDark: (v: boolean) => void
-  templateType: string; actionButtonId: string; isEligible: boolean
+  templateType: string; actionButtons: ActionButton[]; isEligible: boolean
 }) {
   const params = extractParams(title, blocks)
   const [techSettings, setTechSettings] = useState<Record<string, string>>({})
@@ -1158,7 +1148,7 @@ function Step3({ title, blocks, note, setNote, agreed, setAgreed, dark, setDark,
           </span>
         </label>
       </div>
-      <PreviewPanel dark={dark} setDark={setDark} title={title} blocks={blocks} actionButtonId={actionButtonId} templateType={templateType} />
+      <PreviewPanel dark={dark} setDark={setDark} title={title} blocks={blocks} actionButtons={actionButtons} templateType={templateType} />
     </div>
   )
 }
@@ -1175,52 +1165,40 @@ export default function TaoTemplatePage() {
   const [step, setStep] = useState(0)
   const [done, setDone] = useState(false)
 
-  // Step 1
   const [templateName, setTemplateName] = useState("")
   const [selectedApp, setSelectedApp]   = useState("")
   const [selectedOA, setSelectedOA]     = useState("")
 
-  // Step 2
-  const [templateType, setTemplateType]     = useState("tuy-chinh")
-  const [purpose, setPurpose]               = useState("cap-do-1")
-  const [title, setTitle]                   = useState("Xin chào <customer_name>,")
-  const [blocks, setBlocks]                 = useState<Block[]>([
+  const [templateType, setTemplateType] = useState("tuy-chinh")
+  const [purpose, setPurpose]           = useState("cap-do-1")
+  const [title, setTitle]               = useState("Xin chào <customer_name>,")
+  const [blocks, setBlocks]             = useState<Block[]>([
     { type: "text",  id: 1, value: "Cảm ơn bạn đã mua sản phẩm <product_name> tại cửa hàng chúng tôi." },
     { type: "text",  id: 2, value: "Chúng tôi rất vui vì trong rất nhiều lựa chọn, bạn đã luôn chọn sử dụng <company_name>." },
     { type: "table", id: 3, rows: [{ label: "Mã đơn hàng", value: "<order_code>" }, { label: "Trạng thái", value: "<payment_status>" }] },
   ])
-  const [actionButtonId, setActionButtonId] = useState("oa-profile")
-  const [dark, setDark]                     = useState(false)
+  const [actionButtons, setActionButtons] = useState<ActionButton[]>([
+    { id: 1, type: "oa-profile", label: "Đến trang thông tin OA", url: "" },
+  ])
+  const [dark, setDark] = useState(false)
 
-  // Step 3
   const [note, setNote]     = useState("")
   const [agreed, setAgreed] = useState(false)
 
-  // Verified components
   const [verifiedComponents, setVerifiedComponents] = useState<VComponent[]>([])
-
-  // Drawer
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [drawerTab, setDrawerTab]   = useState<DrawerTab>("predefined")
 
   function handleAddVC(c: VComponent) {
     setVerifiedComponents((prev) => {
-      // Logo and button: replace existing of same kind (only one slot each)
-      if (c.kind === "logo" || c.kind === "button") {
-        const without = prev.filter((v) => v.kind !== c.kind)
-        return [...without, c]
-      }
-      // Content: allow multiple, no duplicates
+      if (c.kind === "logo" || c.kind === "button") return [...prev.filter((v) => v.kind !== c.kind), c]
       return prev.find((v) => v.id === c.id) ? prev : [...prev, c]
     })
   }
-  function handleRemoveVC(id: string) {
-    setVerifiedComponents((prev) => prev.filter((c) => c.id !== id))
-  }
+  function handleRemoveVC(id: string) { setVerifiedComponents((prev) => prev.filter((c) => c.id !== id)) }
   function handleMoveVC(index: number, dir: -1 | 1) {
     setVerifiedComponents((prev) => {
-      const arr = [...prev]
-      const ni  = index + dir
+      const arr = [...prev]; const ni = index + dir
       if (ni < 0 || ni >= arr.length) return arr
       ;[arr[index], arr[ni]] = [arr[ni], arr[index]]
       return arr
@@ -1232,9 +1210,7 @@ export default function TaoTemplatePage() {
   const isEligible = allTags.length > 0 && allTags.every((t) => t.status === "ENABLE")
 
   function exit() { router.push(`${basePath}/cong-cu/gui-tin/quan-ly-template`) }
-
   const canNext1 = templateName.trim() && selectedApp && selectedOA
-  const canDone  = agreed
 
   if (done) return (
     <div className="fixed top-[36px] inset-x-0 bottom-0 z-[90] bg-white flex flex-col items-center justify-center gap-4">
@@ -1258,14 +1234,11 @@ export default function TaoTemplatePage() {
     <div className="fixed top-[36px] inset-x-0 bottom-0 z-[90] bg-white flex flex-col">
       <StepHeader step={step} onExit={exit} saved={step > 0} />
 
-      {/* Main content — relative for drawer */}
       <div className="flex-1 overflow-hidden relative flex flex-col">
         {step === 0 && (
-          <Step1
-            templateName={templateName} setTemplateName={setTemplateName}
+          <Step1 templateName={templateName} setTemplateName={setTemplateName}
             selectedApp={selectedApp} setSelectedApp={setSelectedApp}
-            selectedOA={selectedOA} setSelectedOA={setSelectedOA}
-          />
+            selectedOA={selectedOA} setSelectedOA={setSelectedOA} />
         )}
         {step === 1 && (
           <Step2
@@ -1273,51 +1246,34 @@ export default function TaoTemplatePage() {
             purpose={purpose} setPurpose={setPurpose}
             title={title} setTitle={setTitle}
             blocks={blocks} setBlocks={setBlocks}
-            actionButtonId={actionButtonId} setActionButtonId={setActionButtonId}
+            actionButtons={actionButtons} setActionButtons={setActionButtons}
             dark={dark} setDark={setDark}
             verifiedComponents={verifiedComponents}
-            onRemoveVC={handleRemoveVC}
-            onMoveVC={handleMoveVC}
+            onRemoveVC={handleRemoveVC} onMoveVC={handleMoveVC}
           />
         )}
         {step === 2 && (
-          <Step3
-            title={title} blocks={blocks}
+          <Step3 title={title} blocks={blocks}
             note={note} setNote={setNote}
             agreed={agreed} setAgreed={setAgreed}
             dark={dark} setDark={setDark}
-            templateType={templateType} actionButtonId={actionButtonId}
-            isEligible={isEligible}
-          />
+            templateType={templateType} actionButtons={actionButtons}
+            isEligible={isEligible} />
         )}
 
-        {/* Bottom drawer — only on Step 2 */}
         {step === 1 && (
-          <ComponentLibraryDrawer
-            open={drawerOpen}
-            onClose={() => setDrawerOpen(false)}
-            drawerTab={drawerTab}
-            setDrawerTab={setDrawerTab}
-            addedIds={addedIds}
-            onAdd={handleAddVC}
-          />
+          <ComponentLibraryDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)}
+            drawerTab={drawerTab} setDrawerTab={setDrawerTab}
+            addedIds={addedIds} onAdd={handleAddVC} />
         )}
       </div>
 
-      {/* Footer bar */}
       <div className="flex items-center justify-between px-8 py-4 border-t border-border bg-white shrink-0">
-        {step === 0
-          ? <Button variant="outline" onClick={exit}>Hủy</Button>
-          : <Button variant="outline" onClick={() => setStep(step - 1)}>Quay lại</Button>
-        }
+        {step === 0 ? <Button variant="outline" onClick={exit}>Hủy</Button>
+          : <Button variant="outline" onClick={() => setStep(step - 1)}>Quay lại</Button>}
 
-        {/* Center — Library button (Step 2 only) */}
         {step === 1 && (
-          <Button
-            variant="outline"
-            className="gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400"
-            onClick={() => setDrawerOpen(true)}
-          >
+          <Button variant="outline" className="gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400" onClick={() => setDrawerOpen(true)}>
             <Library className="h-4 w-4" />
             Thư viện Component
             {verifiedComponents.length > 0 && (
@@ -1328,38 +1284,23 @@ export default function TaoTemplatePage() {
           </Button>
         )}
 
-        {/* Right */}
         {step < 2 ? (
           <div className="flex items-center gap-3">
             {step === 1 && !isEligible && allTags.length > 0 && (
               <span className="text-xs text-muted-foreground">Dự kiến 1–2 ngày làm việc</span>
             )}
-            <Button
-              onClick={() => setStep(step + 1)}
-              disabled={step === 0 && !canNext1}
-              className={cn(
-                "px-8 text-white transition-all",
-                step === 1 && isEligible
-                  ? "bg-green-600 hover:bg-green-700 shadow-md shadow-green-200"
-                  : "bg-blue-600 hover:bg-blue-700",
-              )}
-            >
-              {step === 1 && isEligible
-                ? <><Zap className="h-4 w-4 mr-1.5" />Tiếp tục · Tự động duyệt</>
-                : "Tiếp tục"}
+            <Button onClick={() => setStep(step + 1)} disabled={step === 0 && !canNext1}
+              className={cn("px-8 text-white transition-all",
+                step === 1 && isEligible ? "bg-green-600 hover:bg-green-700 shadow-md shadow-green-200" : "bg-blue-600 hover:bg-blue-700")}>
+              {step === 1 && isEligible ? <><Zap className="h-4 w-4 mr-1.5" />Tiếp tục · Tự động duyệt</> : "Tiếp tục"}
             </Button>
           </div>
         ) : (
           <div className="flex items-center gap-3">
             {!isEligible && agreed && <span className="text-xs text-muted-foreground">Dự kiến 1–2 ngày làm việc</span>}
-            <Button
-              onClick={() => setDone(true)}
-              disabled={!canDone}
-              className={cn(
-                "px-8 text-white transition-all",
-                isEligible && agreed ? "bg-green-600 hover:bg-green-700 shadow-md shadow-green-200" : "bg-blue-600 hover:bg-blue-700",
-              )}
-            >
+            <Button onClick={() => setDone(true)} disabled={!agreed}
+              className={cn("px-8 text-white transition-all",
+                isEligible && agreed ? "bg-green-600 hover:bg-green-700 shadow-md shadow-green-200" : "bg-blue-600 hover:bg-blue-700")}>
               {isEligible ? <><Zap className="h-4 w-4 mr-1.5" />Gửi duyệt · Tự động duyệt</> : "Gửi duyệt"}
             </Button>
           </div>
