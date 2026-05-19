@@ -1052,7 +1052,7 @@ function Step2({
                           style={{ background: img.bg }}>
                           <div className="absolute inset-0 flex items-center justify-center text-4xl">{img.emoji}</div>
                           <button
-                            onClick={() => { setUploadedImages(uploadedImages.filter((_, idx) => idx !== i)); setImagesVerified(false) }}
+                            onClick={() => { setUploadedImages(uploadedImages.filter((_, idx) => idx !== i)) }}
                             className="absolute top-1 right-1 h-5 w-5 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                             <X className="h-3 w-3" />
                           </button>
