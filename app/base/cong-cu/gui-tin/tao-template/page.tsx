@@ -336,9 +336,17 @@ function ComponentLibraryDrawer({
                   </div>
                   <p className="text-[11px] font-semibold truncate mb-0.5">{c.name}</p>
                   <p className="text-[10px] text-muted-foreground truncate mb-1.5">{c.description}</p>
-                  <div className="flex flex-wrap gap-0.5">
-                    {c.tags.map((t) => <TagBadge key={t.label} tag={t} tiny />)}
-                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    <span className="font-medium text-foreground">Tag được duyệt:</span>{" "}
+                    {c.tags.map((t, i) => (
+                      <span key={t.label}>
+                        <span className={t.status === "ENABLE" ? "text-green-700" : t.status === "PENDING" ? "text-yellow-700" : "text-gray-500"}>
+                          {t.label}{t.status === "PENDING" ? " ⚠" : t.status === "NEW" ? " –" : ""}
+                        </span>
+                        {i < c.tags.length - 1 && <span className="text-gray-300">, </span>}
+                      </span>
+                    ))}
+                  </p>
                   <div className={cn("mt-2 text-center text-[10px] font-semibold", isAdded ? "text-blue-600" : "text-blue-500")}>
                     {isAdded ? "Đã thêm" : "+ Thêm vào template"}
                   </div>
@@ -1151,12 +1159,8 @@ export default function TaoTemplatePage() {
   const [note, setNote]     = useState("")
   const [agreed, setAgreed] = useState(false)
 
-  // Verified components — default: ZBS logo (PENDING) + Voucher predefined (ENABLE) + CTA Đánh giá (PENDING)
-  const [verifiedComponents, setVerifiedComponents] = useState<VComponent[]>([
-    USER_APPROVED[1],  // Logo ZBS — has PENDING tags
-    PREDEFINED[0],     // Voucher giảm giá — all ENABLE
-    USER_APPROVED[5],  // CTA Đánh giá — has PENDING tag
-  ])
+  // Verified components — bắt đầu rỗng, user tự thêm từ thư viện
+  const [verifiedComponents, setVerifiedComponents] = useState<VComponent[]>([])
 
   // Drawer
   const [drawerOpen, setDrawerOpen]   = useState(false)
