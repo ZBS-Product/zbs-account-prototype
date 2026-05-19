@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import {
   Check, X, Info, ChevronDown, ChevronUp, Minus, Plus,
-  Search, Zap, AlertCircle, Library, Trash2,
+  Search, Zap, AlertCircle, Library, Trash2, Upload, ImageIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -158,6 +158,14 @@ const CAROUSEL_SLIDES = [
   { emoji: "🎁", label: "Ưu đãi đặc biệt" },
   { emoji: "✨", label: "Khuyến mãi tháng 6" },
 ]
+
+// Mock uploaded images (emoji + bg for prototype)
+const MOCK_IMGS = [
+  { emoji: "🐳", bg: "oklch(0.75 0.15 230)", label: "Zalo Banner 1" },
+  { emoji: "🐱", bg: "oklch(0.80 0.12 280)", label: "Zalo Banner 2" },
+  { emoji: "🍋", bg: "oklch(0.85 0.18 95)",  label: "Zalo Banner 3" },
+]
+type UploadedImage = { emoji: string; bg: string; label: string }
 function CarouselPreview({ dark }: { dark: boolean }) {
   const [idx, setIdx] = useState(0)
   useEffect(() => {
@@ -446,10 +454,12 @@ function VCChip({ vc, onRemove, showMove, onMoveUp, onMoveDown, isFirst, isLast 
 
 // ── Step 2 right panel ────────────────────────────────────────────────────────
 
-function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, templateType, verifiedComponents }: {
+function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, templateType, verifiedComponents, logoMode, uploadedImages }: {
   dark: boolean; setDark: (v: boolean) => void
   title: string; blocks: Block[]; actionButtons: ActionButton[]; templateType: string
   verifiedComponents: VComponent[]
+  logoMode: "logo" | "image"
+  uploadedImages: UploadedImage[]
 }) {
   const [tab, setTab] = useState<"preview" | "library">("preview")
   const typeInfo   = TEMPLATE_TYPES.find((t) => t.id === templateType)
@@ -500,20 +510,34 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
           </div>
 
           <div className={cn("rounded-lg border border-border overflow-hidden text-sm", dark ? "bg-gray-900 text-white" : "bg-white text-gray-900")}>
-            <div className={cn("px-4 py-3 flex items-center gap-2", dark ? "bg-gray-800" : "bg-orange-50")}>
-              {logoVC ? (
-                <>
-                  <div className="h-6 w-6 rounded text-[9px] font-bold flex items-center justify-center shrink-0" style={{ background: logoVC.bgColor }}>
-                    {logoVC.initials.slice(0, 2)}
+            {logoMode === "image" && uploadedImages.length > 0 ? (
+              /* Image mode — show first image as banner */
+              <div className="relative h-28 overflow-hidden" style={{ background: uploadedImages[0].bg }}>
+                <div className="absolute inset-0 flex items-center justify-center text-4xl">{uploadedImages[0].emoji}</div>
+                {uploadedImages.length > 1 && (
+                  <div className="absolute bottom-1.5 left-0 right-0 flex justify-center gap-1">
+                    {uploadedImages.map((_, i) => (
+                      <div key={i} className={cn("h-1 rounded-full", i === 0 ? "w-4 bg-white" : "w-1.5 bg-white/50")} />
+                    ))}
                   </div>
-                  <div className={cn("text-xs font-bold", dark ? "text-orange-400" : "text-orange-600")}>{logoVC.name}</div>
-                </>
-              ) : (
-                <div className={cn("text-xs font-bold", dark ? "text-orange-400" : "text-orange-600")}>
-                  ATP <span className={dark ? "text-white" : "text-gray-800"}>SOFTWARE</span>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            ) : (
+              <div className={cn("px-4 py-3 flex items-center gap-2", dark ? "bg-gray-800" : "bg-orange-50")}>
+                {logoVC ? (
+                  <>
+                    <div className="h-6 w-6 rounded text-[9px] font-bold flex items-center justify-center shrink-0" style={{ background: logoVC.bgColor }}>
+                      {logoVC.initials.slice(0, 2)}
+                    </div>
+                    <div className={cn("text-xs font-bold", dark ? "text-orange-400" : "text-orange-600")}>{logoVC.name}</div>
+                  </>
+                ) : (
+                  <div className={cn("text-xs font-bold", dark ? "text-orange-400" : "text-orange-600")}>
+                    ATP <span className={dark ? "text-white" : "text-gray-800"}>SOFTWARE</span>
+                  </div>
+                )}
+              </div>
+            )}
             <div className="px-4 py-3 space-y-2">
               <p className="text-[13px] font-semibold leading-snug">{title || "Tiêu đề template"}</p>
               {blocks.map((b) => {
@@ -883,6 +907,7 @@ function Step2({
   title, setTitle, blocks, setBlocks,
   actionButtons, setActionButtons, dark, setDark,
   verifiedComponents, onRemoveVC, onMoveVC,
+  logoMode, setLogoMode, uploadedImages, setUploadedImages,
 }: {
   templateType: string; setTemplateType: (v: string) => void
   purpose: string; setPurpose: (v: string) => void
@@ -893,6 +918,8 @@ function Step2({
   verifiedComponents: VComponent[]
   onRemoveVC: (id: string) => void
   onMoveVC: (index: number, dir: -1 | 1) => void
+  logoMode: "logo" | "image"; setLogoMode: (m: "logo" | "image") => void
+  uploadedImages: UploadedImage[]; setUploadedImages: (imgs: UploadedImage[]) => void
 }) {
   const [logoOpen, setLogoOpen] = useState(true)
   const [btnOpen, setBtnOpen]   = useState(true)
@@ -983,7 +1010,7 @@ function Step2({
           </div>
         </section>
 
-        {/* Logo */}
+        {/* Logo / Hình ảnh */}
         <section className="mb-4 rounded-lg border border-border bg-white overflow-hidden">
           <button onClick={() => setLogoOpen(!logoOpen)}
             className="flex items-center justify-between w-full px-4 py-3 text-sm font-semibold">
@@ -992,45 +1019,116 @@ function Step2({
           </button>
           {logoOpen && (
             <div className="px-4 pb-4 border-t border-border">
-              <p className="text-xs text-muted-foreground mt-3 mb-3">Tối đa 1 logo hoặc 3 hình ảnh</p>
-              <div className="rounded border border-border p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-semibold">Logo</span>
-                  <div className="flex items-center gap-2">
-                    {logoVC && (
-                      <span className="flex items-center gap-1 text-[10px] font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
-                        <Check className="h-2.5 w-2.5" /> Đã duyệt
-                      </span>
-                    )}
-                    <button
-                      className="text-red-400 hover:text-red-600"
-                      onClick={logoVC ? () => onRemoveVC(logoVC.id) : undefined}
-                    >
-                      <X className="h-4 w-4" />
+              <p className="text-xs text-muted-foreground mt-3 mb-3">Chỉ được thêm tối đa 1 logo hoặc tối đa 3 hình ảnh</p>
+
+              {logoMode === "image" ? (
+                /* ── Image mode ── */
+                <div className="rounded border border-border p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold">Hình ảnh</span>
+                    <button onClick={() => { setLogoMode("logo"); setUploadedImages([]) }}
+                      className="text-red-400 hover:text-red-600 transition-colors">
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
+                  <ul className="text-xs text-muted-foreground mb-3 space-y-0.5 list-disc list-inside">
+                    <li>Tải lên tối đa 3 hình ảnh, giá 300đ.</li>
+                    <li>Xem hướng dẫn các quy định xét duyệt hình ảnh <span className="text-blue-600 cursor-pointer hover:underline">tại đây</span>.</li>
+                  </ul>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[0, 1, 2].map((i) => {
+                      const img = uploadedImages[i]
+                      return img ? (
+                        <div key={i} className="relative aspect-video rounded border-2 border-border overflow-hidden group cursor-pointer"
+                          style={{ background: img.bg }}>
+                          <div className="absolute inset-0 flex items-center justify-center text-4xl">{img.emoji}</div>
+                          <button
+                            onClick={() => setUploadedImages(uploadedImages.filter((_, idx) => idx !== i))}
+                            className="absolute top-1 right-1 h-5 w-5 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button key={i}
+                          onClick={() => {
+                            const next = MOCK_IMGS[uploadedImages.length % MOCK_IMGS.length]
+                            setUploadedImages([...uploadedImages, next])
+                          }}
+                          className="aspect-video rounded border-2 border-dashed border-gray-300 hover:border-blue-400 flex flex-col items-center justify-center gap-1 px-2 transition-colors">
+                          <Upload className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-[10px] text-center text-muted-foreground leading-tight">
+                            Kéo thả hoặc <span className="text-blue-600 font-medium">tải ảnh lên</span>
+                          </span>
+                          <span className="text-[9px] text-muted-foreground text-center leading-tight">
+                            JPG, PNG · 16:9 · &lt;500KB
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground mb-4">Logo sau khi được duyệt sẽ được tự động cập nhật cho các mẫu ZBS của OA, xem gợi ý <span className="text-blue-600 cursor-pointer hover:underline">tại đây</span></p>
-                <div className="grid grid-cols-2 gap-4">
-                  {["Giao diện sáng", "Giao diện tối"].map((label, i) => (
-                    <div key={i}>
-                      <div className="text-xs font-semibold mb-2">{label} <span className="text-red-500">*</span></div>
-                      <div className={cn("h-24 rounded border-2 flex items-center justify-center cursor-pointer transition-colors",
-                        logoVC ? (i === 1 ? "bg-gray-900 border-gray-700" : "bg-white border-green-300")
-                               : (i === 1 ? "bg-gray-900 border-gray-600 border-dashed hover:border-blue-400" : "bg-white border-gray-300 border-dashed hover:border-blue-400"))}>
-                        {logoVC ? (
-                          <div className={cn("text-sm font-bold tracking-wide", i === 1 ? "text-orange-300" : "text-orange-500")}>
-                            {logoVC.initials} <span className={i === 1 ? "text-white" : "text-gray-700"}>{logoVC.name.replace(/^Logo\s*/i, "")}</span>
-                          </div>
-                        ) : (
-                          <div className={cn("text-xs font-bold tracking-wide", i === 1 ? "text-orange-400" : "text-orange-600")}>
-                            ATP <span className={i === 1 ? "text-white" : "text-gray-800"}>SOFTWARE</span>
-                          </div>
-                        )}
-                      </div>
+              ) : (
+                /* ── Logo mode ── */
+                <div className="rounded border border-border p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold">Logo</span>
+                    <div className="flex items-center gap-2">
+                      {logoVC && (
+                        <span className="flex items-center gap-1 text-[10px] font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
+                          <Check className="h-2.5 w-2.5" /> Đã duyệt
+                        </span>
+                      )}
+                      <button className="text-red-400 hover:text-red-600 transition-colors"
+                        onClick={logoVC ? () => onRemoveVC(logoVC.id) : undefined}>
+                        <X className="h-4 w-4" />
+                      </button>
                     </div>
-                  ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Logo sau khi được duyệt sẽ được tự động cập nhật cho các mẫu ZBS của OA, xem gợi ý{" "}
+                    <span className="text-blue-600 cursor-pointer hover:underline">tại đây</span>
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    {["Giao diện sáng", "Giao diện tối"].map((label, i) => (
+                      <div key={i}>
+                        <div className="text-xs font-semibold mb-2">{label} <span className="text-red-500">*</span></div>
+                        <div className={cn("h-24 rounded border-2 flex items-center justify-center cursor-pointer transition-colors",
+                          logoVC
+                            ? (i === 1 ? "bg-gray-900 border-gray-700" : "bg-white border-green-300")
+                            : (i === 1 ? "bg-gray-900 border-gray-600 border-dashed hover:border-blue-400" : "bg-white border-gray-300 border-dashed hover:border-blue-400"))}>
+                          {logoVC ? (
+                            <div className={cn("text-sm font-bold tracking-wide", i === 1 ? "text-orange-300" : "text-orange-500")}>
+                              {logoVC.initials}{" "}
+                              <span className={i === 1 ? "text-white" : "text-gray-700"}>{logoVC.name.replace(/^Logo\s*/i, "")}</span>
+                            </div>
+                          ) : (
+                            <div className={cn("text-xs font-bold tracking-wide", i === 1 ? "text-orange-400" : "text-orange-600")}>
+                              ATP <span className={i === 1 ? "text-white" : "text-gray-800"}>SOFTWARE</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+              )}
+
+              {/* Mode toggle */}
+              <div className="mt-3 flex gap-2">
+                <button onClick={() => setLogoMode("logo")}
+                  className={cn("flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-all",
+                    logoMode === "logo"
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white text-muted-foreground border-border hover:border-blue-300 hover:text-blue-600")}>
+                  <span className="text-[11px]">⊕</span> Logo
+                </button>
+                <button onClick={() => setLogoMode("image")}
+                  className={cn("flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-all",
+                    logoMode === "image"
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white text-muted-foreground border-border hover:border-blue-300 hover:text-blue-600")}>
+                  <ImageIcon className="h-3 w-3" /> Hình ảnh
+                </button>
               </div>
             </div>
           )}
@@ -1165,6 +1263,7 @@ function Step2({
         title={title} blocks={blocks}
         actionButtons={actionButtons} templateType={templateType}
         verifiedComponents={verifiedComponents}
+        logoMode={logoMode} uploadedImages={uploadedImages}
       />
     </div>
   )
@@ -1269,7 +1368,9 @@ export default function TaoTemplatePage() {
   const [actionButtons, setActionButtons] = useState<ActionButton[]>([
     { id: 1, type: "oa-profile", label: "Đến trang thông tin OA", url: "" },
   ])
-  const [dark, setDark] = useState(false)
+  const [dark, setDark]                     = useState(false)
+  const [logoMode, setLogoMode]             = useState<"logo" | "image">("logo")
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([])
 
   const [note, setNote]     = useState("")
   const [agreed, setAgreed] = useState(false)
@@ -1285,6 +1386,14 @@ export default function TaoTemplatePage() {
       setActionButtons((prev) => [...prev, { id: Date.now(), type: "oa-profile", label: c.name, url: "" }])
     } else if (c.previewRender === "text") {
       setBlocks((prev) => [...prev, { type: "text", id: Date.now(), value: c.name }])
+    } else if (c.previewRender === "carousel") {
+      // Auto-switch to image mode and fill all 3 slots
+      setLogoMode("image")
+      setUploadedImages([...MOCK_IMGS])
+    } else if (c.previewRender === "image") {
+      // Auto-switch to image mode and add one image
+      setLogoMode("image")
+      setUploadedImages((prev) => prev.length < 3 ? [...prev, MOCK_IMGS[prev.length % MOCK_IMGS.length]] : prev)
     } else {
       setVerifiedComponents((prev) => prev.find((v) => v.id === c.id) ? prev : [...prev, c])
     }
@@ -1345,6 +1454,8 @@ export default function TaoTemplatePage() {
             dark={dark} setDark={setDark}
             verifiedComponents={verifiedComponents}
             onRemoveVC={handleRemoveVC} onMoveVC={handleMoveVC}
+            logoMode={logoMode} setLogoMode={setLogoMode}
+            uploadedImages={uploadedImages} setUploadedImages={setUploadedImages}
           />
         )}
         {step === 2 && (
