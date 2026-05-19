@@ -408,7 +408,7 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
   const isEligible = allTags.length > 0 && allTags.every((t) => t.status === "ENABLE")
   const logoVC     = verifiedComponents.find((c) => c.kind === "logo")
   const contentVCs = verifiedComponents.filter((c) => c.kind === "content")
-  const buttonVC   = verifiedComponents.find((c) => c.kind === "button")
+  const buttonVCs  = verifiedComponents.filter((c) => c.kind === "button")
 
   // Pricing
   const btnCost = actionButtons.reduce((sum, b) => {
@@ -489,17 +489,19 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
               {contentVCs.map((vc) => (
                 <PreviewItem key={vc.id} vc={vc} dark={dark} />
               ))}
-              {/* Buttons */}
-              {buttonVC ? (
-                <button className="w-full mt-2 py-2 rounded text-xs font-semibold text-white" style={{ background: "oklch(0.488 0.243 264.376)" }}>
-                  {buttonVC.name}
-                </button>
-              ) : actionButtons.length > 0 ? (
+              {/* Buttons — library VCs + manual action buttons combined */}
+              {(buttonVCs.length > 0 || actionButtons.length > 0) ? (
                 <div className="mt-2 space-y-1.5">
+                  {buttonVCs.map((vc, i) => (
+                    <button key={vc.id} className={cn("w-full py-2 rounded text-xs font-semibold text-white")}
+                      style={{ background: "oklch(0.488 0.243 264.376)" }}>
+                      {vc.name}
+                    </button>
+                  ))}
                   {actionButtons.map((ab, i) => (
                     <button key={ab.id} className={cn("w-full py-2 rounded text-xs font-semibold transition-colors",
-                      i === 0 ? "text-white" : dark ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-700"
-                    )} style={i === 0 ? { background: "oklch(0.488 0.243 264.376)" } : undefined}>
+                      (buttonVCs.length === 0 && i === 0) ? "text-white" : dark ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-700"
+                    )} style={(buttonVCs.length === 0 && i === 0) ? { background: "oklch(0.488 0.243 264.376)" } : undefined}>
                       {ab.label || `Nút thao tác ${i + 1}`}
                     </button>
                   ))}
@@ -837,7 +839,7 @@ function Step2({
 
   const logoVC     = verifiedComponents.find((c) => c.kind === "logo")
   const contentVCs = verifiedComponents.filter((c) => c.kind === "content")
-  const buttonVC   = verifiedComponents.find((c) => c.kind === "button")
+  const buttonVCs  = verifiedComponents.filter((c) => c.kind === "button")
 
   function addBlock(type: BlockType) {
     if (type === "text") setBlocks([...blocks, { type: "text", id: nextBlockId, value: "" }])
@@ -1029,13 +1031,10 @@ function Step2({
 
           {btnOpen && (
             <div className="space-y-3">
-              {/* Button VC from library */}
-              {buttonVC && (
-                <div>
-                  <VCChip vc={buttonVC} onRemove={() => onRemoveVC(buttonVC.id)} />
-                  <p className="text-[10px] text-blue-600 mt-1 ml-1">↑ Nút từ thư viện — sẽ override nút tự khai báo</p>
-                </div>
-              )}
+              {/* Button VCs from library */}
+              {buttonVCs.map((vc) => (
+                <VCChip key={vc.id} vc={vc} onRemove={() => onRemoveVC(vc.id)} />
+              ))}
 
               {/* Button cards */}
               {actionButtons.map((btn, i) => (
@@ -1061,7 +1060,7 @@ function Step2({
                 </button>
               )}
 
-              {actionButtons.length === 0 && !buttonVC && (
+              {actionButtons.length === 0 && buttonVCs.length === 0 && (
                 <p className="text-xs text-muted-foreground text-center py-2">Chưa có nút nào — nhấn để thêm hoặc chọn từ Thư viện</p>
               )}
             </div>
@@ -1189,7 +1188,7 @@ export default function TaoTemplatePage() {
 
   function handleAddVC(c: VComponent) {
     setVerifiedComponents((prev) => {
-      if (c.kind === "logo" || c.kind === "button") return [...prev.filter((v) => v.kind !== c.kind), c]
+      if (c.kind === "logo") return [...prev.filter((v) => v.kind !== c.kind), c]
       return prev.find((v) => v.id === c.id) ? prev : [...prev, c]
     })
   }
