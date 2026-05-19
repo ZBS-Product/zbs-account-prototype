@@ -908,6 +908,7 @@ function Step2({
   actionButtons, setActionButtons, dark, setDark,
   verifiedComponents, onRemoveVC, onMoveVC,
   logoMode, setLogoMode, uploadedImages, setUploadedImages,
+  imagesVerified, setImagesVerified,
 }: {
   templateType: string; setTemplateType: (v: string) => void
   purpose: string; setPurpose: (v: string) => void
@@ -920,6 +921,7 @@ function Step2({
   onMoveVC: (index: number, dir: -1 | 1) => void
   logoMode: "logo" | "image"; setLogoMode: (m: "logo" | "image") => void
   uploadedImages: UploadedImage[]; setUploadedImages: (imgs: UploadedImage[]) => void
+  imagesVerified: boolean; setImagesVerified: (v: boolean) => void
 }) {
   const [logoOpen, setLogoOpen] = useState(true)
   const [btnOpen, setBtnOpen]   = useState(true)
@@ -1025,8 +1027,15 @@ function Step2({
                 /* ── Image mode ── */
                 <div className="rounded border border-border p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-semibold">Hình ảnh</span>
-                    <button onClick={() => { setLogoMode("logo"); setUploadedImages([]) }}
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold">Hình ảnh</span>
+                      {imagesVerified && (
+                        <span className="flex items-center gap-1 text-[10px] font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
+                          <Check className="h-2.5 w-2.5" /> Đã duyệt
+                        </span>
+                      )}
+                    </div>
+                    <button onClick={() => { setLogoMode("logo"); setUploadedImages([]); setImagesVerified(false) }}
                       className="text-red-400 hover:text-red-600 transition-colors">
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -1043,7 +1052,7 @@ function Step2({
                           style={{ background: img.bg }}>
                           <div className="absolute inset-0 flex items-center justify-center text-4xl">{img.emoji}</div>
                           <button
-                            onClick={() => setUploadedImages(uploadedImages.filter((_, idx) => idx !== i))}
+                            onClick={() => { setUploadedImages(uploadedImages.filter((_, idx) => idx !== i)); setImagesVerified(false) }}
                             className="absolute top-1 right-1 h-5 w-5 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                             <X className="h-3 w-3" />
                           </button>
@@ -1053,6 +1062,7 @@ function Step2({
                           onClick={() => {
                             const next = MOCK_IMGS[uploadedImages.length % MOCK_IMGS.length]
                             setUploadedImages([...uploadedImages, next])
+                            setImagesVerified(false)
                           }}
                           className="aspect-video rounded border-2 border-dashed border-gray-300 hover:border-blue-400 flex flex-col items-center justify-center gap-1 px-2 transition-colors">
                           <Upload className="h-4 w-4 text-muted-foreground" />
@@ -1066,6 +1076,11 @@ function Step2({
                       )
                     })}
                   </div>
+                  {uploadedImages.length > 0 && !imagesVerified && (
+                    <p className="text-[10px] text-amber-600 mt-2">
+                      ⚠ Hình ảnh chỉnh sửa sẽ không được tự động duyệt
+                    </p>
+                  )}
                 </div>
               ) : (
                 /* ── Logo mode ── */
@@ -1371,6 +1386,7 @@ export default function TaoTemplatePage() {
   const [dark, setDark]                     = useState(false)
   const [logoMode, setLogoMode]             = useState<"logo" | "image">("logo")
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([])
+  const [imagesVerified, setImagesVerified] = useState(false)
 
   const [note, setNote]     = useState("")
   const [agreed, setAgreed] = useState(false)
@@ -1387,13 +1403,16 @@ export default function TaoTemplatePage() {
     } else if (c.previewRender === "text") {
       setBlocks((prev) => [...prev, { type: "text", id: Date.now(), value: c.name }])
     } else if (c.previewRender === "carousel") {
-      // Auto-switch to image mode and fill all 3 slots
       setLogoMode("image")
       setUploadedImages([...MOCK_IMGS])
+      setImagesVerified(true)
     } else if (c.previewRender === "image") {
-      // Auto-switch to image mode and add one image
       setLogoMode("image")
-      setUploadedImages((prev) => prev.length < 3 ? [...prev, MOCK_IMGS[prev.length % MOCK_IMGS.length]] : prev)
+      setUploadedImages((prev) => {
+        const next = prev.length < 3 ? [...prev, MOCK_IMGS[prev.length % MOCK_IMGS.length]] : prev
+        return next
+      })
+      setImagesVerified(true)
     } else {
       setVerifiedComponents((prev) => prev.find((v) => v.id === c.id) ? prev : [...prev, c])
     }
@@ -1456,6 +1475,7 @@ export default function TaoTemplatePage() {
             onRemoveVC={handleRemoveVC} onMoveVC={handleMoveVC}
             logoMode={logoMode} setLogoMode={setLogoMode}
             uploadedImages={uploadedImages} setUploadedImages={setUploadedImages}
+            imagesVerified={imagesVerified} setImagesVerified={setImagesVerified}
           />
         )}
         {step === 2 && (
