@@ -61,7 +61,7 @@ type ComponentStatus = "ENABLE" | "PENDING" | "NEW"
 type VCKind          = "logo" | "content" | "button"
 type VCSource        = "predefined" | "user"
 type PreviewRender   = "logo" | "voucher" | "rating" | "payment-table" | "image" | "carousel" | "text" | "button"
-type DrawerTab       = "predefined" | "user"
+type LibCategory = "all" | VCKind | PreviewRender
 
 interface ComponentTag { label: string; status: ComponentStatus }
 interface VComponent {
@@ -211,14 +211,44 @@ function PreviewItem({ vc, dark }: { vc: VComponent; dark: boolean }) {
 
 // ── Component Library Drawer ──────────────────────────────────────────────────
 
-function ComponentLibraryDrawer({ open, onClose, drawerTab, setDrawerTab, addedIds, onAdd }: {
+const ALL_LIBRARY = [...PREDEFINED, ...USER_APPROVED]
+
+const LIB_CATEGORIES: { id: LibCategory; label: string }[] = [
+  { id: "all",           label: "Tất cả" },
+  { id: "logo",          label: "Logo" },
+  { id: "button",        label: "Nút" },
+  { id: "text",          label: "Văn bản" },
+  { id: "voucher",       label: "Voucher" },
+  { id: "payment-table", label: "Thanh toán" },
+  { id: "rating",        label: "Đánh giá" },
+  { id: "image",         label: "Hình ảnh" },
+  { id: "carousel",      label: "Carousel" },
+]
+
+function ComponentLibraryDrawer({ open, onClose, onAdd }: {
   open: boolean; onClose: () => void
-  drawerTab: DrawerTab; setDrawerTab: (t: DrawerTab) => void
-  addedIds: Set<string>; onAdd: (c: VComponent) => void
+  onAdd: (c: VComponent) => void
 }) {
-  const [search, setSearch] = useState("")
-  const pool     = drawerTab === "predefined" ? PREDEFINED : USER_APPROVED
-  const filtered = pool.filter((c) => !search || c.name.toLowerCase().includes(search.toLowerCase()))
+  const [search, setSearch]     = useState("")
+  const [category, setCategory] = useState<LibCategory>("all")
+  const [toast, setToast]       = useState<string | null>(null)
+
+  function handleAdd(c: VComponent) {
+    onAdd(c)
+    setToast(c.name)
+    setTimeout(() => setToast(null), 1600)
+  }
+
+  const filtered = ALL_LIBRARY.filter((c) => {
+    if (search && !c.name.toLowerCase().includes(search.toLowerCase())) return false
+    if (category === "all") return true
+    return c.kind === category || c.previewRender === category
+  })
+
+  // Only show category pills that have at least 1 item
+  const availableCategories = LIB_CATEGORIES.filter((cat) =>
+    cat.id === "all" || ALL_LIBRARY.some((c) => c.kind === cat.id || c.previewRender === cat.id)
+  )
 
   return (
     <>
@@ -227,51 +257,50 @@ function ComponentLibraryDrawer({ open, onClose, drawerTab, setDrawerTab, addedI
         "absolute left-0 right-0 bottom-0 bg-white border-t border-border shadow-2xl z-20 flex flex-col transition-transform duration-300 ease-out",
         open ? "translate-y-0" : "translate-y-full",
       )} style={{ height: "44%" }}>
+        {/* Handle */}
         <div className="flex justify-center pt-2.5 pb-1 shrink-0">
           <div className="h-1 w-10 rounded-full bg-gray-300" />
         </div>
+
+        {/* Header */}
         <div className="flex items-center gap-3 px-6 py-2.5 border-b border-border shrink-0">
-          <div className="flex gap-1 p-0.5 bg-gray-100 rounded-lg shrink-0">
-            {(["predefined", "user"] as DrawerTab[]).map((t) => (
-              <button key={t} onClick={() => setDrawerTab(t)}
-                className={cn("flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all",
-                  drawerTab === t ? "bg-white shadow text-blue-600" : "text-muted-foreground hover:text-foreground")}>
-                {t === "predefined" ? "📐 Mẫu" : "✅ Đã duyệt"}
+          <span className="text-sm font-semibold shrink-0">Thư viện Component</span>
+          <div className="flex items-center gap-1.5 flex-1 overflow-x-auto scrollbar-none">
+            {availableCategories.map((cat) => (
+              <button key={cat.id} onClick={() => setCategory(cat.id)}
+                className={cn("shrink-0 px-3 py-1 text-xs font-medium rounded-full border transition-all whitespace-nowrap",
+                  category === cat.id
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-muted-foreground border-border hover:border-blue-300 hover:text-blue-600")}>
+                {cat.label}
               </button>
             ))}
           </div>
-          <span className="text-xs text-muted-foreground">
-            {drawerTab === "predefined" ? "Tài sản nền tảng do Zalo cung cấp — luôn ENABLE" : "Component đã được Zalo duyệt của bạn"}
-          </span>
-          <div className="relative ml-auto">
+          <div className="relative shrink-0">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm component..."
               className="pl-8 pr-3 py-1.5 text-xs border border-border rounded-md w-44 focus:outline-none focus:ring-1 focus:ring-blue-500" />
           </div>
-          <button onClick={onClose} className="p-1.5 rounded hover:bg-gray-100 transition-colors">
+          <button onClick={onClose} className="p-1.5 rounded hover:bg-gray-100 transition-colors shrink-0">
             <X className="h-4 w-4 text-muted-foreground" />
           </button>
         </div>
+
+        {/* Grid */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
-          <div className="grid grid-cols-4 gap-3">
-            {filtered.map((c) => {
-              const isAdded = addedIds.has(c.id)
-              return (
-                <button key={c.id} onClick={() => onAdd(c)}
-                  className={cn("rounded-xl border-2 p-3 text-left relative transition-all",
-                    isAdded ? "border-blue-600 bg-blue-50" : "border-border bg-white hover:border-blue-300 hover:shadow-sm")}>
-                  {isAdded && (
-                    <div className="absolute top-2 right-2 h-4 w-4 rounded-full bg-blue-600 flex items-center justify-center">
-                      <Check className="h-2.5 w-2.5 text-white" />
-                    </div>
-                  )}
+          {filtered.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">Không có component nào</p>
+          ) : (
+            <div className="grid grid-cols-4 gap-3">
+              {filtered.map((c) => (
+                <button key={c.id} onClick={() => handleAdd(c)}
+                  className="rounded-xl border-2 border-border bg-white hover:border-blue-400 hover:shadow-sm p-3 text-left transition-all active:scale-95">
                   <div className="h-11 rounded-lg flex items-center justify-center mb-2 text-base font-bold border border-black/5" style={{ background: c.bgColor }}>
                     {c.initials}
                   </div>
                   <p className="text-[11px] font-semibold truncate mb-0.5">{c.name}</p>
                   <p className="text-[10px] text-muted-foreground truncate mb-1.5">{c.description}</p>
                   <p className="text-[10px] text-muted-foreground">
-                    <span className="font-medium text-foreground">Tag được duyệt:</span>{" "}
                     {c.tags.map((t, i) => (
                       <span key={t.label}>
                         <span className={t.status === "ENABLE" ? "text-green-700" : t.status === "PENDING" ? "text-yellow-700" : "text-gray-500"}>
@@ -281,13 +310,22 @@ function ComponentLibraryDrawer({ open, onClose, drawerTab, setDrawerTab, addedI
                       </span>
                     ))}
                   </p>
-                  <div className={cn("mt-2 text-center text-[10px] font-semibold", isAdded ? "text-blue-600" : "text-blue-500")}>
-                    {isAdded ? "Đã thêm" : "+ Thêm vào template"}
+                  <div className="mt-2 text-center text-[10px] font-semibold text-blue-500">
+                    + Thêm vào template
                   </div>
                 </button>
-              )
-            })}
-          </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Toast confirmation */}
+        <div className={cn(
+          "absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-gray-900 text-white text-xs font-medium px-4 py-2 rounded-full shadow-lg transition-all duration-200 pointer-events-none",
+          toast ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+        )}>
+          <Check className="h-3.5 w-3.5 text-green-400" />
+          Đã thêm <span className="font-semibold">{toast}</span>
         </div>
       </div>
     </>
@@ -1221,7 +1259,6 @@ export default function TaoTemplatePage() {
 
   const [verifiedComponents, setVerifiedComponents] = useState<VComponent[]>([])
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [drawerTab, setDrawerTab]   = useState<DrawerTab>("predefined")
 
   function handleAddVC(c: VComponent) {
     if (c.kind === "logo") {
@@ -1307,8 +1344,7 @@ export default function TaoTemplatePage() {
 
         {step === 1 && (
           <ComponentLibraryDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)}
-            drawerTab={drawerTab} setDrawerTab={setDrawerTab}
-            addedIds={addedIds} onAdd={handleAddVC} />
+            onAdd={handleAddVC} />
         )}
       </div>
 
