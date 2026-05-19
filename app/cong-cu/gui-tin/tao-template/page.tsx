@@ -47,8 +47,9 @@ interface ActionButton {
   type: string    // id from ALL_BUTTON_TYPES
   label: string   // display text in message
   url: string     // URL or link value
-  verified?: boolean  // from library VC — clears on any edit
-  vcId?: string       // source VC id
+  verified?: boolean   // was originally from library VC
+  edited?: boolean     // modified after adding — disables auto-approval
+  vcId?: string        // source VC id
 }
 
 const MAX_BUTTONS = 3
@@ -106,8 +107,8 @@ const USER_APPROVED: VComponent[] = [
 // ── Block types ───────────────────────────────────────────────────────────────
 
 type BlockType = "text" | "table"
-interface TextBlock  { type: "text";  id: number; value: string; verified?: boolean; vcId?: string }
-interface TableBlock { type: "table"; id: number; rows: { label: string; value: string }[]; verified?: boolean; vcId?: string }
+interface TextBlock  { type: "text";  id: number; value: string; verified?: boolean; edited?: boolean; vcId?: string }
+interface TableBlock { type: "table"; id: number; rows: { label: string; value: string }[]; verified?: boolean; edited?: boolean; vcId?: string }
 type Block = TextBlock | TableBlock
 
 function extractParams(title: string, blocks: Block[]): string[] {
@@ -727,7 +728,8 @@ function ActionButtonCard({
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold">Nút thao tác {index + 1}</span>
           {btn.verified && (
-            <span className="flex items-center gap-1 text-[10px] font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
+            <span className={cn("flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full",
+              btn.edited ? "text-gray-400 bg-gray-100 line-through" : "text-green-700 bg-green-100")}>
               <Check className="h-2.5 w-2.5" /> Đã duyệt
             </span>
           )}
@@ -765,7 +767,7 @@ function ActionButtonCard({
                     <div className="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider bg-gray-50 border-b border-border">{group.group}</div>
                     {group.items.map((item) => (
                       <button key={item.id}
-                        onClick={() => { onChange({ ...btn, type: item.id, verified: false, vcId: undefined }); setTypeOpen(false) }}
+                        onClick={() => { onChange({ ...btn, type: item.id, edited: true }); setTypeOpen(false) }}
                         className={cn("w-full flex items-center justify-between px-3 py-2.5 hover:bg-blue-50 transition-colors text-left",
                           btn.type === item.id && "bg-blue-50"
                         )}
@@ -794,7 +796,7 @@ function ActionButtonCard({
           <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Nội dung nút <span className="text-red-500">*</span></label>
           <Input
             value={btn.label}
-            onChange={(e) => onChange({ ...btn, label: e.target.value, verified: false, vcId: undefined })}
+            onChange={(e) => onChange({ ...btn, label: e.target.value, edited: true })}
             placeholder="VD: Xem đơn hàng, Tìm hiểu thêm..."
             className="h-9 text-sm"
           />
@@ -811,6 +813,12 @@ function ActionButtonCard({
               className="h-9 text-sm"
             />
           </div>
+        )}
+
+        {btn.verified && btn.edited && (
+          <p className="text-[10px] text-amber-600 pt-1">
+            ⚠ Đã chỉnh sửa — nút này sẽ không được tự động duyệt
+          </p>
         )}
       </div>
     </div>
@@ -907,8 +915,8 @@ function Step2({
   function removeBlock(id: number) {
     setBlocks(blocks.filter((b) => b.id !== id))
   }
-  function clearBlockVerified(id: number) {
-    setBlocks(blocks.map((b) => b.id === id ? { ...b, verified: false, vcId: undefined } : b))
+  function markBlockEdited(id: number) {
+    setBlocks(blocks.map((b) => b.id === id ? { ...b, edited: true } : b))
   }
   function addActionButton() {
     setActionButtons([...actionButtons, { id: nextBtnId, type: "oa-profile", label: "", url: "" }])
@@ -1045,7 +1053,8 @@ function Step2({
                   <div className="text-xs font-semibold">Văn bản <span className="text-red-500">*</span></div>
                   <div className="flex items-center gap-2">
                     {b.verified && (
-                      <span className="flex items-center gap-1 text-[10px] font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
+                      <span className={cn("flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full",
+                        b.edited ? "text-gray-400 bg-gray-100 line-through" : "text-green-700 bg-green-100")}>
                         <Check className="h-2.5 w-2.5" /> Đã duyệt
                       </span>
                     )}
@@ -1055,9 +1064,14 @@ function Step2({
                   </div>
                 </div>
                 <textarea value={b.value}
-                  onChange={(e) => { if (b.verified) clearBlockVerified(b.id); updateTextBlock(b.id, e.target.value.slice(0, 400)) }}
+                  onChange={(e) => { if (b.verified && !b.edited) markBlockEdited(b.id); updateTextBlock(b.id, e.target.value.slice(0, 400)) }}
                   rows={3} className="w-full text-sm border-0 resize-none focus:outline-none" placeholder="Nhập nội dung văn bản..." />
-                <div className="text-right text-[10px] text-muted-foreground">{b.value.length}/400</div>
+                <div className="flex items-center justify-between">
+                  {b.verified && b.edited
+                    ? <p className="text-[10px] text-amber-600">⚠ Đã chỉnh sửa — nội dung này sẽ không được tự động duyệt</p>
+                    : <span />}
+                  <div className="text-[10px] text-muted-foreground">{b.value.length}/400</div>
+                </div>
               </div>
             ) : (
               <div key={b.id} className="rounded border border-border p-3">
