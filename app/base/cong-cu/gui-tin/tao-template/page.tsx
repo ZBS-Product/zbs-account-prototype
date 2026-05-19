@@ -47,6 +47,8 @@ interface ActionButton {
   type: string    // id from ALL_BUTTON_TYPES
   label: string   // display text in message
   url: string     // URL or link value
+  verified?: boolean  // from library VC — clears on any edit
+  vcId?: string       // source VC id
 }
 
 const MAX_BUTTONS = 3
@@ -104,8 +106,8 @@ const USER_APPROVED: VComponent[] = [
 // ── Block types ───────────────────────────────────────────────────────────────
 
 type BlockType = "text" | "table"
-interface TextBlock  { type: "text";  id: number; value: string }
-interface TableBlock { type: "table"; id: number; rows: { label: string; value: string }[] }
+interface TextBlock  { type: "text";  id: number; value: string; verified?: boolean; vcId?: string }
+interface TableBlock { type: "table"; id: number; rows: { label: string; value: string }[]; verified?: boolean; vcId?: string }
 type Block = TextBlock | TableBlock
 
 function extractParams(title: string, blocks: Block[]): string[] {
@@ -684,7 +686,14 @@ function ActionButtonCard({
     <div className="rounded-lg border border-border bg-white overflow-visible">
       {/* Card header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <span className="text-sm font-semibold">Nút thao tác {index + 1}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold">Nút thao tác {index + 1}</span>
+          {btn.verified && (
+            <span className="flex items-center gap-1 text-[10px] font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
+              <Check className="h-2.5 w-2.5" /> Đã duyệt
+            </span>
+          )}
+        </div>
         <button onClick={onRemove} className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors">
           <Trash2 className="h-4 w-4" />
         </button>
@@ -718,7 +727,7 @@ function ActionButtonCard({
                     <div className="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider bg-gray-50 border-b border-border">{group.group}</div>
                     {group.items.map((item) => (
                       <button key={item.id}
-                        onClick={() => { onChange({ ...btn, type: item.id }); setTypeOpen(false) }}
+                        onClick={() => { onChange({ ...btn, type: item.id, verified: false, vcId: undefined }); setTypeOpen(false) }}
                         className={cn("w-full flex items-center justify-between px-3 py-2.5 hover:bg-blue-50 transition-colors text-left",
                           btn.type === item.id && "bg-blue-50"
                         )}
@@ -747,7 +756,7 @@ function ActionButtonCard({
           <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Nội dung nút <span className="text-red-500">*</span></label>
           <Input
             value={btn.label}
-            onChange={(e) => onChange({ ...btn, label: e.target.value })}
+            onChange={(e) => onChange({ ...btn, label: e.target.value, verified: false, vcId: undefined })}
             placeholder="VD: Xem đơn hàng, Tìm hiểu thêm..."
             className="h-9 text-sm"
           />
@@ -857,6 +866,12 @@ function Step2({
   function removeTableRow(id: number, ri: number) {
     setBlocks(blocks.map((b) => b.id === id && b.type === "table" ? { ...b, rows: b.rows.filter((_, i) => i !== ri) } : b))
   }
+  function removeBlock(id: number) {
+    setBlocks(blocks.filter((b) => b.id !== id))
+  }
+  function clearBlockVerified(id: number) {
+    setBlocks(blocks.map((b) => b.id === id ? { ...b, verified: false, vcId: undefined } : b))
+  }
   function addActionButton() {
     setActionButtons([...actionButtons, { id: nextBtnId, type: "oa-profile", label: "", url: "" }])
   }
@@ -928,26 +943,40 @@ function Step2({
           {logoOpen && (
             <div className="px-4 pb-4 border-t border-border">
               <p className="text-xs text-muted-foreground mt-3 mb-3">Tối đa 1 logo hoặc 3 hình ảnh</p>
-              {logoVC && (
-                <div className="mb-3">
-                  <VCChip vc={logoVC} onRemove={() => onRemoveVC(logoVC.id)} />
-                  <p className="text-[10px] text-blue-600 mt-1 ml-1">↑ Logo từ thư viện — ghi đè logo mặc định trong preview</p>
-                </div>
-              )}
-              <div className={cn("rounded border border-border p-4", logoVC && "opacity-50 pointer-events-none")}>
+              <div className="rounded border border-border p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-semibold">Logo {logoVC && <span className="text-[10px] text-muted-foreground font-normal">(bị ghi đè)</span>}</span>
-                  <button className="text-red-400 hover:text-red-600"><X className="h-4 w-4" /></button>
+                  <span className="text-sm font-semibold">Logo</span>
+                  <div className="flex items-center gap-2">
+                    {logoVC && (
+                      <span className="flex items-center gap-1 text-[10px] font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
+                        <Check className="h-2.5 w-2.5" /> Đã duyệt
+                      </span>
+                    )}
+                    <button
+                      className="text-red-400 hover:text-red-600"
+                      onClick={logoVC ? () => onRemoveVC(logoVC.id) : undefined}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
                 <p className="text-xs text-muted-foreground mb-4">Logo sau khi được duyệt sẽ được tự động cập nhật cho các mẫu ZBS của OA, xem gợi ý <span className="text-blue-600 cursor-pointer hover:underline">tại đây</span></p>
                 <div className="grid grid-cols-2 gap-4">
                   {["Giao diện sáng", "Giao diện tối"].map((label, i) => (
                     <div key={i}>
                       <div className="text-xs font-semibold mb-2">{label} <span className="text-red-500">*</span></div>
-                      <div className={cn("h-24 rounded border-2 border-dashed flex items-center justify-center cursor-pointer hover:border-blue-400 transition-colors", i === 1 ? "bg-gray-900 border-gray-600" : "bg-white border-gray-300")}>
-                        <div className={cn("text-xs font-bold tracking-wide", i === 1 ? "text-orange-400" : "text-orange-600")}>
-                          ATP <span className={i === 1 ? "text-white" : "text-gray-800"}>SOFTWARE</span>
-                        </div>
+                      <div className={cn("h-24 rounded border-2 flex items-center justify-center cursor-pointer transition-colors",
+                        logoVC ? (i === 1 ? "bg-gray-900 border-gray-700" : "bg-white border-green-300")
+                               : (i === 1 ? "bg-gray-900 border-gray-600 border-dashed hover:border-blue-400" : "bg-white border-gray-300 border-dashed hover:border-blue-400"))}>
+                        {logoVC ? (
+                          <div className={cn("text-sm font-bold tracking-wide", i === 1 ? "text-orange-300" : "text-orange-500")}>
+                            {logoVC.initials} <span className={i === 1 ? "text-white" : "text-gray-700"}>{logoVC.name.replace(/^Logo\s*/i, "")}</span>
+                          </div>
+                        ) : (
+                          <div className={cn("text-xs font-bold tracking-wide", i === 1 ? "text-orange-400" : "text-orange-600")}>
+                            ATP <span className={i === 1 ? "text-white" : "text-gray-800"}>SOFTWARE</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -974,9 +1003,22 @@ function Step2({
             </div>
             {blocks.map((b) => b.type === "text" ? (
               <div key={b.id} className="rounded border border-border p-3">
-                <div className="text-xs font-semibold mb-1">Văn bản <span className="text-red-500">*</span></div>
-                <textarea value={b.value} onChange={(e) => updateTextBlock(b.id, e.target.value.slice(0, 400))} rows={3}
-                  className="w-full text-sm border-0 resize-none focus:outline-none" placeholder="Nhập nội dung văn bản..." />
+                <div className="flex items-center justify-between mb-1">
+                  <div className="text-xs font-semibold">Văn bản <span className="text-red-500">*</span></div>
+                  <div className="flex items-center gap-2">
+                    {b.verified && (
+                      <span className="flex items-center gap-1 text-[10px] font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
+                        <Check className="h-2.5 w-2.5" /> Đã duyệt
+                      </span>
+                    )}
+                    <button onClick={() => removeBlock(b.id)} className="text-gray-300 hover:text-red-400 transition-colors">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+                <textarea value={b.value}
+                  onChange={(e) => { if (b.verified) clearBlockVerified(b.id); updateTextBlock(b.id, e.target.value.slice(0, 400)) }}
+                  rows={3} className="w-full text-sm border-0 resize-none focus:outline-none" placeholder="Nhập nội dung văn bản..." />
                 <div className="text-right text-[10px] text-muted-foreground">{b.value.length}/400</div>
               </div>
             ) : (
@@ -1031,12 +1073,7 @@ function Step2({
 
           {btnOpen && (
             <div className="space-y-3">
-              {/* Button VCs from library */}
-              {buttonVCs.map((vc) => (
-                <VCChip key={vc.id} vc={vc} onRemove={() => onRemoveVC(vc.id)} />
-              ))}
-
-              {/* Button cards */}
+              {/* Button cards — includes both manual and library VCs (shown with Đã duyệt badge) */}
               {actionButtons.map((btn, i) => (
                 <ActionButtonCard
                   key={btn.id}
@@ -1060,7 +1097,7 @@ function Step2({
                 </button>
               )}
 
-              {actionButtons.length === 0 && buttonVCs.length === 0 && (
+              {actionButtons.length === 0 && (
                 <p className="text-xs text-muted-foreground text-center py-2">Chưa có nút nào — nhấn để thêm hoặc chọn từ Thư viện</p>
               )}
             </div>
@@ -1187,10 +1224,16 @@ export default function TaoTemplatePage() {
   const [drawerTab, setDrawerTab]   = useState<DrawerTab>("predefined")
 
   function handleAddVC(c: VComponent) {
-    setVerifiedComponents((prev) => {
-      if (c.kind === "logo") return [...prev.filter((v) => v.kind !== c.kind), c]
-      return prev.find((v) => v.id === c.id) ? prev : [...prev, c]
-    })
+    if (c.kind === "logo") {
+      setVerifiedComponents((prev) => [...prev.filter((v) => v.kind !== "logo"), c])
+    } else if (c.kind === "button") {
+      if (actionButtons.length >= MAX_BUTTONS) return
+      setActionButtons((prev) => [...prev, { id: Date.now(), type: "oa-profile", label: c.name, url: "", verified: true, vcId: c.id }])
+    } else if (c.previewRender === "text") {
+      setBlocks((prev) => [...prev, { type: "text", id: Date.now(), value: c.description || c.name, verified: true, vcId: c.id }])
+    } else {
+      setVerifiedComponents((prev) => prev.find((v) => v.id === c.id) ? prev : [...prev, c])
+    }
   }
   function handleRemoveVC(id: string) { setVerifiedComponents((prev) => prev.filter((c) => c.id !== id)) }
   function handleMoveVC(index: number, dir: -1 | 1) {
@@ -1202,7 +1245,11 @@ export default function TaoTemplatePage() {
     })
   }
 
-  const addedIds   = new Set(verifiedComponents.map((c) => c.id))
+  const addedIds   = new Set([
+    ...verifiedComponents.map((c) => c.id),
+    ...actionButtons.filter((b) => b.vcId).map((b) => b.vcId!),
+    ...blocks.filter((b) => b.vcId).map((b) => b.vcId!),
+  ])
   const allTags    = verifiedComponents.flatMap((c) => c.tags)
   const isEligible = allTags.length > 0 && allTags.every((t) => t.status === "ENABLE")
 
