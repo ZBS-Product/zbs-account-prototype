@@ -487,9 +487,7 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
                 )
               })}
               {contentVCs.map((vc) => (
-                <div key={vc.id} className={cn("border-l-2 pl-2.5 rounded-r", dark ? "border-blue-500" : "border-blue-400")}>
-                  <PreviewItem vc={vc} dark={dark} />
-                </div>
+                <PreviewItem key={vc.id} vc={vc} dark={dark} />
               ))}
               {/* Buttons */}
               {buttonVC ? (
