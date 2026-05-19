@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import {
   Check, X, Info, ChevronDown, ChevronUp, Minus, Plus,
-  Search, Zap, AlertCircle, Library, GripVertical,
+  Search, Zap, AlertCircle, Library,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -29,9 +29,9 @@ const PURPOSES = [
 ]
 const BUTTON_OPTIONS = [
   { group: "ĐẾN TÀI SẢN CỦA DOANH NGHIỆP TRÊN HỆ SINH THÁI ZALO", options: [
-    { id: "oa-profile", label: "Đến trang thông tin OA (+0đ)",               sub: "Xem trang thông tin OA trên Zalo" },
+    { id: "oa-profile", label: "Đến trang thông tin OA (+0đ)",                       sub: "Xem trang thông tin OA trên Zalo" },
     { id: "mini-app",   label: "Đến ứng dụng Zalo Mini App của Doanh nghiệp (+0/100đ)", sub: "Truy cập Mini App" },
-    { id: "oa-post",    label: "Đến bài viết của OA (+0/100đ)",              sub: "Truy cập bài viết của doanh nghiệp" },
+    { id: "oa-post",    label: "Đến bài viết của OA (+0/100đ)",                      sub: "Truy cập bài viết của doanh nghiệp" },
   ]},
   { group: "ĐẾN LIÊN KẾT TÙY CHỈNH", options: [
     { id: "custom-url", label: "Đến URL (+0/100đ)", sub: "Đường dẫn tùy chỉnh" },
@@ -44,7 +44,7 @@ const TECH_SETTINGS = ["Tên khách hàng (30)", "Tên sản phẩm / Thương h
 type ComponentStatus = "ENABLE" | "PENDING" | "NEW"
 type VCKind          = "logo" | "content" | "button"
 type VCSource        = "predefined" | "user"
-type PreviewRender   = "logo" | "voucher" | "rating" | "payment-table" | "image" | "text" | "button"
+type PreviewRender   = "logo" | "voucher" | "rating" | "payment-table" | "image" | "carousel" | "text" | "button"
 type DrawerTab       = "predefined" | "user"
 
 interface ComponentTag { label: string; status: ComponentStatus }
@@ -92,6 +92,24 @@ const PREDEFINED: VComponent[] = [
     name: "Banner hình ảnh", description: "Ảnh banner tuỳ chỉnh",
     initials: "🖼️", bgColor: "oklch(0.92 0.06 300)",
     tags: ALL_ENABLE, previewRender: "image",
+  },
+  {
+    id: "pre-carousel", kind: "content", source: "predefined",
+    name: "Carousel ảnh", description: "Bộ ảnh tự động chuyển slide",
+    initials: "▶", bgColor: "oklch(0.91 0.05 240)",
+    tags: ALL_ENABLE, previewRender: "carousel",
+  },
+  {
+    id: "pre-btn-view", kind: "button", source: "predefined",
+    name: "Nút Xem chi tiết", description: "CTA mặc định Zalo",
+    initials: "→", bgColor: "oklch(0.88 0.08 265)",
+    tags: ALL_ENABLE, previewRender: "button",
+  },
+  {
+    id: "pre-btn-confirm", kind: "button", source: "predefined",
+    name: "Nút Xác nhận", description: "CTA xác nhận giao dịch",
+    initials: "✓", bgColor: "oklch(0.88 0.08 145)",
+    tags: ALL_ENABLE, previewRender: "button",
   },
 ]
 
@@ -182,6 +200,38 @@ function TagBadge({ tag, tiny }: { tag: ComponentTag; tiny?: boolean }) {
   )
 }
 
+// ── Carousel auto-swipe preview ───────────────────────────────────────────────
+
+const CAROUSEL_SLIDES = [
+  { emoji: "🏖️", label: "Hè rực rỡ 2024" },
+  { emoji: "🎁", label: "Ưu đãi đặc biệt" },
+  { emoji: "✨", label: "Khuyến mãi tháng 6" },
+]
+
+function CarouselPreview({ dark }: { dark: boolean }) {
+  const [idx, setIdx] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => setIdx((i) => (i + 1) % CAROUSEL_SLIDES.length), 1800)
+    return () => clearInterval(t)
+  }, [])
+  return (
+    <div className={cn("rounded-lg overflow-hidden relative h-16", dark ? "bg-gray-700" : "bg-gradient-to-br from-blue-50 to-indigo-100")}>
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 transition-all duration-500">
+        <span className="text-xl">{CAROUSEL_SLIDES[idx].emoji}</span>
+        <span className={cn("text-[10px] font-semibold", dark ? "text-gray-200" : "text-indigo-700")}>{CAROUSEL_SLIDES[idx].label}</span>
+      </div>
+      {/* Dots */}
+      <div className="absolute bottom-1.5 left-0 right-0 flex justify-center gap-1">
+        {CAROUSEL_SLIDES.map((_, i) => (
+          <div key={i} className={cn("h-1 rounded-full transition-all duration-300",
+            i === idx ? "w-4 bg-blue-500" : "w-1.5 bg-gray-400/60"
+          )} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ── Preview item renderer (per VComponent type) ────────────────────────────────
 
 function PreviewItem({ vc, dark }: { vc: VComponent; dark: boolean }) {
@@ -214,10 +264,10 @@ function PreviewItem({ vc, dark }: { vc: VComponent; dark: boolean }) {
       )
     case "image":
       return (
-        <div className={cn("h-14 rounded-lg flex items-center justify-center text-2xl", dark ? "bg-gray-700" : "bg-gray-100")}>
-          🖼️
-        </div>
+        <div className={cn("h-14 rounded-lg flex items-center justify-center text-2xl", dark ? "bg-gray-700" : "bg-gray-100")}>🖼️</div>
       )
+    case "carousel":
+      return <CarouselPreview dark={dark} />
     case "text":
       return (
         <p className={cn("text-[11px] leading-relaxed", dark ? "text-gray-400" : "text-gray-600")}>
@@ -263,45 +313,35 @@ function ComponentLibraryDrawer({
 
         {/* Header */}
         <div className="flex items-center gap-3 px-6 py-2.5 border-b border-border shrink-0">
-          {/* Tab switcher */}
           <div className="flex gap-1 p-0.5 bg-gray-100 rounded-lg shrink-0">
             <button
               onClick={() => setDrawerTab("predefined")}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all",
-                drawerTab === "predefined" ? "bg-white shadow text-blue-600" : "text-muted-foreground hover:text-foreground",
+              className={cn("flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all",
+                drawerTab === "predefined" ? "bg-white shadow text-blue-600" : "text-muted-foreground hover:text-foreground"
               )}
             >
               📐 Mẫu
             </button>
             <button
               onClick={() => setDrawerTab("user")}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all",
-                drawerTab === "user" ? "bg-white shadow text-blue-600" : "text-muted-foreground hover:text-foreground",
+              className={cn("flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-all",
+                drawerTab === "user" ? "bg-white shadow text-blue-600" : "text-muted-foreground hover:text-foreground"
               )}
             >
               ✅ Đã duyệt
             </button>
           </div>
-
           <span className="text-xs text-muted-foreground">
-            {drawerTab === "predefined"
-              ? "Tài sản nền tảng do Zalo cung cấp — luôn ENABLE"
-              : "Component đã được Zalo duyệt của bạn"}
+            {drawerTab === "predefined" ? "Tài sản nền tảng do Zalo cung cấp — luôn ENABLE" : "Component đã được Zalo duyệt của bạn"}
           </span>
-
-          {/* Search */}
           <div className="relative ml-auto">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={search} onChange={(e) => setSearch(e.target.value)}
               placeholder="Tìm component..."
               className="pl-8 pr-3 py-1.5 text-xs border border-border rounded-md w-44 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
-
           <button onClick={onClose} className="p-1.5 rounded hover:bg-gray-100 transition-colors">
             <X className="h-4 w-4 text-muted-foreground" />
           </button>
@@ -315,12 +355,12 @@ function ComponentLibraryDrawer({
               return (
                 <button
                   key={c.id}
-                  onClick={() => !isAdded && onAdd(c)}
+                  onClick={() => onAdd(c)}
                   className={cn(
                     "rounded-xl border-2 p-3 text-left relative transition-all",
                     isAdded
-                      ? "border-blue-600 bg-blue-50 cursor-default"
-                      : "border-border bg-white hover:border-blue-300 hover:shadow-sm cursor-pointer",
+                      ? "border-blue-600 bg-blue-50"
+                      : "border-border bg-white hover:border-blue-300 hover:shadow-sm",
                   )}
                 >
                   {isAdded && (
@@ -328,10 +368,8 @@ function ComponentLibraryDrawer({
                       <Check className="h-2.5 w-2.5 text-white" />
                     </div>
                   )}
-                  <div
-                    className="h-11 rounded-lg flex items-center justify-center mb-2 text-base font-bold border border-black/5"
-                    style={{ background: c.bgColor }}
-                  >
+                  <div className="h-11 rounded-lg flex items-center justify-center mb-2 text-base font-bold border border-black/5"
+                    style={{ background: c.bgColor }}>
                     {c.initials}
                   </div>
                   <p className="text-[11px] font-semibold truncate mb-0.5">{c.name}</p>
@@ -360,7 +398,7 @@ function ComponentLibraryDrawer({
   )
 }
 
-// ── Approval check (right-panel Library tab) ─────────────────────────────────
+// ── Approval check (right-panel Library tab) ──────────────────────────────────
 
 function ApprovalCheckContent({ verifiedComponents }: { verifiedComponents: VComponent[] }) {
   const allTags        = verifiedComponents.flatMap((c) => c.tags)
@@ -399,10 +437,7 @@ function ApprovalCheckContent({ verifiedComponents }: { verifiedComponents: VCom
                   {items.map((vc) => (
                     <div key={vc.id} className="rounded-lg border border-border bg-white p-2.5">
                       <div className="flex items-center gap-2 mb-1.5">
-                        <div
-                          className="h-6 w-6 rounded text-[10px] font-bold flex items-center justify-center shrink-0"
-                          style={{ background: vc.bgColor }}
-                        >
+                        <div className="h-6 w-6 rounded text-[10px] font-bold flex items-center justify-center shrink-0" style={{ background: vc.bgColor }}>
                           {vc.initials.slice(0, 2)}
                         </div>
                         <p className="text-xs font-semibold truncate flex-1">{vc.name}</p>
@@ -422,7 +457,7 @@ function ApprovalCheckContent({ verifiedComponents }: { verifiedComponents: VCom
 
       {verifiedComponents.length > 0 && (
         <div className={cn("rounded-lg p-3 text-xs mt-auto",
-          isEligible ? "bg-green-50 border border-green-200" : "bg-yellow-50 border border-yellow-200",
+          isEligible ? "bg-green-50 border border-green-200" : "bg-yellow-50 border border-yellow-200"
         )}>
           {isEligible ? (
             <div className="flex items-center gap-1.5 font-semibold text-green-700">
@@ -442,7 +477,7 @@ function ApprovalCheckContent({ verifiedComponents }: { verifiedComponents: VCom
   )
 }
 
-// ── Step 2 right panel (tabbed Xem trước / Thư viện) ─────────────────────────
+// ── Step 2 right panel (tabbed Xem trước / Thư viện) ──────────────────────────
 
 function Step2RightPanel({
   dark, setDark, title, blocks, actionButtonId, templateType, verifiedComponents,
@@ -464,22 +499,17 @@ function Step2RightPanel({
 
   return (
     <div className="w-[300px] shrink-0 border-l border-border bg-gray-50 flex flex-col overflow-hidden">
-      {/* Tab bar */}
       <div className="flex border-b border-border bg-white shrink-0">
-        <button
-          onClick={() => setTab("preview")}
+        <button onClick={() => setTab("preview")}
           className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium border-b-2 transition-colors",
             tab === "preview" ? "border-blue-600 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"
-          )}
-        >
+          )}>
           📋 Xem trước
         </button>
-        <button
-          onClick={() => setTab("library")}
+        <button onClick={() => setTab("library")}
           className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium border-b-2 transition-colors",
             tab === "library" ? "border-blue-600 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground"
-          )}
-        >
+          )}>
           {isEligible && verifiedComponents.length > 0
             ? <Zap className="h-3 w-3 text-green-600" />
             : verifiedComponents.length > 0
@@ -505,12 +535,10 @@ function Step2RightPanel({
           </div>
 
           <div className={cn("rounded-lg border border-border overflow-hidden text-sm", dark ? "bg-gray-900 text-white" : "bg-white text-gray-900")}>
-            {/* Header — shows logoVC if present */}
             <div className={cn("px-4 py-3 flex items-center gap-2", dark ? "bg-gray-800" : "bg-orange-50")}>
               {logoVC ? (
                 <>
-                  <div className="h-6 w-6 rounded text-[9px] font-bold flex items-center justify-center shrink-0"
-                    style={{ background: logoVC.bgColor }}>
+                  <div className="h-6 w-6 rounded text-[9px] font-bold flex items-center justify-center shrink-0" style={{ background: logoVC.bgColor }}>
                     {logoVC.initials.slice(0, 2)}
                   </div>
                   <div className={cn("text-xs font-bold", dark ? "text-orange-400" : "text-orange-600")}>{logoVC.name}</div>
@@ -521,10 +549,8 @@ function Step2RightPanel({
                 </div>
               )}
             </div>
-
             <div className="px-4 py-3 space-y-2">
               <p className="text-[13px] font-semibold leading-snug">{title || "Tiêu đề template"}</p>
-
               {blocks.map((b) => {
                 if (b.type === "text") return (
                   <p key={b.id} className={cn("text-[12px] leading-relaxed", dark ? "text-gray-300" : "text-gray-700")}>
@@ -544,23 +570,17 @@ function Step2RightPanel({
                   </table>
                 )
               })}
-
-              {/* Verified content components rendered inline */}
               {contentVCs.map((vc) => (
                 <div key={vc.id} className={cn("border-l-2 pl-2.5 rounded-r", dark ? "border-blue-500" : "border-blue-400")}>
                   <PreviewItem vc={vc} dark={dark} />
                 </div>
               ))}
-
-              {/* Button slot */}
               {buttonVC ? (
-                <button className="w-full mt-2 py-2 rounded text-xs font-semibold text-white"
-                  style={{ background: "oklch(0.488 0.243 264.376)" }}>
+                <button className="w-full mt-2 py-2 rounded text-xs font-semibold text-white" style={{ background: "oklch(0.488 0.243 264.376)" }}>
                   {buttonVC.name}
                 </button>
               ) : activeBtn ? (
-                <button className="w-full mt-2 py-2 rounded text-xs font-semibold text-white"
-                  style={{ background: "oklch(0.488 0.243 264.376)" }}>
+                <button className="w-full mt-2 py-2 rounded text-xs font-semibold text-white" style={{ background: "oklch(0.488 0.243 264.376)" }}>
                   {activeBtn.label.split(" (+")[0]}
                 </button>
               ) : null}
@@ -661,7 +681,6 @@ function PreviewPanel({ dark, setDark, title, blocks, actionButtonId, templateTy
 }) {
   const activeBtn = BUTTON_OPTIONS.flatMap((g) => g.options).find((o) => o.id === actionButtonId)
   const typeInfo  = TEMPLATE_TYPES.find((t) => t.id === templateType)
-
   return (
     <div className="w-[300px] shrink-0 border-l border-border bg-gray-50 overflow-y-auto p-5 space-y-4">
       <span className="text-sm font-semibold block">Xem trước Template</span>
@@ -711,63 +730,36 @@ function PreviewPanel({ dark, setDark, title, blocks, actionButtonId, templateTy
   )
 }
 
-// ── Added components list (in Step 2 form) ────────────────────────────────────
+// ── VC chip — reusable inline component chip with remove button ────────────────
 
-function AddedComponentsSection({
-  verifiedComponents,
-  onRemove,
-  onMove,
-}: {
-  verifiedComponents: VComponent[]
-  onRemove: (id: string) => void
-  onMove: (index: number, dir: -1 | 1) => void
+function VCChip({ vc, onRemove, showMove, onMoveUp, onMoveDown, isFirst, isLast }: {
+  vc: VComponent; onRemove: () => void
+  showMove?: boolean; onMoveUp?: () => void; onMoveDown?: () => void
+  isFirst?: boolean; isLast?: boolean
 }) {
-  if (verifiedComponents.length === 0) return null
-
   return (
-    <section className="mb-4 rounded-lg border border-blue-200 bg-blue-50/40 overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-blue-100">
-        <div className="flex items-center gap-2">
-          <Library className="h-4 w-4 text-blue-600" />
-          <span className="text-sm font-semibold text-blue-700">Component đã thêm</span>
-          <span className="h-5 min-w-5 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center px-1">
-            {verifiedComponents.length}
-          </span>
+    <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
+      <div className="h-6 w-6 rounded text-[10px] font-bold flex items-center justify-center shrink-0" style={{ background: vc.bgColor }}>
+        {vc.initials.slice(0, 2)}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-semibold truncate">{vc.name}</p>
+        <p className="text-[10px] text-muted-foreground">{vc.source === "predefined" ? "Mẫu nền tảng" : "Của bạn"}</p>
+      </div>
+      {showMove && (
+        <div className="flex flex-col gap-0.5 shrink-0">
+          <button onClick={onMoveUp} disabled={isFirst} className="p-0.5 rounded hover:bg-blue-100 disabled:opacity-30 transition-colors">
+            <ChevronUp className="h-3 w-3" />
+          </button>
+          <button onClick={onMoveDown} disabled={isLast} className="p-0.5 rounded hover:bg-blue-100 disabled:opacity-30 transition-colors">
+            <ChevronDown className="h-3 w-3" />
+          </button>
         </div>
-      </div>
-      <div className="p-3 space-y-2">
-        {verifiedComponents.map((vc, idx) => (
-          <div key={vc.id} className="flex items-center gap-2 rounded-lg border border-border bg-white px-3 py-2">
-            <GripVertical className="h-4 w-4 text-gray-300 shrink-0" />
-            <div className="h-7 w-7 rounded text-[10px] font-bold flex items-center justify-center shrink-0"
-              style={{ background: vc.bgColor }}>
-              {vc.initials.slice(0, 2)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold truncate">{vc.name}</p>
-              <p className="text-[10px] text-muted-foreground">{vc.source === "predefined" ? "Mẫu nền tảng" : "Của bạn"} · {vc.kind === "logo" ? "Logo" : vc.kind === "content" ? "Nội dung" : "Nút CTA"}</p>
-            </div>
-            <div className="flex flex-wrap gap-0.5 shrink-0 max-w-[120px]">
-              {vc.tags.slice(0, 2).map((t) => <TagBadge key={t.label} tag={t} tiny />)}
-            </div>
-            <div className="flex flex-col gap-0.5 shrink-0">
-              <button onClick={() => onMove(idx, -1)} disabled={idx === 0}
-                className="p-0.5 rounded hover:bg-gray-100 disabled:opacity-30 transition-colors">
-                <ChevronUp className="h-3 w-3" />
-              </button>
-              <button onClick={() => onMove(idx, 1)} disabled={idx === verifiedComponents.length - 1}
-                className="p-0.5 rounded hover:bg-gray-100 disabled:opacity-30 transition-colors">
-                <ChevronDown className="h-3 w-3" />
-              </button>
-            </div>
-            <button onClick={() => onRemove(vc.id)}
-              className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors shrink-0">
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        ))}
-      </div>
-    </section>
+      )}
+      <button onClick={onRemove} className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors shrink-0">
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </div>
   )
 }
 
@@ -838,6 +830,11 @@ function Step2({
   const [showBtnDropdown, setShowBtnDropdown] = useState(false)
   const [btnSearch, setBtnSearch]             = useState("")
   const nextId = useMemo(() => Math.max(0, ...blocks.map((b) => b.id)) + 1, [blocks])
+
+  // Derive slots from verifiedComponents
+  const logoVC     = verifiedComponents.find((c) => c.kind === "logo")
+  const contentVCs = verifiedComponents.filter((c) => c.kind === "content")
+  const buttonVC   = verifiedComponents.find((c) => c.kind === "button")
 
   function addBlock(type: BlockType) {
     if (type === "text") setBlocks([...blocks, { type: "text", id: nextId, value: "" }])
@@ -922,9 +919,18 @@ function Step2({
           {logoOpen && (
             <div className="px-4 pb-4 border-t border-border">
               <p className="text-xs text-muted-foreground mt-3 mb-3">Tối đa 1 logo hoặc 3 hình ảnh</p>
-              <div className="rounded border border-border p-4">
+
+              {/* Selected logo from library — overrides default */}
+              {logoVC && (
+                <div className="mb-3">
+                  <VCChip vc={logoVC} onRemove={() => onRemoveVC(logoVC.id)} />
+                  <p className="text-[10px] text-blue-600 mt-1 ml-1">↑ Logo từ thư viện — ghi đè logo mặc định trong preview</p>
+                </div>
+              )}
+
+              <div className={cn("rounded border border-border p-4", logoVC && "opacity-50 pointer-events-none")}>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-semibold">Logo</span>
+                  <span className="text-sm font-semibold">Logo {logoVC && <span className="text-[10px] text-muted-foreground font-normal">(bị ghi đè bởi thư viện)</span>}</span>
                   <button className="text-red-400 hover:text-red-600"><X className="h-4 w-4" /></button>
                 </div>
                 <p className="text-xs text-muted-foreground mb-4">Logo sau khi được duyệt sẽ được tự động cập nhật cho các mẫu ZBS của OA, xem gợi ý <span className="text-blue-600 cursor-pointer hover:underline">tại đây</span></p>
@@ -985,6 +991,29 @@ function Step2({
                 </button>
               </div>
             ))}
+
+            {/* Content VCs from library — inline after blocks */}
+            {contentVCs.length > 0 && (
+              <div className="space-y-2">
+                {contentVCs.map((vc) => {
+                  const globalIdx = verifiedComponents.findIndex((v) => v.id === vc.id)
+                  const vcContent = contentVCs
+                  const localIdx  = vcContent.findIndex((v) => v.id === vc.id)
+                  return (
+                    <VCChip
+                      key={vc.id} vc={vc}
+                      onRemove={() => onRemoveVC(vc.id)}
+                      showMove
+                      onMoveUp={() => onMoveVC(globalIdx, -1)}
+                      onMoveDown={() => onMoveVC(globalIdx, 1)}
+                      isFirst={localIdx === 0}
+                      isLast={localIdx === vcContent.length - 1}
+                    />
+                  )
+                })}
+              </div>
+            )}
+
             <div className="flex items-center gap-2">
               <Plus className="h-4 w-4 text-muted-foreground" />
               <button onClick={() => addBlock("text")} className="flex items-center gap-1 text-xs border border-border rounded px-2 py-1 hover:bg-gray-50"><span>☰</span> Văn bản</button>
@@ -994,7 +1023,7 @@ function Step2({
         </section>
 
         {/* Action button */}
-        <section className="mb-4 rounded-lg border border-border bg-white overflow-hidden">
+        <section className="mb-6 rounded-lg border border-border bg-white overflow-visible">
           <button onClick={() => setBtnOpen(!btnOpen)}
             className="flex items-center justify-between w-full px-4 py-3 text-sm font-semibold">
             <span>Nút thao tác</span>
@@ -1002,19 +1031,34 @@ function Step2({
           </button>
           {btnOpen && (
             <div className="px-4 pb-4 border-t border-border">
-              <div className="rounded border border-border p-3 relative mt-3">
-                <div className="text-xs font-semibold mb-2">Nút thao tác 1</div>
+              {/* Button VC from library */}
+              {buttonVC && (
+                <div className="mt-3 mb-3">
+                  <VCChip vc={buttonVC} onRemove={() => onRemoveVC(buttonVC.id)} />
+                  <p className="text-[10px] text-blue-600 mt-1 ml-1">↑ Nút từ thư viện — ghi đè cấu hình bên dưới</p>
+                </div>
+              )}
+
+              <div className={cn("rounded border border-border p-3 relative mt-3", buttonVC && "opacity-50 pointer-events-none")}>
+                <div className="text-xs font-semibold mb-2">
+                  Nút thao tác 1 {buttonVC && <span className="text-muted-foreground font-normal">(bị ghi đè bởi thư viện)</span>}
+                </div>
                 <div className="text-xs text-muted-foreground mb-2">Loại nút</div>
                 <div className="relative">
-                  <div className={cn("flex items-center border border-border rounded px-3 h-9 text-sm cursor-pointer", showBtnDropdown && "border-blue-500 ring-1 ring-blue-500")}
-                    onClick={() => setShowBtnDropdown(!showBtnDropdown)}>
+                  <div
+                    className={cn("flex items-center border border-border rounded px-3 h-9 text-sm cursor-pointer", showBtnDropdown && "border-blue-500 ring-1 ring-blue-500")}
+                    onClick={() => setShowBtnDropdown(!showBtnDropdown)}
+                  >
                     <Search className="h-4 w-4 text-muted-foreground mr-2 shrink-0" />
-                    <input value={btnSearch} onChange={(e) => { setBtnSearch(e.target.value); setShowBtnDropdown(true) }}
+                    <input
+                      value={btnSearch}
+                      onChange={(e) => { setBtnSearch(e.target.value); setShowBtnDropdown(true) }}
                       placeholder={activeBtn ? activeBtn.label.split(" (+")[0] : "Đến trang thông tin OA (+0đ)"}
-                      className="flex-1 text-sm focus:outline-none bg-transparent" />
+                      className="flex-1 text-sm focus:outline-none bg-transparent"
+                    />
                   </div>
                   {showBtnDropdown && (
-                    <div className="absolute top-full left-0 right-0 z-20 border border-border bg-white rounded shadow-lg mt-1 max-h-48 overflow-y-auto">
+                    <div className="absolute top-full left-0 right-0 z-50 border border-border bg-white rounded shadow-lg mt-1 max-h-48 overflow-y-auto">
                       {filteredBtnOptions.map((g) => (
                         <div key={g.group}>
                           <div className="px-3 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider bg-gray-50">{g.group}</div>
@@ -1034,13 +1078,6 @@ function Step2({
             </div>
           )}
         </section>
-
-        {/* Added components list */}
-        <AddedComponentsSection
-          verifiedComponents={verifiedComponents}
-          onRemove={onRemoveVC}
-          onMove={onMoveVC}
-        />
       </div>
 
       {/* Right panel */}
@@ -1159,15 +1196,23 @@ export default function TaoTemplatePage() {
   const [note, setNote]     = useState("")
   const [agreed, setAgreed] = useState(false)
 
-  // Verified components — bắt đầu rỗng, user tự thêm từ thư viện
+  // Verified components
   const [verifiedComponents, setVerifiedComponents] = useState<VComponent[]>([])
 
   // Drawer
-  const [drawerOpen, setDrawerOpen]   = useState(false)
-  const [drawerTab, setDrawerTab]     = useState<DrawerTab>("predefined")
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [drawerTab, setDrawerTab]   = useState<DrawerTab>("predefined")
 
   function handleAddVC(c: VComponent) {
-    setVerifiedComponents((prev) => prev.find((v) => v.id === c.id) ? prev : [...prev, c])
+    setVerifiedComponents((prev) => {
+      // Logo and button: replace existing of same kind (only one slot each)
+      if (c.kind === "logo" || c.kind === "button") {
+        const without = prev.filter((v) => v.kind !== c.kind)
+        return [...without, c]
+      }
+      // Content: allow multiple, no duplicates
+      return prev.find((v) => v.id === c.id) ? prev : [...prev, c]
+    })
   }
   function handleRemoveVC(id: string) {
     setVerifiedComponents((prev) => prev.filter((c) => c.id !== id))
@@ -1175,7 +1220,7 @@ export default function TaoTemplatePage() {
   function handleMoveVC(index: number, dir: -1 | 1) {
     setVerifiedComponents((prev) => {
       const arr = [...prev]
-      const ni = index + dir
+      const ni  = index + dir
       if (ni < 0 || ni >= arr.length) return arr
       ;[arr[index], arr[ni]] = [arr[ni], arr[index]]
       return arr
@@ -1261,7 +1306,6 @@ export default function TaoTemplatePage() {
 
       {/* Footer bar */}
       <div className="flex items-center justify-between px-8 py-4 border-t border-border bg-white shrink-0">
-        {/* Left */}
         {step === 0
           ? <Button variant="outline" onClick={exit}>Hủy</Button>
           : <Button variant="outline" onClick={() => setStep(step - 1)}>Quay lại</Button>
