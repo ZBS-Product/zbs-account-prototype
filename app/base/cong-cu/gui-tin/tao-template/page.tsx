@@ -59,7 +59,7 @@ const TECH_SETTINGS = ["Tên khách hàng (30)", "Tên sản phẩm / Thương h
 type ComponentStatus = "ENABLE" | "PENDING" | "NEW"
 type VCKind          = "logo" | "content" | "button"
 type VCSource        = "predefined" | "user"
-type PreviewRender   = "logo" | "voucher" | "rating" | "payment-table" | "image" | "carousel" | "text" | "button"
+type PreviewRender   = "logo" | "voucher" | "rating" | "payment-table" | "image" | "carousel" | "text" | "title" | "button"
 type LibCategory = "all" | VCKind | PreviewRender
 
 interface ComponentTag { label: string; status: ComponentStatus }
@@ -78,38 +78,48 @@ const ALL_ENABLE: ComponentTag[] = [
 ]
 
 const PREDEFINED: VComponent[] = [
-  { id: "pre-banner",         kind: "content", source: "predefined", name: "Banner hình ảnh",        description: "Ảnh banner tuỳ chỉnh",                                                                                                       initials: "🖼️", bgColor: "oklch(0.92 0.06 300)", tags: ALL_ENABLE, previewRender: "image"   },
-  { id: "pre-carousel",       kind: "content", source: "predefined", name: "Carousel ảnh",           description: "Bộ ảnh tự động chuyển slide",                                                                                                initials: "▶",  bgColor: "oklch(0.91 0.05 240)", tags: ALL_ENABLE, previewRender: "carousel" },
-  { id: "pre-btn-order-view", kind: "button",  source: "predefined", name: "Xem đơn hàng đã đặt",   description: "CTA xem chi tiết đơn hàng",                                                                                                  initials: "→",  bgColor: "oklch(0.88 0.08 265)", tags: ALL_ENABLE, previewRender: "button"  },
-  { id: "pre-btn-order-detail",kind:"button",  source: "predefined", name: "Xem chi tiết đơn hàng", description: "CTA xem chi tiết sau xác nhận thanh toán",                                                                                    initials: "→",  bgColor: "oklch(0.88 0.08 200)", tags: ALL_ENABLE, previewRender: "button"  },
+  { id: "pre-banner",          kind: "content", source: "predefined", name: "Banner hình ảnh",        description: "Ảnh banner tuỳ chỉnh",                     initials: "🖼️", bgColor: "oklch(0.92 0.06 300)", tags: ALL_ENABLE, previewRender: "image"   },
+  { id: "pre-carousel",        kind: "content", source: "predefined", name: "Carousel ảnh",           description: "Bộ ảnh tự động chuyển slide",              initials: "▶",  bgColor: "oklch(0.91 0.05 240)", tags: ALL_ENABLE, previewRender: "carousel" },
+  { id: "pre-title-order",     kind: "content", source: "predefined", name: "Xác nhận đơn hàng",     description: "Tiêu đề xác nhận đơn hàng",                initials: "T",  bgColor: "oklch(0.88 0.08 265)", tags: ALL_ENABLE, previewRender: "title"   },
+  { id: "pre-title-payment",   kind: "content", source: "predefined", name: "Xác nhận thanh toán",   description: "Tiêu đề xác nhận thanh toán",              initials: "T",  bgColor: "oklch(0.88 0.08 200)", tags: ALL_ENABLE, previewRender: "title"   },
+  { id: "pre-btn-order-view",  kind: "button",  source: "predefined", name: "Xem đơn hàng đã đặt",   description: "CTA xem chi tiết đơn hàng",                initials: "→",  bgColor: "oklch(0.88 0.08 265)", tags: ALL_ENABLE, previewRender: "button"  },
+  { id: "pre-btn-order-detail",kind: "button",  source: "predefined", name: "Xem chi tiết đơn hàng", description: "CTA xem chi tiết sau xác nhận thanh toán", initials: "→",  bgColor: "oklch(0.88 0.08 200)", tags: ALL_ENABLE, previewRender: "button"  },
 ]
 
 const USER_APPROVED: VComponent[] = [
-  { id: "user-logo-shopviet",   kind: "logo",    source: "user", name: "Logo ShopViet",
+  { id: "user-logo-shopviet",    kind: "logo",    source: "user", name: "Logo ShopViet",
     description: "Logo thương hiệu ShopViet",
     initials: "SV", bgColor: "oklch(0.88 0.12 25)",
     tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "ENABLE" }, { label: "Hậu mãi", status: "ENABLE" }], previewRender: "logo" },
-  { id: "user-logo-medcare",    kind: "logo",    source: "user", name: "Logo MedCare Clinic",
+  { id: "user-logo-medcare",     kind: "logo",    source: "user", name: "Logo MedCare Clinic",
     description: "Logo phòng khám MedCare",
     initials: "MC", bgColor: "oklch(0.88 0.10 165)",
     tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "ENABLE" }, { label: "Hậu mãi", status: "PENDING" }], previewRender: "logo" },
-  { id: "user-text-shipping",   kind: "content", source: "user", name: "Thông báo giao hàng",
+  { id: "user-title-shipping",   kind: "content", source: "user", name: "Thông báo giao hàng",
+    description: "Tiêu đề thông báo trạng thái giao hàng",
+    initials: "T",  bgColor: "oklch(0.92 0.06 240)",
+    tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "ENABLE" }], previewRender: "title" },
+  { id: "user-title-loyalty",    kind: "content", source: "user", name: "Thông báo điểm tích lũy",
+    description: "Tiêu đề thông báo cộng điểm thành viên",
+    initials: "T",  bgColor: "oklch(0.92 0.08 50)",
+    tags: [{ label: "Chăm sóc KH", status: "ENABLE" }, { label: "Hậu mãi", status: "ENABLE" }], previewRender: "title" },
+  { id: "user-title-appointment",kind: "content", source: "user", name: "Xác nhận lịch khám",
+    description: "Tiêu đề xác nhận lịch khám tại phòng khám",
+    initials: "T",  bgColor: "oklch(0.92 0.06 165)",
+    tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "PENDING" }], previewRender: "title" },
+  { id: "user-text-shipping",    kind: "content", source: "user", name: "Nội dung giao hàng",
     description: "Xin chào <name>, đơn hàng <order_code> đặt vào ngày <date> đã <status>. Cảm ơn bạn đã quan tâm đến sản phẩm của chúng tôi.",
-    initials: "🚚", bgColor: "oklch(0.92 0.06 240)",
+    initials: "V",  bgColor: "oklch(0.93 0.04 240)",
     tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "ENABLE" }], previewRender: "text" },
-  { id: "user-text-loyalty",    kind: "content", source: "user", name: "Thông báo điểm tích lũy",
+  { id: "user-text-loyalty",     kind: "content", source: "user", name: "Nội dung điểm tích lũy",
     description: "Cảm ơn quý khách <customer_name> đã sử dụng dịch vụ. Quý khách được ghi nhận tích lũy điểm thành viên thành công với các thông tin sau.",
-    initials: "🎁", bgColor: "oklch(0.92 0.08 50)",
+    initials: "V",  bgColor: "oklch(0.93 0.05 50)",
     tags: [{ label: "Chăm sóc KH", status: "ENABLE" }, { label: "Hậu mãi", status: "ENABLE" }], previewRender: "text" },
-  { id: "user-text-appointment",kind: "content", source: "user", name: "Xác nhận lịch khám",
-    description: "Cảm ơn quý khách đã đặt lịch khám tại phòng khám. Lịch khám của bạn đã được xác nhận với chi tiết như sau.",
-    initials: "🏥", bgColor: "oklch(0.92 0.06 165)",
-    tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "PENDING" }], previewRender: "text" },
-  { id: "user-btn-cskh",        kind: "button",  source: "user", name: "Liên hệ bộ phận CSKH",
+  { id: "user-btn-cskh",         kind: "button",  source: "user", name: "Liên hệ bộ phận CSKH",
     description: "Nút liên hệ chăm sóc khách hàng",
     initials: "📞", bgColor: "oklch(0.88 0.08 265)",
     tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "ENABLE" }, { label: "Hậu mãi", status: "ENABLE" }], previewRender: "button" },
-  { id: "user-btn-loyalty",     kind: "button",  source: "user", name: "Theo dõi điểm",
+  { id: "user-btn-loyalty",      kind: "button",  source: "user", name: "Theo dõi điểm",
     description: "Nút xem điểm tích lũy thành viên",
     initials: "🎯", bgColor: "oklch(0.88 0.08 50)",
     tags: [{ label: "Chăm sóc KH", status: "ENABLE" }, { label: "Hậu mãi", status: "ENABLE" }], previewRender: "button" },
@@ -252,6 +262,7 @@ const TAG_TO_LEVEL: Record<string, number> = {
 function vcTypeLabel(c: VComponent): string {
   if (c.kind === "logo") return "Logo"
   if (c.kind === "button") return "Nút"
+  if (c.previewRender === "title") return "Tiêu đề"
   if (c.previewRender === "text") return "Văn bản"
   if (c.previewRender === "image" || c.previewRender === "carousel") return "Ảnh"
   return "Component"
@@ -284,6 +295,7 @@ function TemplateSkeletonPreview({ vc }: { vc: VComponent }) {
   const isButton   = vc.kind === "button"
   const isLogo     = vc.kind === "logo"
   const isText     = vc.previewRender === "text"
+  const isTitle    = vc.previewRender === "title"
   const blue       = "oklch(0.488 0.243 264.376)"
 
   return (
@@ -326,7 +338,13 @@ function TemplateSkeletonPreview({ vc }: { vc: VComponent }) {
         {/* Title skeleton */}
         {!isLogo && <SK w="3/4" />}
 
-        {isText ? (
+        {isTitle ? (
+          /* Real title — bold prominent heading + body skeletons */
+          <div className="flex flex-col gap-1 flex-1">
+            <p className="text-[7px] leading-tight text-gray-900 font-bold">{vc.name}</p>
+            <SK w="full" /><SK w="4/5" /><SK w="3/4" />
+          </div>
+        ) : isText ? (
           /* Real text lines — name bold + first line of description */
           <div className="flex flex-col gap-0.5 flex-1 justify-center">
             <p className="text-[6px] leading-tight text-gray-800 font-semibold truncate">{vc.name}</p>
@@ -366,8 +384,9 @@ function TemplateSkeletonPreview({ vc }: { vc: VComponent }) {
 const LIB_CATEGORIES: { id: LibCategory | "media"; label: string }[] = [
   { id: "all",    label: "Tất cả" },
   { id: "logo",   label: "Logo" },
-  { id: "button", label: "Nút" },
+  { id: "title",  label: "Tiêu đề" },
   { id: "text",   label: "Văn bản" },
+  { id: "button", label: "Nút" },
   { id: "media",  label: "Ảnh" },
 ]
 
@@ -449,8 +468,8 @@ function ComponentLibraryDrawer({ open, onClose, onAdd }: {
                     <TemplateSkeletonPreview vc={c} />
                     {/* Type label */}
                     <p className="text-[10px] text-blue-600 font-semibold mt-1.5 leading-tight">{vcTypeLabel(c)}</p>
-                    {/* Preview text for button / text */}
-                    {(c.kind === "button" || c.previewRender === "text") && (
+                    {/* Preview text for button / text / title */}
+                    {(c.kind === "button" || c.previewRender === "text" || c.previewRender === "title") && (
                       <p className="text-[9px] text-muted-foreground truncate italic leading-tight">"{c.name}"</p>
                     )}
                     {/* Approval levels */}
@@ -1531,6 +1550,8 @@ export default function TaoTemplatePage() {
     } else if (c.kind === "button") {
       if (actionButtons.length >= MAX_BUTTONS) return
       setActionButtons((prev) => [...prev, { id: Date.now(), type: "oa-profile", label: c.name, url: "" }])
+    } else if (c.previewRender === "title") {
+      setTitle(c.name)
     } else if (c.previewRender === "text") {
       setBlocks((prev) => [...prev, { type: "text", id: Date.now(), value: c.name }])
     } else if (c.previewRender === "carousel") {
