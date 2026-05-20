@@ -59,7 +59,7 @@ const TECH_SETTINGS = ["Tên khách hàng (30)", "Tên sản phẩm / Thương h
 type ComponentStatus = "ENABLE" | "PENDING" | "NEW"
 type VCKind          = "logo" | "content" | "button"
 type VCSource        = "predefined" | "user"
-type PreviewRender   = "logo" | "voucher" | "rating" | "payment-table" | "image" | "carousel" | "text" | "title" | "button"
+type PreviewRender   = "logo" | "voucher" | "rating" | "payment-table" | "image" | "carousel" | "text" | "title" | "table" | "button"
 type LibCategory = "all" | VCKind | PreviewRender
 
 interface ComponentTag { label: string; status: ComponentStatus }
@@ -67,6 +67,7 @@ interface VComponent {
   id: string; kind: VCKind; source: VCSource
   name: string; description: string; initials: string; bgColor: string
   tags: ComponentTag[]; previewRender: PreviewRender
+  tableRows?: { label: string; value: string }[]
 }
 
 // ── Predefined library ─────────────────────────────────────────────────────────
@@ -82,6 +83,10 @@ const PREDEFINED: VComponent[] = [
   { id: "pre-carousel",        kind: "content", source: "predefined", name: "Carousel ảnh",           description: "Bộ ảnh tự động chuyển slide",              initials: "▶",  bgColor: "oklch(0.91 0.05 240)", tags: ALL_ENABLE, previewRender: "carousel" },
   { id: "pre-title-order",     kind: "content", source: "predefined", name: "Xác nhận đơn hàng",     description: "Tiêu đề xác nhận đơn hàng",                initials: "T",  bgColor: "oklch(0.88 0.08 265)", tags: ALL_ENABLE, previewRender: "title"   },
   { id: "pre-title-payment",   kind: "content", source: "predefined", name: "Xác nhận thanh toán",   description: "Tiêu đề xác nhận thanh toán",              initials: "T",  bgColor: "oklch(0.88 0.08 200)", tags: ALL_ENABLE, previewRender: "title"   },
+  { id: "pre-table-order",     kind: "content", source: "predefined", name: "Bảng xác nhận đơn hàng",   description: "Bảng chi tiết đơn hàng",           initials: "≡",  bgColor: "oklch(0.90 0.04 265)", tags: ALL_ENABLE, previewRender: "table",
+    tableRows: [{ label: "Mã đơn", value: "<order_code>" }, { label: "Điện thoại", value: "<phone_number>" }, { label: "Giá tiền", value: "<price>" }, { label: "Trạng thái", value: "<status>" }, { label: "Ngày đặt hàng", value: "<date>" }] },
+  { id: "pre-table-payment",   kind: "content", source: "predefined", name: "Bảng xác nhận thanh toán", description: "Bảng chi tiết thanh toán",          initials: "≡",  bgColor: "oklch(0.90 0.04 200)", tags: ALL_ENABLE, previewRender: "table",
+    tableRows: [{ label: "Mã đơn", value: "<order_code>" }, { label: "Ngày đặt hàng", value: "<date>" }, { label: "Giá tiền", value: "<price>" }, { label: "Hình thức thanh toán", value: "<payment>" }] },
   { id: "pre-btn-order-view",  kind: "button",  source: "predefined", name: "Xem đơn hàng đã đặt",   description: "CTA xem chi tiết đơn hàng",                initials: "→",  bgColor: "oklch(0.88 0.08 265)", tags: ALL_ENABLE, previewRender: "button"  },
   { id: "pre-btn-order-detail",kind: "button",  source: "predefined", name: "Xem chi tiết đơn hàng", description: "CTA xem chi tiết sau xác nhận thanh toán", initials: "→",  bgColor: "oklch(0.88 0.08 200)", tags: ALL_ENABLE, previewRender: "button"  },
 ]
@@ -115,6 +120,16 @@ const USER_APPROVED: VComponent[] = [
     description: "Cảm ơn quý khách <customer_name> đã sử dụng dịch vụ. Quý khách được ghi nhận tích lũy điểm thành viên thành công với các thông tin sau.",
     initials: "V",  bgColor: "oklch(0.93 0.05 50)",
     tags: [{ label: "Chăm sóc KH", status: "ENABLE" }, { label: "Hậu mãi", status: "ENABLE" }], previewRender: "text" },
+  { id: "user-table-loyalty",    kind: "content", source: "user", name: "Bảng điểm tích lũy",
+    description: "Bảng thông tin điểm thành viên tích lũy",
+    initials: "≡",  bgColor: "oklch(0.91 0.06 50)",
+    tags: [{ label: "Chăm sóc KH", status: "ENABLE" }, { label: "Hậu mãi", status: "ENABLE" }], previewRender: "table",
+    tableRows: [{ label: "Khách hàng", value: "<customer_name>" }, { label: "Điểm hiện tại", value: "<points>" }, { label: "Điểm vừa cộng", value: "<earned_points>" }, { label: "Hạng thành viên", value: "<tier>" }] },
+  { id: "user-table-appointment",kind: "content", source: "user", name: "Bảng lịch khám",
+    description: "Bảng thông tin lịch hẹn khám tại phòng khám",
+    initials: "≡",  bgColor: "oklch(0.91 0.06 165)",
+    tags: [{ label: "Giao dịch", status: "ENABLE" }, { label: "Chăm sóc KH", status: "PENDING" }], previewRender: "table",
+    tableRows: [{ label: "Bệnh nhân", value: "<patient_name>" }, { label: "Ngày khám", value: "<appointment_date>" }, { label: "Giờ khám", value: "<appointment_time>" }, { label: "Bác sĩ", value: "<doctor_name>" }, { label: "Phòng khám", value: "<clinic_room>" }] },
   { id: "user-btn-cskh",         kind: "button",  source: "user", name: "Liên hệ bộ phận CSKH",
     description: "Nút liên hệ chăm sóc khách hàng",
     initials: "📞", bgColor: "oklch(0.88 0.08 265)",
@@ -264,6 +279,7 @@ function vcTypeLabel(c: VComponent): string {
   if (c.kind === "button") return "Nút"
   if (c.previewRender === "title") return "Tiêu đề"
   if (c.previewRender === "text") return "Văn bản"
+  if (c.previewRender === "table") return "Bảng"
   if (c.previewRender === "image" || c.previewRender === "carousel") return "Ảnh"
   return "Component"
 }
@@ -296,6 +312,7 @@ function TemplateSkeletonPreview({ vc }: { vc: VComponent }) {
   const isLogo     = vc.kind === "logo"
   const isText     = vc.previewRender === "text"
   const isTitle    = vc.previewRender === "title"
+  const isTable    = vc.previewRender === "table"
   const blue       = "oklch(0.488 0.243 264.376)"
 
   return (
@@ -349,6 +366,16 @@ function TemplateSkeletonPreview({ vc }: { vc: VComponent }) {
           <div className="flex flex-col gap-0.5 flex-1 justify-center">
             <p className="text-[6px] leading-tight text-gray-600 line-clamp-4">{vc.description}</p>
           </div>
+        ) : isTable ? (
+          /* Mini table — key/value rows */
+          <div className="flex flex-col flex-1 justify-center divide-y divide-gray-100">
+            {(vc.tableRows ?? []).slice(0, 4).map((r, i) => (
+              <div key={i} className="flex items-center justify-between py-[2px]">
+                <span className="text-[5.5px] text-gray-400 shrink-0 mr-1 truncate" style={{ maxWidth: "45%" }}>{r.label}</span>
+                <span className="text-[5.5px] text-gray-600 font-semibold truncate">{r.value}</span>
+              </div>
+            ))}
+          </div>
         ) : isLogo ? (
           /* Content skeletons after real logo */
           <div className="flex flex-col gap-1 flex-1 justify-center">
@@ -385,6 +412,7 @@ const LIB_CATEGORIES: { id: LibCategory | "media"; label: string }[] = [
   { id: "logo",   label: "Logo" },
   { id: "title",  label: "Tiêu đề" },
   { id: "text",   label: "Văn bản" },
+  { id: "table",  label: "Bảng" },
   { id: "button", label: "Nút" },
   { id: "media",  label: "Ảnh" },
 ]
@@ -462,7 +490,7 @@ function ComponentLibraryPanel({ open, onClose, onAdd }: {
                     className="rounded-xl border-2 border-border bg-white hover:border-blue-400 hover:shadow-sm p-2 text-left transition-all active:scale-95">
                     <TemplateSkeletonPreview vc={c} />
                     <p className="text-[11px] text-blue-600 font-semibold mt-1.5 leading-tight">{vcTypeLabel(c)}</p>
-                    {(c.kind === "button" || c.previewRender === "text" || c.previewRender === "title") && (
+                    {(c.kind === "button" || c.previewRender === "text" || c.previewRender === "title" || c.previewRender === "table") && (
                       <p className="text-[10px] text-muted-foreground truncate italic leading-tight">"{c.name}"</p>
                     )}
                     {levels.length > 0 && (
@@ -1522,6 +1550,8 @@ export default function TaoTemplatePage() {
       setTitle(c.name)
     } else if (c.previewRender === "text") {
       setBlocks((prev) => [...prev, { type: "text", id: Date.now(), value: c.description }])
+    } else if (c.previewRender === "table") {
+      setBlocks((prev) => [...prev, { type: "table", id: Date.now(), rows: c.tableRows ?? [] }])
     } else if (c.previewRender === "carousel") {
       setLogoMode("image")
       setUploadedImages([...MOCK_IMGS])
