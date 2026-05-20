@@ -345,10 +345,9 @@ function TemplateSkeletonPreview({ vc }: { vc: VComponent }) {
             <SK w="full" /><SK w="4/5" /><SK w="3/4" />
           </div>
         ) : isText ? (
-          /* Real text lines — name bold + first line of description */
+          /* Real text content only — no title */
           <div className="flex flex-col gap-0.5 flex-1 justify-center">
-            <p className="text-[6px] leading-tight text-gray-800 font-semibold truncate">{vc.name}</p>
-            <p className="text-[6px] leading-tight text-gray-500 line-clamp-3">{vc.description}</p>
+            <p className="text-[6px] leading-tight text-gray-600 line-clamp-4">{vc.description}</p>
           </div>
         ) : isLogo ? (
           /* Content skeletons after real logo */
@@ -1553,7 +1552,7 @@ export default function TaoTemplatePage() {
     } else if (c.previewRender === "title") {
       setTitle(c.name)
     } else if (c.previewRender === "text") {
-      setBlocks((prev) => [...prev, { type: "text", id: Date.now(), value: c.name }])
+      setBlocks((prev) => [...prev, { type: "text", id: Date.now(), value: c.description }])
     } else if (c.previewRender === "carousel") {
       setLogoMode("image")
       setUploadedImages([...MOCK_IMGS])
