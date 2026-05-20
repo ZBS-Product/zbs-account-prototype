@@ -432,7 +432,15 @@ function ComponentLibraryPanel({ open, onClose, onAdd }: {
   }
 
   const filtered = ALL_LIBRARY.filter((c) => {
-    if (search && !c.name.toLowerCase().includes(search.toLowerCase())) return false
+    if (search) {
+      const q = search.toLowerCase()
+      const inName = c.name.toLowerCase().includes(q)
+      const inDesc = c.description.toLowerCase().includes(q)
+      const inRows = (c.tableRows ?? []).some(
+        (r) => r.label.toLowerCase().includes(q) || r.value.toLowerCase().includes(q)
+      )
+      if (!inName && !inDesc && !inRows) return false
+    }
     if (category === "all") return true
     if (category === "media") return c.previewRender === "image" || c.previewRender === "carousel"
     return c.kind === category || c.previewRender === category
@@ -490,9 +498,13 @@ function ComponentLibraryPanel({ open, onClose, onAdd }: {
                     className="rounded-xl border-2 border-border bg-white hover:border-blue-400 hover:shadow-sm p-2 text-left transition-all active:scale-95">
                     <TemplateSkeletonPreview vc={c} />
                     <p className="text-[11px] text-blue-600 font-semibold mt-1.5 leading-tight">{vcTypeLabel(c)}</p>
-                    {(c.kind === "button" || c.previewRender === "text" || c.previewRender === "title" || c.previewRender === "table") && (
+                    {c.previewRender === "table" ? (
+                      <p className="text-[10px] text-muted-foreground truncate leading-tight">
+                        {(c.tableRows ?? []).map((r) => `${r.label} ${r.value}`).join(" · ")}
+                      </p>
+                    ) : (c.kind === "button" || c.previewRender === "text" || c.previewRender === "title") ? (
                       <p className="text-[10px] text-muted-foreground truncate italic leading-tight">"{c.name}"</p>
-                    )}
+                    ) : null}
                     {levels.length > 0 && (
                       <p className="text-[10px] text-muted-foreground leading-tight">
                         Cấp độ duyệt: {levels.join(", ")}
