@@ -419,54 +419,54 @@ function ComponentLibraryPanel({ open, onClose, onAdd }: {
   return (
     /* Bottom panel — dark shelf, pushes content above upward */
     <div className={cn(
-      "shrink-0 bg-slate-900 overflow-hidden transition-all duration-300 ease-out",
-      open ? "h-[380px] shadow-[0_-8px_32px_rgba(0,0,0,0.25)]" : "h-0",
+      "shrink-0 bg-white overflow-hidden transition-all duration-300 ease-out",
+      open ? "h-[380px] shadow-[0_-8px_24px_rgba(0,0,0,0.10)]" : "h-0",
     )}>
       <div className="h-[380px] flex flex-col relative">
-        {/* Header row */}
-        <div className="flex items-center gap-3 px-6 py-2.5 border-b border-slate-700 shrink-0">
-          <span className="text-sm font-semibold text-white shrink-0">Thư viện Component</span>
+        {/* Header row — white, standard */}
+        <div className="flex items-center gap-3 px-6 py-2.5 border-b border-border shrink-0">
+          <span className="text-sm font-semibold shrink-0">Thư viện Component</span>
           {/* Category pills */}
           <div className="flex items-center gap-1.5 flex-1 overflow-x-auto scrollbar-none">
             {availableCategories.map((cat) => (
               <button key={cat.id} onClick={() => setCategory(cat.id)}
                 className={cn("shrink-0 px-3 py-1 text-xs font-medium rounded-full border transition-all whitespace-nowrap",
                   category === cat.id
-                    ? "bg-blue-500 text-white border-blue-500"
-                    : "bg-transparent text-slate-400 border-slate-600 hover:border-slate-400 hover:text-slate-200")}>
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-muted-foreground border-border hover:border-blue-300 hover:text-blue-600")}>
                 {cat.label}
               </button>
             ))}
           </div>
           {/* Search */}
           <div className="relative shrink-0">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm component..."
-              className="pl-8 pr-3 py-1.5 text-xs bg-slate-800 border border-slate-600 text-slate-200 placeholder:text-slate-500 rounded-md w-40 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+              className="pl-8 pr-3 py-1.5 text-xs border border-border rounded-md w-40 focus:outline-none focus:ring-1 focus:ring-blue-500" />
           </div>
-          <button onClick={onClose} className="p-1.5 rounded hover:bg-slate-700 transition-colors shrink-0">
-            <X className="h-4 w-4 text-slate-400" />
+          <button onClick={onClose} className="p-1.5 rounded hover:bg-gray-100 transition-colors shrink-0">
+            <X className="h-4 w-4 text-muted-foreground" />
           </button>
         </div>
 
-        {/* Grid */}
-        <div className="flex-1 overflow-y-auto px-6 py-3">
+        {/* Grid — slate-50 background only here */}
+        <div className="flex-1 overflow-y-auto bg-slate-50 px-6 py-3">
           {filtered.length === 0 ? (
-            <p className="text-sm text-slate-500 text-center py-8">Không có component nào</p>
+            <p className="text-sm text-muted-foreground text-center py-8">Không có component nào</p>
           ) : (
             <div className="grid grid-cols-5 gap-3">
               {filtered.map((c) => {
                 const levels = vcApprovalLevels(c)
                 return (
                   <button key={c.id} onClick={() => handleAdd(c)}
-                    className="rounded-xl border-2 border-slate-700 bg-white hover:border-blue-400 hover:shadow-[0_0_12px_rgba(96,165,250,0.3)] p-2 text-left transition-all active:scale-95">
+                    className="rounded-xl border-2 border-border bg-white hover:border-blue-400 hover:shadow-sm p-2 text-left transition-all active:scale-95">
                     <TemplateSkeletonPreview vc={c} />
-                    <p className="text-[10px] text-blue-500 font-semibold mt-1.5 leading-tight">{vcTypeLabel(c)}</p>
+                    <p className="text-[10px] text-blue-600 font-semibold mt-1.5 leading-tight">{vcTypeLabel(c)}</p>
                     {(c.kind === "button" || c.previewRender === "text" || c.previewRender === "title") && (
-                      <p className="text-[9px] text-slate-500 truncate italic leading-tight">"{c.name}"</p>
+                      <p className="text-[9px] text-muted-foreground truncate italic leading-tight">"{c.name}"</p>
                     )}
                     {levels.length > 0 && (
-                      <p className="text-[9px] text-slate-500 leading-tight">
+                      <p className="text-[9px] text-muted-foreground leading-tight">
                         Cấp độ duyệt: {levels.join(", ")}
                       </p>
                     )}
