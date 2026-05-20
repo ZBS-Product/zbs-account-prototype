@@ -274,15 +274,15 @@ function TemplateSkeletonPreview({ vc }: { vc: VComponent }) {
   const blue       = "oklch(0.488 0.243 264.376)"
 
   return (
-    <div className="aspect-square rounded-xl border-2 border-blue-200 bg-white overflow-hidden flex flex-col">
+    <div className="h-28 rounded-xl border-2 border-blue-200 bg-white overflow-hidden flex flex-col">
       {/* ── Top: image banner (if image/carousel) or logo header ── */}
       {isImage ? (
-        <div className="shrink-0 h-[38%] flex items-center justify-center relative overflow-hidden"
+        <div className="shrink-0 h-[42%] flex items-center justify-center relative overflow-hidden"
           style={{ background: blue }}>
           {vc.previewRender === "carousel" ? (
             <>
-              <span className="text-2xl">{CAROUSEL_SLIDES[idx].emoji}</span>
-              <div className="absolute bottom-1 left-0 right-0 flex justify-center gap-0.5">
+              <span className="text-xl">{CAROUSEL_SLIDES[idx].emoji}</span>
+              <div className="absolute bottom-0.5 left-0 right-0 flex justify-center gap-0.5">
                 {CAROUSEL_SLIDES.map((_, i) => (
                   <div key={i} className={cn("h-0.5 rounded-full transition-all",
                     i === idx ? "w-2.5 bg-white" : "w-1 bg-white/50")} />
@@ -290,59 +290,57 @@ function TemplateSkeletonPreview({ vc }: { vc: VComponent }) {
               </div>
             </>
           ) : (
-            <span className="text-[10px] font-semibold text-white/90">Ảnh</span>
+            <span className="text-[9px] font-semibold text-white/90">Ảnh</span>
           )}
         </div>
       ) : (
-        <div className={cn("shrink-0 px-3 py-2 flex items-center gap-1.5",
+        <div className={cn("shrink-0 px-2 py-1.5 flex items-center gap-1",
           isLogo ? "bg-orange-50" : "bg-gray-50")}>
           {isLogo ? (
             <>
-              <div className="h-4 w-4 rounded text-[7px] font-bold flex items-center justify-center shrink-0"
+              <div className="h-3.5 w-3.5 rounded text-[6px] font-bold flex items-center justify-center shrink-0"
                 style={{ background: vc.bgColor }}>{vc.initials.slice(0, 2)}</div>
-              <div className="h-[5px] flex-1 rounded-full bg-orange-200" />
+              <div className="h-[4px] flex-1 rounded-full bg-orange-200" />
             </>
           ) : (
-            <div className="h-[5px] w-10 rounded-full bg-gray-300" />
+            <div className="h-[4px] w-8 rounded-full bg-gray-300" />
           )}
         </div>
       )}
 
       {/* ── Content ── */}
-      <div className="flex-1 px-3 py-2 flex flex-col gap-1.5 min-h-0 overflow-hidden">
+      <div className="flex-1 px-2 py-1.5 flex flex-col gap-1 min-h-0 overflow-hidden">
         {/* Title skeleton */}
         {!isLogo && <SK w="3/4" />}
 
         {isText ? (
-          /* Real text lines */
-          <div className="flex flex-col gap-1 flex-1 justify-center">
-            {[...Array(4)].map((_, i) => (
-              <p key={i} className="text-[7px] leading-tight text-gray-700 truncate">{vc.description}</p>
-            ))}
+          /* Real text lines — just 2 lines is enough */
+          <div className="flex flex-col gap-0.5 flex-1 justify-center">
+            <p className="text-[6px] leading-tight text-gray-700 truncate">{vc.name}</p>
+            <p className="text-[6px] leading-tight text-gray-500 truncate">{vc.description}</p>
           </div>
         ) : isLogo ? (
           /* Content skeletons after real logo */
-          <div className="flex flex-col gap-1.5 flex-1 justify-center">
+          <div className="flex flex-col gap-1 flex-1 justify-center">
             <SK w="full" /><SK w="4/5" /><SK w="3/4" />
           </div>
         ) : (
           /* Generic content skeletons */
-          <div className="flex flex-col gap-1.5 flex-1 justify-center">
+          <div className="flex flex-col gap-1 flex-1 justify-center">
             <SK w="full" /><SK w="4/5" />
             {!isButton && <SK w="3/4" />}
-            {!isButton && <SK w="1/2" />}
           </div>
         )}
 
         {/* ── Button slot ── */}
-        <div className="shrink-0 pb-0.5">
+        <div className="shrink-0">
           {isButton ? (
-            <div className="w-full rounded py-1.5 flex items-center justify-center text-white text-[9px] font-semibold"
+            <div className="w-full rounded py-1 flex items-center justify-center text-white text-[8px] font-semibold"
               style={{ background: blue }}>
               {vc.name}
             </div>
           ) : (
-            <div className="w-full h-[18px] rounded bg-gray-200" />
+            <div className="w-full h-[14px] rounded bg-gray-200" />
           )}
         </div>
       </div>
@@ -393,7 +391,7 @@ function ComponentLibraryDrawer({ open, onClose, onAdd }: {
       <div className={cn(
         "absolute left-0 right-0 bottom-0 bg-white border-t border-border shadow-2xl z-20 flex flex-col transition-transform duration-300 ease-out",
         open ? "translate-y-0" : "translate-y-full",
-      )} style={{ height: "44%" }}>
+      )} style={{ height: "62%" }}>
         {/* Handle */}
         <div className="flex justify-center pt-2.5 pb-1 shrink-0">
           <div className="h-1 w-10 rounded-full bg-gray-300" />
