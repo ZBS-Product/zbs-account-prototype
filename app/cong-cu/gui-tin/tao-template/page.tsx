@@ -228,6 +228,35 @@ function PreviewItem({ vc, dark }: { vc: VComponent; dark: boolean }) {
   }
 }
 
+// ── Library card helpers ──────────────────────────────────────────────────────
+
+function vcTypeLabel(c: VComponent): string {
+  if (c.kind === "logo") return "Logo"
+  if (c.kind === "button") return "Nút"
+  if (c.previewRender === "text") return "Văn bản"
+  if (c.previewRender === "image" || c.previewRender === "carousel") return "Ảnh"
+  return "Component"
+}
+
+function vcApprovalLevel(c: VComponent): 1 | 2 | 3 {
+  if (c.source === "predefined") return 3
+  const allEnable = c.tags.every((t) => t.status === "ENABLE")
+  return allEnable ? 2 : 1
+}
+
+function ApprovalLevelBadge({ level }: { level: 1 | 2 | 3 }) {
+  const styles: Record<number, string> = {
+    3: "bg-green-100 text-green-700",
+    2: "bg-blue-100 text-blue-700",
+    1: "bg-yellow-100 text-yellow-700",
+  }
+  return (
+    <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded-full", styles[level])}>
+      Cấp {level}
+    </span>
+  )
+}
+
 // ── Library card thumbnail — renders what actually gets inserted into template ─
 
 function LibraryCardPreview({ vc }: { vc: VComponent }) {
@@ -241,7 +270,7 @@ function LibraryCardPreview({ vc }: { vc: VComponent }) {
   switch (vc.previewRender) {
     case "logo":
       return (
-        <div className="h-11 rounded-lg flex items-center gap-2 px-3 border border-black/5 bg-orange-50 overflow-hidden">
+        <div className="rounded-lg flex items-center gap-2 px-3 py-2.5 border border-black/5 bg-orange-50 overflow-hidden">
           <div className="h-6 w-6 rounded text-[9px] font-bold flex items-center justify-center shrink-0" style={{ background: vc.bgColor }}>
             {vc.initials}
           </div>
@@ -250,14 +279,14 @@ function LibraryCardPreview({ vc }: { vc: VComponent }) {
       )
     case "button":
       return (
-        <div className="h-11 rounded-lg flex items-center justify-center px-2 text-white text-[11px] font-semibold border border-black/5"
+        <div className="w-full rounded-lg py-2.5 flex items-center justify-center text-white text-[12px] font-semibold"
           style={{ background: "oklch(0.488 0.243 264.376)" }}>
           {vc.name}
         </div>
       )
     case "text":
       return (
-        <div className="h-11 rounded-lg flex flex-col justify-center px-3 gap-1.5 border border-black/5 bg-white">
+        <div className="rounded-lg flex flex-col justify-center px-3 py-3 gap-1.5 border border-black/5 bg-white">
           <div className="h-1.5 w-full rounded-full bg-gray-300" />
           <div className="h-1.5 w-4/5 rounded-full bg-gray-200" />
           <div className="h-1.5 w-3/5 rounded-full bg-gray-200" />
@@ -265,15 +294,15 @@ function LibraryCardPreview({ vc }: { vc: VComponent }) {
       )
     case "image":
       return (
-        <div className="h-11 rounded-lg flex flex-col items-center justify-center gap-1 border border-black/5" style={{ background: vc.bgColor }}>
+        <div className="rounded-lg flex flex-col items-center justify-center gap-1 py-3 border border-black/5" style={{ background: vc.bgColor }}>
           <ImageIcon className="h-4 w-4 text-white/70" />
           <span className="text-[9px] font-medium text-white/80">16 : 9</span>
         </div>
       )
     case "carousel":
       return (
-        <div className="h-11 rounded-lg relative overflow-hidden border border-black/5" style={{ background: vc.bgColor }}>
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
+        <div className="rounded-lg relative overflow-hidden py-3 border border-black/5" style={{ background: vc.bgColor }}>
+          <div className="flex flex-col items-center justify-center gap-0.5">
             <span className="text-xl leading-none">{CAROUSEL_SLIDES[idx].emoji}</span>
           </div>
           <div className="absolute bottom-1 left-0 right-0 flex justify-center gap-1">
@@ -286,7 +315,7 @@ function LibraryCardPreview({ vc }: { vc: VComponent }) {
       )
     default:
       return (
-        <div className="h-11 rounded-lg flex items-center justify-center border border-black/5" style={{ background: vc.bgColor }}>
+        <div className="rounded-lg flex items-center justify-center py-3 border border-black/5" style={{ background: vc.bgColor }}>
           <span className="text-base">{vc.initials}</span>
         </div>
       )
@@ -295,16 +324,12 @@ function LibraryCardPreview({ vc }: { vc: VComponent }) {
 
 // ── Component Library Drawer ──────────────────────────────────────────────────
 
-const LIB_CATEGORIES: { id: LibCategory; label: string }[] = [
-  { id: "all",           label: "Tất cả" },
-  { id: "logo",          label: "Logo" },
-  { id: "button",        label: "Nút" },
-  { id: "text",          label: "Văn bản" },
-  { id: "voucher",       label: "Voucher" },
-  { id: "payment-table", label: "Thanh toán" },
-  { id: "rating",        label: "Đánh giá" },
-  { id: "image",         label: "Hình ảnh" },
-  { id: "carousel",      label: "Carousel" },
+const LIB_CATEGORIES: { id: LibCategory | "media"; label: string }[] = [
+  { id: "all",    label: "Tất cả" },
+  { id: "logo",   label: "Logo" },
+  { id: "button", label: "Nút" },
+  { id: "text",   label: "Văn bản" },
+  { id: "media",  label: "Ảnh" },
 ]
 
 function ComponentLibraryDrawer({ open, onClose, onAdd }: {
@@ -312,7 +337,7 @@ function ComponentLibraryDrawer({ open, onClose, onAdd }: {
   onAdd: (c: VComponent) => void
 }) {
   const [search, setSearch]     = useState("")
-  const [category, setCategory] = useState<LibCategory>("all")
+  const [category, setCategory] = useState<LibCategory | "media">("all")
   const [toast, setToast]       = useState<string | null>(null)
 
   function handleAdd(c: VComponent) {
@@ -324,13 +349,15 @@ function ComponentLibraryDrawer({ open, onClose, onAdd }: {
   const filtered = ALL_LIBRARY.filter((c) => {
     if (search && !c.name.toLowerCase().includes(search.toLowerCase())) return false
     if (category === "all") return true
+    if (category === "media") return c.previewRender === "image" || c.previewRender === "carousel"
     return c.kind === category || c.previewRender === category
   })
 
-  // Only show category pills that have at least 1 item
-  const availableCategories = LIB_CATEGORIES.filter((cat) =>
-    cat.id === "all" || ALL_LIBRARY.some((c) => c.kind === cat.id || c.previewRender === cat.id)
-  )
+  const availableCategories = LIB_CATEGORIES.filter((cat) => {
+    if (cat.id === "all") return true
+    if (cat.id === "media") return ALL_LIBRARY.some((c) => c.previewRender === "image" || c.previewRender === "carousel")
+    return ALL_LIBRARY.some((c) => c.kind === cat.id || c.previewRender === cat.id)
+  })
 
   return (
     <>
@@ -377,24 +404,20 @@ function ComponentLibraryDrawer({ open, onClose, onAdd }: {
               {filtered.map((c) => (
                 <button key={c.id} onClick={() => handleAdd(c)}
                   className="rounded-xl border-2 border-border bg-white hover:border-blue-400 hover:shadow-sm p-3 text-left transition-all active:scale-95">
-                  <div className="mb-2">
+                  <div className="mb-2.5">
                     <LibraryCardPreview vc={c} />
                   </div>
-                  <p className="text-[11px] font-semibold truncate mb-0.5">{c.name}</p>
-                  <p className="text-[10px] text-muted-foreground truncate mb-1.5">{c.description}</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {c.tags.map((t, i) => (
-                      <span key={t.label}>
-                        <span className={t.status === "ENABLE" ? "text-green-700" : t.status === "PENDING" ? "text-yellow-700" : "text-gray-500"}>
-                          {t.label}{t.status === "PENDING" ? " ⚠" : t.status === "NEW" ? " –" : ""}
-                        </span>
-                        {i < c.tags.length - 1 && <span className="text-gray-300">, </span>}
-                      </span>
-                    ))}
-                  </p>
-                  <div className="mt-2 text-center text-[10px] font-semibold text-blue-500">
-                    + Thêm vào template
+                  {/* Name */}
+                  <p className="text-[11px] font-semibold truncate mb-1.5">{c.name}</p>
+                  {/* Type + Approval level */}
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <span className="text-[10px] text-muted-foreground font-medium">{vcTypeLabel(c)}</span>
+                    <ApprovalLevelBadge level={vcApprovalLevel(c)} />
                   </div>
+                  {/* Preview text for button/text */}
+                  {(c.kind === "button" || c.previewRender === "text") && (
+                    <p className="text-[10px] text-muted-foreground truncate italic">"{c.name}"</p>
+                  )}
                 </button>
               ))}
             </div>
@@ -1462,6 +1485,7 @@ export default function TaoTemplatePage() {
   function handleAddVC(c: VComponent) {
     if (c.kind === "logo") {
       setVerifiedComponents((prev) => [...prev.filter((v) => v.kind !== "logo"), c])
+      setLogoMode("logo")
     } else if (c.kind === "button") {
       if (actionButtons.length >= MAX_BUTTONS) return
       setActionButtons((prev) => [...prev, { id: Date.now(), type: "oa-profile", label: c.name, url: "" }])
