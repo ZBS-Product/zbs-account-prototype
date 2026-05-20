@@ -417,27 +417,20 @@ function ComponentLibraryPanel({ open, onClose, onAdd }: {
   })
 
   return (
-    /* Flex column — slides in by width transition, no absolute positioning */
+    /* Bottom panel — height transition pushes content above upward */
     <div className={cn(
-      "shrink-0 border-l border-border bg-white flex flex-col overflow-hidden transition-all duration-300 ease-out",
-      open ? "w-[380px]" : "w-0",
+      "shrink-0 bg-white border-t border-blue-100 overflow-hidden transition-all duration-300 ease-out",
+      open ? "h-[380px] shadow-[0_-8px_24px_rgba(0,0,0,0.12)]" : "h-0",
     )}>
-      {/* Inner wrapper keeps content at fixed width so it doesn't reflow during transition */}
-      <div className="w-[380px] flex flex-col h-full relative">
-        {/* Header */}
-        <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-border shrink-0">
+      <div className="h-[380px] flex flex-col relative">
+        {/* Handle + header row */}
+        <div className="flex items-center gap-3 px-6 py-2.5 border-b border-border shrink-0">
           <span className="text-sm font-semibold shrink-0">Thư viện Component</span>
-          <button onClick={onClose} className="p-1.5 rounded hover:bg-gray-100 transition-colors shrink-0">
-            <X className="h-4 w-4 text-muted-foreground" />
-          </button>
-        </div>
-
-        {/* Category tabs + search */}
-        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border shrink-0">
-          <div className="flex items-center gap-1 flex-1 overflow-x-auto scrollbar-none">
+          {/* Category pills */}
+          <div className="flex items-center gap-1.5 flex-1 overflow-x-auto scrollbar-none">
             {availableCategories.map((cat) => (
               <button key={cat.id} onClick={() => setCategory(cat.id)}
-                className={cn("shrink-0 px-2.5 py-1 text-xs font-medium rounded-full border transition-all whitespace-nowrap",
+                className={cn("shrink-0 px-3 py-1 text-xs font-medium rounded-full border transition-all whitespace-nowrap",
                   category === cat.id
                     ? "bg-blue-600 text-white border-blue-600"
                     : "bg-white text-muted-foreground border-border hover:border-blue-300 hover:text-blue-600")}>
@@ -445,19 +438,23 @@ function ComponentLibraryPanel({ open, onClose, onAdd }: {
               </button>
             ))}
           </div>
+          {/* Search */}
           <div className="relative shrink-0">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm..."
-              className="pl-7 pr-2.5 py-1 text-xs border border-border rounded-md w-24 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm component..."
+              className="pl-8 pr-3 py-1.5 text-xs border border-border rounded-md w-40 focus:outline-none focus:ring-1 focus:ring-blue-500" />
           </div>
+          <button onClick={onClose} className="p-1.5 rounded hover:bg-gray-100 transition-colors shrink-0">
+            <X className="h-4 w-4 text-muted-foreground" />
+          </button>
         </div>
 
         {/* Grid */}
-        <div className="flex-1 overflow-y-auto px-4 py-4">
+        <div className="flex-1 overflow-y-auto px-6 py-3">
           {filtered.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">Không có component nào</p>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-5 gap-3">
               {filtered.map((c) => {
                 const levels = vcApprovalLevels(c)
                 return (
@@ -482,7 +479,7 @@ function ComponentLibraryPanel({ open, onClose, onAdd }: {
 
         {/* Toast */}
         <div className={cn(
-          "absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-gray-900 text-white text-xs font-medium px-4 py-2 rounded-full shadow-lg transition-all duration-200 pointer-events-none whitespace-nowrap",
+          "absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-gray-900 text-white text-xs font-medium px-4 py-2 rounded-full shadow-lg transition-all duration-200 pointer-events-none whitespace-nowrap",
           toast ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
         )}>
           <Check className="h-3.5 w-3.5 text-green-400" />
@@ -1029,7 +1026,6 @@ function Step2({
   verifiedComponents, onRemoveVC, onMoveVC,
   logoMode, setLogoMode, uploadedImages, setUploadedImages,
   imagesVerified, setImagesVerified,
-  libraryOpen, onLibraryClose, onLibraryAdd,
 }: {
   templateType: string; setTemplateType: (v: string) => void
   purpose: string; setPurpose: (v: string) => void
@@ -1043,7 +1039,6 @@ function Step2({
   logoMode: "logo" | "image"; setLogoMode: (m: "logo" | "image") => void
   uploadedImages: UploadedImage[]; setUploadedImages: (imgs: UploadedImage[]) => void
   imagesVerified: boolean; setImagesVerified: (v: boolean) => void
-  libraryOpen: boolean; onLibraryClose: () => void; onLibraryAdd: (c: VComponent) => void
 }) {
   const [logoOpen, setLogoOpen] = useState(true)
   const [btnOpen, setBtnOpen]   = useState(true)
@@ -1402,9 +1397,6 @@ function Step2({
         verifiedComponents={verifiedComponents}
         logoMode={logoMode} uploadedImages={uploadedImages}
       />
-      <ComponentLibraryPanel
-        open={libraryOpen} onClose={onLibraryClose} onAdd={onLibraryAdd}
-      />
     </div>
   )
 }
@@ -1585,7 +1577,7 @@ export default function TaoTemplatePage() {
     <div className="fixed top-[36px] inset-x-0 bottom-0 z-[90] bg-white flex flex-col">
       <StepHeader step={step} onExit={exit} saved={step > 0} />
 
-      <div className="flex-1 overflow-hidden relative flex flex-col">
+      <div className="flex-1 min-h-0 overflow-hidden">
         {step === 0 && (
           <Step1 templateName={templateName} setTemplateName={setTemplateName}
             selectedApp={selectedApp} setSelectedApp={setSelectedApp}
@@ -1604,7 +1596,6 @@ export default function TaoTemplatePage() {
             logoMode={logoMode} setLogoMode={setLogoMode}
             uploadedImages={uploadedImages} setUploadedImages={setUploadedImages}
             imagesVerified={imagesVerified} setImagesVerified={setImagesVerified}
-            libraryOpen={drawerOpen} onLibraryClose={() => setDrawerOpen(false)} onLibraryAdd={handleAddVC}
           />
         )}
         {step === 2 && (
@@ -1616,6 +1607,10 @@ export default function TaoTemplatePage() {
             isEligible={isEligible} />
         )}
       </div>
+
+      {step === 1 && (
+        <ComponentLibraryPanel open={drawerOpen} onClose={() => setDrawerOpen(false)} onAdd={handleAddVC} />
+      )}
 
       <div className="flex items-center justify-between px-8 py-4 border-t border-border bg-white shrink-0">
         {step === 0 ? <Button variant="outline" onClick={exit}>Hủy</Button>
