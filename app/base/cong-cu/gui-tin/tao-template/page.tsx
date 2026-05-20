@@ -389,7 +389,7 @@ const LIB_CATEGORIES: { id: LibCategory | "media"; label: string }[] = [
   { id: "media",  label: "Ảnh" },
 ]
 
-function ComponentLibraryDrawer({ open, onClose, onAdd }: {
+function ComponentLibraryPanel({ open, onClose, onAdd }: {
   open: boolean; onClose: () => void
   onAdd: (c: VComponent) => void
 }) {
@@ -417,19 +417,27 @@ function ComponentLibraryDrawer({ open, onClose, onAdd }: {
   })
 
   return (
-    <>
-      {open && <div className="absolute inset-0 bg-black/10 z-10" onClick={onClose} />}
-      <div className={cn(
-        "absolute top-0 right-0 bottom-0 bg-white border-l border-border shadow-2xl z-20 flex flex-col transition-transform duration-300 ease-out w-[480px]",
-        open ? "translate-x-0" : "translate-x-full",
-      )}>
+    /* Flex column — slides in by width transition, no absolute positioning */
+    <div className={cn(
+      "shrink-0 border-l border-border bg-white flex flex-col overflow-hidden transition-all duration-300 ease-out",
+      open ? "w-[380px]" : "w-0",
+    )}>
+      {/* Inner wrapper keeps content at fixed width so it doesn't reflow during transition */}
+      <div className="w-[380px] flex flex-col h-full relative">
         {/* Header */}
-        <div className="flex items-center gap-3 px-5 py-3 border-b border-border shrink-0">
+        <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-border shrink-0">
           <span className="text-sm font-semibold shrink-0">Thư viện Component</span>
-          <div className="flex items-center gap-1.5 flex-1 overflow-x-auto scrollbar-none">
+          <button onClick={onClose} className="p-1.5 rounded hover:bg-gray-100 transition-colors shrink-0">
+            <X className="h-4 w-4 text-muted-foreground" />
+          </button>
+        </div>
+
+        {/* Category tabs + search */}
+        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border shrink-0">
+          <div className="flex items-center gap-1 flex-1 overflow-x-auto scrollbar-none">
             {availableCategories.map((cat) => (
               <button key={cat.id} onClick={() => setCategory(cat.id)}
-                className={cn("shrink-0 px-3 py-1 text-xs font-medium rounded-full border transition-all whitespace-nowrap",
+                className={cn("shrink-0 px-2.5 py-1 text-xs font-medium rounded-full border transition-all whitespace-nowrap",
                   category === cat.id
                     ? "bg-blue-600 text-white border-blue-600"
                     : "bg-white text-muted-foreground border-border hover:border-blue-300 hover:text-blue-600")}>
@@ -438,35 +446,28 @@ function ComponentLibraryDrawer({ open, onClose, onAdd }: {
             ))}
           </div>
           <div className="relative shrink-0">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm component..."
-              className="pl-8 pr-3 py-1.5 text-xs border border-border rounded-md w-44 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm..."
+              className="pl-7 pr-2.5 py-1 text-xs border border-border rounded-md w-24 focus:outline-none focus:ring-1 focus:ring-blue-500" />
           </div>
-          <button onClick={onClose} className="p-1.5 rounded hover:bg-gray-100 transition-colors shrink-0">
-            <X className="h-4 w-4 text-muted-foreground" />
-          </button>
         </div>
 
         {/* Grid */}
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="flex-1 overflow-y-auto px-4 py-4">
           {filtered.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">Không có component nào</p>
           ) : (
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               {filtered.map((c) => {
                 const levels = vcApprovalLevels(c)
                 return (
                   <button key={c.id} onClick={() => handleAdd(c)}
                     className="rounded-xl border-2 border-border bg-white hover:border-blue-400 hover:shadow-sm p-2 text-left transition-all active:scale-95">
-                    {/* Template skeleton preview */}
                     <TemplateSkeletonPreview vc={c} />
-                    {/* Type label */}
                     <p className="text-[10px] text-blue-600 font-semibold mt-1.5 leading-tight">{vcTypeLabel(c)}</p>
-                    {/* Preview text for button / text / title */}
                     {(c.kind === "button" || c.previewRender === "text" || c.previewRender === "title") && (
                       <p className="text-[9px] text-muted-foreground truncate italic leading-tight">"{c.name}"</p>
                     )}
-                    {/* Approval levels */}
                     {levels.length > 0 && (
                       <p className="text-[9px] text-muted-foreground leading-tight">
                         Cấp độ duyệt: {levels.join(", ")}
@@ -479,16 +480,16 @@ function ComponentLibraryDrawer({ open, onClose, onAdd }: {
           )}
         </div>
 
-        {/* Toast confirmation */}
+        {/* Toast */}
         <div className={cn(
-          "absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-gray-900 text-white text-xs font-medium px-4 py-2 rounded-full shadow-lg transition-all duration-200 pointer-events-none",
+          "absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-gray-900 text-white text-xs font-medium px-4 py-2 rounded-full shadow-lg transition-all duration-200 pointer-events-none whitespace-nowrap",
           toast ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
         )}>
           <Check className="h-3.5 w-3.5 text-green-400" />
           Đã thêm <span className="font-semibold">{toast}</span>
         </div>
       </div>
-    </>
+    </div>
   )
 }
 
@@ -1028,6 +1029,7 @@ function Step2({
   verifiedComponents, onRemoveVC, onMoveVC,
   logoMode, setLogoMode, uploadedImages, setUploadedImages,
   imagesVerified, setImagesVerified,
+  libraryOpen, onLibraryClose, onLibraryAdd,
 }: {
   templateType: string; setTemplateType: (v: string) => void
   purpose: string; setPurpose: (v: string) => void
@@ -1041,6 +1043,7 @@ function Step2({
   logoMode: "logo" | "image"; setLogoMode: (m: "logo" | "image") => void
   uploadedImages: UploadedImage[]; setUploadedImages: (imgs: UploadedImage[]) => void
   imagesVerified: boolean; setImagesVerified: (v: boolean) => void
+  libraryOpen: boolean; onLibraryClose: () => void; onLibraryAdd: (c: VComponent) => void
 }) {
   const [logoOpen, setLogoOpen] = useState(true)
   const [btnOpen, setBtnOpen]   = useState(true)
@@ -1399,6 +1402,9 @@ function Step2({
         verifiedComponents={verifiedComponents}
         logoMode={logoMode} uploadedImages={uploadedImages}
       />
+      <ComponentLibraryPanel
+        open={libraryOpen} onClose={onLibraryClose} onAdd={onLibraryAdd}
+      />
     </div>
   )
 }
@@ -1598,6 +1604,7 @@ export default function TaoTemplatePage() {
             logoMode={logoMode} setLogoMode={setLogoMode}
             uploadedImages={uploadedImages} setUploadedImages={setUploadedImages}
             imagesVerified={imagesVerified} setImagesVerified={setImagesVerified}
+            libraryOpen={drawerOpen} onLibraryClose={() => setDrawerOpen(false)} onLibraryAdd={handleAddVC}
           />
         )}
         {step === 2 && (
@@ -1607,11 +1614,6 @@ export default function TaoTemplatePage() {
             dark={dark} setDark={setDark}
             templateType={templateType} actionButtons={actionButtons}
             isEligible={isEligible} />
-        )}
-
-        {step === 1 && (
-          <ComponentLibraryDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)}
-            onAdd={handleAddVC} />
         )}
       </div>
 
