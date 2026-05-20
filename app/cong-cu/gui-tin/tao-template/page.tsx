@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import {
   Check, X, Info, ChevronDown, ChevronUp, Minus, Plus,
-  Search, Zap, AlertCircle, Library, Trash2, Upload, ImageIcon,
+  Search, Zap, AlertCircle, Library, Trash2, Upload, ImageIcon, GripVertical,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -1070,6 +1070,29 @@ function Step2({
 }) {
   const [logoOpen, setLogoOpen] = useState(true)
   const [btnOpen, setBtnOpen]   = useState(true)
+  const [dragIdx, setDragIdx]       = useState<number | null>(null)
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
+
+  function handleDragStart(e: React.DragEvent, idx: number) {
+    setDragIdx(idx)
+    e.dataTransfer.effectAllowed = "move"
+  }
+  function handleDragOver(e: React.DragEvent, idx: number) {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = "move"
+    if (dragOverIdx !== idx) setDragOverIdx(idx)
+  }
+  function handleDrop(e: React.DragEvent, idx: number) {
+    e.preventDefault()
+    if (dragIdx === null || dragIdx === idx) { setDragIdx(null); setDragOverIdx(null); return }
+    const arr = [...blocks]
+    const [removed] = arr.splice(dragIdx, 1)
+    arr.splice(idx, 0, removed)
+    setBlocks(arr)
+    setDragIdx(null)
+    setDragOverIdx(null)
+  }
+  function handleDragEnd() { setDragIdx(null); setDragOverIdx(null) }
   const nextBtnId = useMemo(() => Math.max(0, ...actionButtons.map((b) => b.id)) + 1, [actionButtons])
   const nextBlockId = useMemo(() => Math.max(0, ...blocks.map((b) => b.id)) + 1, [blocks])
 
@@ -1298,78 +1321,101 @@ function Step2({
         <section className="mb-4 rounded-lg border border-border bg-white overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-border">
             <span className="text-sm font-semibold">Nội dung Template</span>
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
           </div>
-          <div className="p-4 space-y-4">
-            <div className="rounded border border-border p-3">
-              <div className="text-xs font-semibold mb-1 flex items-center justify-between">
-                <span>Tiêu đề <span className="text-red-500">*</span></span>
-                <span className="text-muted-foreground font-normal">Mỗi tin chỉ chứa 1 tiêu đề</span>
+          <div className="p-4 space-y-2">
+
+            {/* ── Tiêu đề — fixed, cannot be deleted or moved ── */}
+            <div className="rounded border border-border p-3 bg-gray-50/40">
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <GripVertical className="h-3.5 w-3.5 text-gray-200 shrink-0" />
+                  <span className="text-xs font-semibold">Tiêu đề <span className="text-red-500">*</span></span>
+                </div>
+                <span className="text-[10px] text-muted-foreground">Mặc định · 1 tiêu đề</span>
               </div>
-              <Input value={title} onChange={(e) => setTitle(e.target.value.slice(0, 65))} className="text-sm border-0 px-0 focus-visible:ring-0 h-8" placeholder="Nhập tiêu đề..." />
+              <Input value={title} onChange={(e) => setTitle(e.target.value.slice(0, 65))}
+                className="text-sm border-0 px-0 focus-visible:ring-0 h-8" placeholder="Nhập tiêu đề..." />
               <div className="text-right text-[10px] text-muted-foreground mt-1">{title.length}/65</div>
             </div>
-            {blocks.map((b) => b.type === "text" ? (
-              <div key={b.id} className="rounded border border-border p-3">
-                <div className="flex items-center justify-between mb-1">
-                  <div className="text-xs font-semibold">Văn bản <span className="text-red-500">*</span></div>
-                  <div className="flex items-center gap-2">
-                    {isTextVerified(b.value) ? (
-                      <span className="flex items-center gap-1 text-[10px] font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
-                        <Check className="h-2.5 w-2.5" /> Đã duyệt
-                      </span>
-                    ) : null}
-                    <button onClick={() => removeBlock(b.id)} className="text-gray-300 hover:text-red-400 transition-colors">
-                      <X className="h-3.5 w-3.5" />
+
+            {/* ── Draggable blocks ── */}
+            {blocks.map((b, idx) => (
+              <div key={b.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, idx)}
+                onDragOver={(e) => handleDragOver(e, idx)}
+                onDrop={(e) => handleDrop(e, idx)}
+                onDragEnd={handleDragEnd}
+                className={cn(
+                  "rounded border p-3 transition-all select-none",
+                  dragOverIdx === idx && dragIdx !== idx
+                    ? "border-blue-400 bg-blue-50/40 shadow-sm"
+                    : "border-border bg-white",
+                  dragIdx === idx && "opacity-40 scale-[0.99]",
+                )}>
+                {b.type === "text" ? (
+                  <>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <GripVertical className="h-3.5 w-3.5 text-gray-300 cursor-grab active:cursor-grabbing shrink-0" />
+                        <span className="text-xs font-semibold">Văn bản <span className="text-red-500">*</span></span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {isTextVerified(b.value) && (
+                          <span className="flex items-center gap-1 text-[10px] font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
+                            <Check className="h-2.5 w-2.5" /> Đã duyệt
+                          </span>
+                        )}
+                        <button onClick={() => removeBlock(b.id)} className="text-gray-300 hover:text-red-400 transition-colors">
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                    <textarea value={b.value}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onChange={(e) => updateTextBlock(b.id, e.target.value.slice(0, 400))}
+                      rows={3} className="w-full text-sm border-0 resize-none focus:outline-none select-text" placeholder="Nhập nội dung văn bản..." />
+                    <div className="flex items-center justify-between">
+                      {!isTextVerified(b.value) && b.value.trim()
+                        ? <p className="text-[10px] text-amber-600">⚠ Nội dung chỉnh sửa sẽ không được tự động duyệt</p>
+                        : <span />}
+                      <div className="text-[10px] text-muted-foreground">{b.value.length}/400</div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <GripVertical className="h-3.5 w-3.5 text-gray-300 cursor-grab active:cursor-grabbing shrink-0" />
+                        <span className="text-xs font-semibold">Bảng</span>
+                      </div>
+                      <button onClick={() => removeBlock(b.id)} className="text-gray-300 hover:text-red-400 transition-colors">
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-[1fr_1fr_24px] gap-2 text-xs font-semibold text-muted-foreground mb-2">
+                      <span>Tiêu đề</span><span>Nội dung</span><span />
+                    </div>
+                    {b.rows.map((r, ri) => (
+                      <div key={ri} className="grid grid-cols-[1fr_1fr_24px] gap-2 mb-2">
+                        <Input value={r.label} onMouseDown={(e) => e.stopPropagation()} onChange={(e) => updateTableRow(b.id, ri, "label", e.target.value)} className="h-8 text-sm" placeholder="Tiêu đề hàng" />
+                        <Input value={r.value} onMouseDown={(e) => e.stopPropagation()} onChange={(e) => updateTableRow(b.id, ri, "value", e.target.value)} className="h-8 text-sm" placeholder="<tham_so>" />
+                        <button onClick={() => removeTableRow(b.id, ri)} className="flex items-center justify-center text-red-400 hover:text-red-600"><Minus className="h-4 w-4" /></button>
+                      </div>
+                    ))}
+                    <button onClick={() => addTableRow(b.id)} className="flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1">
+                      <Plus className="h-3 w-3" /> Thêm hàng
                     </button>
-                  </div>
-                </div>
-                <textarea value={b.value}
-                  onChange={(e) => updateTextBlock(b.id, e.target.value.slice(0, 400))}
-                  rows={3} className="w-full text-sm border-0 resize-none focus:outline-none" placeholder="Nhập nội dung văn bản..." />
-                <div className="flex items-center justify-between">
-                  {!isTextVerified(b.value) && b.value.trim()
-                    ? <p className="text-[10px] text-amber-600">⚠ Nội dung chỉnh sửa sẽ không được tự động duyệt</p>
-                    : <span />}
-                  <div className="text-[10px] text-muted-foreground">{b.value.length}/400</div>
-                </div>
-              </div>
-            ) : (
-              <div key={b.id} className="rounded border border-border p-3">
-                <div className="text-xs font-semibold mb-3">Bảng</div>
-                <div className="grid grid-cols-[1fr_1fr_24px] gap-2 text-xs font-semibold text-muted-foreground mb-2">
-                  <span>Tiêu đề</span><span>Nội dung</span><span />
-                </div>
-                {b.rows.map((r, ri) => (
-                  <div key={ri} className="grid grid-cols-[1fr_1fr_24px] gap-2 mb-2">
-                    <Input value={r.label} onChange={(e) => updateTableRow(b.id, ri, "label", e.target.value)} className="h-8 text-sm" placeholder="Tiêu đề hàng" />
-                    <Input value={r.value} onChange={(e) => updateTableRow(b.id, ri, "value", e.target.value)} className="h-8 text-sm" placeholder="<tham_so>" />
-                    <button onClick={() => removeTableRow(b.id, ri)} className="flex items-center justify-center text-red-400 hover:text-red-600"><Minus className="h-4 w-4" /></button>
-                  </div>
-                ))}
-                <button onClick={() => addTableRow(b.id)} className="flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1">
-                  <Plus className="h-3 w-3" /> Thêm hàng
-                </button>
+                  </>
+                )}
               </div>
             ))}
-            {contentVCs.length > 0 && (
-              <div className="space-y-2">
-                {contentVCs.map((vc) => {
-                  const globalIdx = verifiedComponents.findIndex((v) => v.id === vc.id)
-                  const localIdx  = contentVCs.findIndex((v) => v.id === vc.id)
-                  return (
-                    <VCChip key={vc.id} vc={vc} onRemove={() => onRemoveVC(vc.id)} showMove
-                      onMoveUp={() => onMoveVC(globalIdx, -1)} onMoveDown={() => onMoveVC(globalIdx, 1)}
-                      isFirst={localIdx === 0} isLast={localIdx === contentVCs.length - 1}
-                    />
-                  )
-                })}
-              </div>
-            )}
-            <div className="flex items-center gap-2">
+
+            {/* ── Add block ── */}
+            <div className="flex items-center gap-2 pt-1">
               <Plus className="h-4 w-4 text-muted-foreground" />
-              <button onClick={() => addBlock("text")} className="flex items-center gap-1 text-xs border border-border rounded px-2 py-1 hover:bg-gray-50"><span>☰</span> Văn bản</button>
-              <button onClick={() => addBlock("table")} className="flex items-center gap-1 text-xs border border-border rounded px-2 py-1 hover:bg-gray-50"><span>⊞</span> Bảng</button>
+              <button onClick={() => addBlock("text")} className="flex items-center gap-1 text-xs border border-border rounded px-2 py-1 hover:bg-gray-50 transition-colors"><span>☰</span> Văn bản</button>
+              <button onClick={() => addBlock("table")} className="flex items-center gap-1 text-xs border border-border rounded px-2 py-1 hover:bg-gray-50 transition-colors"><span>⊞</span> Bảng</button>
             </div>
           </div>
         </section>
