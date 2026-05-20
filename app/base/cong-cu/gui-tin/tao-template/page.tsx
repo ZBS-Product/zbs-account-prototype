@@ -418,18 +418,13 @@ function ComponentLibraryDrawer({ open, onClose, onAdd }: {
 
   return (
     <>
-      {open && <div className="absolute inset-0 bg-black/20 z-10" onClick={onClose} />}
+      {open && <div className="absolute inset-0 bg-black/10 z-10" onClick={onClose} />}
       <div className={cn(
-        "absolute left-0 right-0 bottom-0 bg-white border-t border-border shadow-2xl z-20 flex flex-col transition-transform duration-300 ease-out",
-        open ? "translate-y-0" : "translate-y-full",
-      )} style={{ height: "62%" }}>
-        {/* Handle */}
-        <div className="flex justify-center pt-2.5 pb-1 shrink-0">
-          <div className="h-1 w-10 rounded-full bg-gray-300" />
-        </div>
-
+        "absolute top-0 right-0 bottom-0 bg-white border-l border-border shadow-2xl z-20 flex flex-col transition-transform duration-300 ease-out w-[480px]",
+        open ? "translate-x-0" : "translate-x-full",
+      )}>
         {/* Header */}
-        <div className="flex items-center gap-3 px-6 py-2.5 border-b border-border shrink-0">
+        <div className="flex items-center gap-3 px-5 py-3 border-b border-border shrink-0">
           <span className="text-sm font-semibold shrink-0">Thư viện Component</span>
           <div className="flex items-center gap-1.5 flex-1 overflow-x-auto scrollbar-none">
             {availableCategories.map((cat) => (
@@ -457,7 +452,7 @@ function ComponentLibraryDrawer({ open, onClose, onAdd }: {
           {filtered.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">Không có component nào</p>
           ) : (
-            <div className="grid grid-cols-5 gap-2.5">
+            <div className="grid grid-cols-3 gap-3">
               {filtered.map((c) => {
                 const levels = vcApprovalLevels(c)
                 return (
@@ -609,10 +604,7 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
   logoMode: "logo" | "image"
   uploadedImages: UploadedImage[]
 }) {
-  const [tab, setTab] = useState<"preview" | "library">("preview")
   const typeInfo   = TEMPLATE_TYPES.find((t) => t.id === templateType)
-  const allTags    = verifiedComponents.flatMap((c) => c.tags)
-  const isEligible = allTags.length > 0 && allTags.every((t) => t.status === "ENABLE")
   const logoVC     = verifiedComponents.find((c) => c.kind === "logo")
   const contentVCs = verifiedComponents.filter((c) => c.kind === "content")
   const buttonVCs  = verifiedComponents.filter((c) => c.kind === "button")
@@ -627,29 +619,11 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
 
   return (
     <div className="w-[300px] shrink-0 border-l border-border bg-gray-50 flex flex-col overflow-hidden">
-      <div className="flex border-b border-border bg-white shrink-0">
-        <button onClick={() => setTab("preview")}
-          className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium border-b-2 transition-colors",
-            tab === "preview" ? "border-blue-600 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground")}>
-          📋 Xem trước
-        </button>
-        <button onClick={() => setTab("library")}
-          className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium border-b-2 transition-colors",
-            tab === "library" ? "border-blue-600 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground")}>
-          {isEligible && verifiedComponents.length > 0 ? <Zap className="h-3 w-3 text-green-600" />
-            : verifiedComponents.length > 0 ? <AlertCircle className="h-3 w-3 text-yellow-500" />
-            : <Library className="h-3 w-3" />}
-          Thư viện
-          {verifiedComponents.length > 0 && tab !== "library" && (
-            <span className="ml-0.5 h-4 w-4 rounded-full bg-blue-100 text-blue-600 text-[9px] font-bold flex items-center justify-center">
-              {verifiedComponents.length}
-            </span>
-          )}
-        </button>
+      <div className="flex items-center px-5 py-2.5 border-b border-border bg-white shrink-0">
+        <span className="text-xs font-semibold text-foreground">📋 Xem trước</span>
       </div>
 
-      {tab === "preview" ? (
-        <div className="flex-1 overflow-y-auto p-5 space-y-4">
+      <div className="flex-1 overflow-y-auto p-5 space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Giao diện tối</span>
             <button onClick={() => setDark(!dark)} className={cn("relative h-5 w-9 rounded-full transition-colors", dark ? "bg-blue-600" : "bg-gray-300")}>
@@ -762,9 +736,6 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
             Gửi thử mẫu ZBS
           </button>
         </div>
-      ) : (
-        <ApprovalCheckContent verifiedComponents={verifiedComponents} />
-      )}
     </div>
   )
 }
