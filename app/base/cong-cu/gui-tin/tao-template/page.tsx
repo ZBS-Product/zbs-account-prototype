@@ -1717,23 +1717,16 @@ export default function TaoTemplatePage() {
         )}
 
         {step < 2 ? (
-          <div className="flex items-center gap-3">
-            {step === 1 && !isEligible && allTags.length > 0 && (
-              <span className="text-xs text-muted-foreground">Dự kiến 1–2 ngày làm việc</span>
-            )}
-            <Button onClick={() => setStep(step + 1)} disabled={step === 0 && !canNext1}
-              className={cn("px-8 text-white transition-all",
-                step === 1 && isEligible ? "bg-green-600 hover:bg-green-700 shadow-md shadow-green-200" : "bg-blue-600 hover:bg-blue-700")}>
-              {step === 1 && isEligible ? <><Zap className="h-4 w-4 mr-1.5" />Tiếp tục · Tự động duyệt</> : "Tiếp tục"}
-            </Button>
-          </div>
+          <Button onClick={() => setStep(step + 1)} disabled={step === 0 && !canNext1}
+            className="px-8 text-white bg-blue-600 hover:bg-blue-700">
+            Tiếp tục
+          </Button>
         ) : (
           <div className="flex items-center gap-3">
-            {!isEligible && agreed && <span className="text-xs text-muted-foreground">Dự kiến 1–2 ngày làm việc</span>}
+            {!agreed && <span className="text-xs text-muted-foreground">Dự kiến 1–2 ngày làm việc</span>}
             <Button onClick={() => setDone(true)} disabled={!agreed}
-              className={cn("px-8 text-white transition-all",
-                isEligible && agreed ? "bg-green-600 hover:bg-green-700 shadow-md shadow-green-200" : "bg-blue-600 hover:bg-blue-700")}>
-              {isEligible ? <><Zap className="h-4 w-4 mr-1.5" />Gửi duyệt · Tự động duyệt</> : "Gửi duyệt"}
+              className="px-8 text-white bg-blue-600 hover:bg-blue-700">
+              Gửi duyệt
             </Button>
           </div>
         )}
