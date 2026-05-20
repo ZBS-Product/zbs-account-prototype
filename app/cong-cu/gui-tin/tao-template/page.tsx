@@ -461,12 +461,12 @@ function ComponentLibraryPanel({ open, onClose, onAdd }: {
                   <button key={c.id} onClick={() => handleAdd(c)}
                     className="rounded-xl border-2 border-border bg-white hover:border-blue-400 hover:shadow-sm p-2 text-left transition-all active:scale-95">
                     <TemplateSkeletonPreview vc={c} />
-                    <p className="text-[10px] text-blue-600 font-semibold mt-1.5 leading-tight">{vcTypeLabel(c)}</p>
+                    <p className="text-[11px] text-blue-600 font-semibold mt-1.5 leading-tight">{vcTypeLabel(c)}</p>
                     {(c.kind === "button" || c.previewRender === "text" || c.previewRender === "title") && (
-                      <p className="text-[9px] text-muted-foreground truncate italic leading-tight">"{c.name}"</p>
+                      <p className="text-[10px] text-muted-foreground truncate italic leading-tight">"{c.name}"</p>
                     )}
                     {levels.length > 0 && (
-                      <p className="text-[9px] text-muted-foreground leading-tight">
+                      <p className="text-[10px] text-muted-foreground leading-tight">
                         Cấp độ duyệt: {levels.join(", ")}
                       </p>
                     )}
@@ -1556,7 +1556,7 @@ export default function TaoTemplatePage() {
   const canNext1 = templateName.trim() && selectedApp && selectedOA
 
   if (done) return (
-    <div className="fixed top-[68px] inset-x-0 bottom-0 z-[90] bg-white flex flex-col items-center justify-center gap-4">
+    <div className="fixed top-[36px] inset-x-0 bottom-0 z-[44] bg-white flex flex-col items-center justify-center gap-4">
       <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
         <Check className="h-8 w-8 text-green-600" />
       </div>
@@ -1574,7 +1574,7 @@ export default function TaoTemplatePage() {
   )
 
   return (
-    <div className="fixed top-[68px] inset-x-0 bottom-0 z-[90] bg-white flex flex-col">
+    <div className="fixed top-[36px] inset-x-0 bottom-0 z-[44] bg-white flex flex-col">
       <StepHeader step={step} onExit={exit} saved={step > 0} />
 
       <div className="flex-1 min-h-0 overflow-hidden">
