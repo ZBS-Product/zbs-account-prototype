@@ -228,6 +228,71 @@ function PreviewItem({ vc, dark }: { vc: VComponent; dark: boolean }) {
   }
 }
 
+// ── Library card thumbnail — renders what actually gets inserted into template ─
+
+function LibraryCardPreview({ vc }: { vc: VComponent }) {
+  const [idx, setIdx] = useState(0)
+  useEffect(() => {
+    if (vc.previewRender !== "carousel") return
+    const t = setInterval(() => setIdx((i) => (i + 1) % CAROUSEL_SLIDES.length), 1600)
+    return () => clearInterval(t)
+  }, [vc.previewRender])
+
+  switch (vc.previewRender) {
+    case "logo":
+      return (
+        <div className="h-11 rounded-lg flex items-center gap-2 px-3 border border-black/5 bg-orange-50 overflow-hidden">
+          <div className="h-6 w-6 rounded text-[9px] font-bold flex items-center justify-center shrink-0" style={{ background: vc.bgColor }}>
+            {vc.initials}
+          </div>
+          <span className="text-[11px] font-bold text-orange-600 truncate">{vc.name.replace(/^Logo\s*/i, "")}</span>
+        </div>
+      )
+    case "button":
+      return (
+        <div className="h-11 rounded-lg flex items-center justify-center px-2 text-white text-[11px] font-semibold border border-black/5"
+          style={{ background: "oklch(0.488 0.243 264.376)" }}>
+          {vc.name}
+        </div>
+      )
+    case "text":
+      return (
+        <div className="h-11 rounded-lg flex flex-col justify-center px-3 gap-1.5 border border-black/5 bg-white">
+          <div className="h-1.5 w-full rounded-full bg-gray-300" />
+          <div className="h-1.5 w-4/5 rounded-full bg-gray-200" />
+          <div className="h-1.5 w-3/5 rounded-full bg-gray-200" />
+        </div>
+      )
+    case "image":
+      return (
+        <div className="h-11 rounded-lg flex flex-col items-center justify-center gap-1 border border-black/5" style={{ background: vc.bgColor }}>
+          <ImageIcon className="h-4 w-4 text-white/70" />
+          <span className="text-[9px] font-medium text-white/80">16 : 9</span>
+        </div>
+      )
+    case "carousel":
+      return (
+        <div className="h-11 rounded-lg relative overflow-hidden border border-black/5" style={{ background: vc.bgColor }}>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
+            <span className="text-xl leading-none">{CAROUSEL_SLIDES[idx].emoji}</span>
+          </div>
+          <div className="absolute bottom-1 left-0 right-0 flex justify-center gap-1">
+            {CAROUSEL_SLIDES.map((_, i) => (
+              <div key={i} className={cn("h-0.5 rounded-full transition-all duration-300",
+                i === idx ? "w-3 bg-white" : "w-1 bg-white/50")} />
+            ))}
+          </div>
+        </div>
+      )
+    default:
+      return (
+        <div className="h-11 rounded-lg flex items-center justify-center border border-black/5" style={{ background: vc.bgColor }}>
+          <span className="text-base">{vc.initials}</span>
+        </div>
+      )
+  }
+}
+
 // ── Component Library Drawer ──────────────────────────────────────────────────
 
 const LIB_CATEGORIES: { id: LibCategory; label: string }[] = [
@@ -312,8 +377,8 @@ function ComponentLibraryDrawer({ open, onClose, onAdd }: {
               {filtered.map((c) => (
                 <button key={c.id} onClick={() => handleAdd(c)}
                   className="rounded-xl border-2 border-border bg-white hover:border-blue-400 hover:shadow-sm p-3 text-left transition-all active:scale-95">
-                  <div className="h-11 rounded-lg flex items-center justify-center mb-2 text-base font-bold border border-black/5" style={{ background: c.bgColor }}>
-                    {c.initials}
+                  <div className="mb-2">
+                    <LibraryCardPreview vc={c} />
                   </div>
                   <p className="text-[11px] font-semibold truncate mb-0.5">{c.name}</p>
                   <p className="text-[10px] text-muted-foreground truncate mb-1.5">{c.description}</p>
