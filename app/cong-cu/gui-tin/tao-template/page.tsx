@@ -230,6 +230,12 @@ function PreviewItem({ vc, dark }: { vc: VComponent; dark: boolean }) {
 
 // ── Library card helpers ──────────────────────────────────────────────────────
 
+const TAG_TO_LEVEL: Record<string, number> = {
+  "Giao dịch": 1,
+  "Chăm sóc KH": 2,
+  "Hậu mãi": 3,
+}
+
 function vcTypeLabel(c: VComponent): string {
   if (c.kind === "logo") return "Logo"
   if (c.kind === "button") return "Nút"
@@ -238,28 +244,22 @@ function vcTypeLabel(c: VComponent): string {
   return "Component"
 }
 
-function vcApprovalLevel(c: VComponent): 1 | 2 | 3 {
-  if (c.source === "predefined") return 3
-  const allEnable = c.tags.every((t) => t.status === "ENABLE")
-  return allEnable ? 2 : 1
+function vcApprovalLevels(c: VComponent): number[] {
+  // predefined = approved for all levels
+  if (c.source === "predefined") return [1, 2, 3]
+  return c.tags
+    .filter((t) => t.status === "ENABLE" && TAG_TO_LEVEL[t.label] !== undefined)
+    .map((t) => TAG_TO_LEVEL[t.label])
+    .sort()
 }
 
-function ApprovalLevelBadge({ level }: { level: 1 | 2 | 3 }) {
-  const styles: Record<number, string> = {
-    3: "bg-green-100 text-green-700",
-    2: "bg-blue-100 text-blue-700",
-    1: "bg-yellow-100 text-yellow-700",
-  }
-  return (
-    <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded-full", styles[level])}>
-      Cấp {level}
-    </span>
-  )
-}
+// ── Template skeleton preview — component shown in context, rest is skeleton ──
 
-// ── Library card thumbnail — renders what actually gets inserted into template ─
+const SK = ({ w = "full" }: { w?: string }) => (
+  <div className={cn("h-[5px] rounded-full bg-gray-200", w === "full" ? "w-full" : w === "3/4" ? "w-3/4" : w === "4/5" ? "w-4/5" : w === "1/2" ? "w-1/2" : "w-2/3")} />
+)
 
-function LibraryCardPreview({ vc }: { vc: VComponent }) {
+function TemplateSkeletonPreview({ vc }: { vc: VComponent }) {
   const [idx, setIdx] = useState(0)
   useEffect(() => {
     if (vc.previewRender !== "carousel") return
@@ -267,59 +267,87 @@ function LibraryCardPreview({ vc }: { vc: VComponent }) {
     return () => clearInterval(t)
   }, [vc.previewRender])
 
-  switch (vc.previewRender) {
-    case "logo":
-      return (
-        <div className="rounded-lg flex items-center gap-2 px-3 py-2.5 border border-black/5 bg-orange-50 overflow-hidden">
-          <div className="h-6 w-6 rounded text-[9px] font-bold flex items-center justify-center shrink-0" style={{ background: vc.bgColor }}>
-            {vc.initials}
-          </div>
-          <span className="text-[11px] font-bold text-orange-600 truncate">{vc.name.replace(/^Logo\s*/i, "")}</span>
+  const isImage    = vc.previewRender === "image" || vc.previewRender === "carousel"
+  const isButton   = vc.kind === "button"
+  const isLogo     = vc.kind === "logo"
+  const isText     = vc.previewRender === "text"
+  const blue       = "oklch(0.488 0.243 264.376)"
+
+  return (
+    <div className="aspect-square rounded-xl border-2 border-blue-200 bg-white overflow-hidden flex flex-col">
+      {/* ── Top: image banner (if image/carousel) or logo header ── */}
+      {isImage ? (
+        <div className="shrink-0 h-[38%] flex items-center justify-center relative overflow-hidden"
+          style={{ background: blue }}>
+          {vc.previewRender === "carousel" ? (
+            <>
+              <span className="text-2xl">{CAROUSEL_SLIDES[idx].emoji}</span>
+              <div className="absolute bottom-1 left-0 right-0 flex justify-center gap-0.5">
+                {CAROUSEL_SLIDES.map((_, i) => (
+                  <div key={i} className={cn("h-0.5 rounded-full transition-all",
+                    i === idx ? "w-2.5 bg-white" : "w-1 bg-white/50")} />
+                ))}
+              </div>
+            </>
+          ) : (
+            <span className="text-[10px] font-semibold text-white/90">Ảnh</span>
+          )}
         </div>
-      )
-    case "button":
-      return (
-        <div className="w-full rounded-lg py-2.5 flex items-center justify-center text-white text-[12px] font-semibold"
-          style={{ background: "oklch(0.488 0.243 264.376)" }}>
-          {vc.name}
+      ) : (
+        <div className={cn("shrink-0 px-3 py-2 flex items-center gap-1.5",
+          isLogo ? "bg-orange-50" : "bg-gray-50")}>
+          {isLogo ? (
+            <>
+              <div className="h-4 w-4 rounded text-[7px] font-bold flex items-center justify-center shrink-0"
+                style={{ background: vc.bgColor }}>{vc.initials.slice(0, 2)}</div>
+              <div className="h-[5px] flex-1 rounded-full bg-orange-200" />
+            </>
+          ) : (
+            <div className="h-[5px] w-10 rounded-full bg-gray-300" />
+          )}
         </div>
-      )
-    case "text":
-      return (
-        <div className="rounded-lg flex flex-col justify-center px-3 py-3 gap-1.5 border border-black/5 bg-white">
-          <div className="h-1.5 w-full rounded-full bg-gray-300" />
-          <div className="h-1.5 w-4/5 rounded-full bg-gray-200" />
-          <div className="h-1.5 w-3/5 rounded-full bg-gray-200" />
-        </div>
-      )
-    case "image":
-      return (
-        <div className="rounded-lg flex flex-col items-center justify-center gap-1 py-3 border border-black/5" style={{ background: vc.bgColor }}>
-          <ImageIcon className="h-4 w-4 text-white/70" />
-          <span className="text-[9px] font-medium text-white/80">16 : 9</span>
-        </div>
-      )
-    case "carousel":
-      return (
-        <div className="rounded-lg relative overflow-hidden py-3 border border-black/5" style={{ background: vc.bgColor }}>
-          <div className="flex flex-col items-center justify-center gap-0.5">
-            <span className="text-xl leading-none">{CAROUSEL_SLIDES[idx].emoji}</span>
-          </div>
-          <div className="absolute bottom-1 left-0 right-0 flex justify-center gap-1">
-            {CAROUSEL_SLIDES.map((_, i) => (
-              <div key={i} className={cn("h-0.5 rounded-full transition-all duration-300",
-                i === idx ? "w-3 bg-white" : "w-1 bg-white/50")} />
+      )}
+
+      {/* ── Content ── */}
+      <div className="flex-1 px-3 py-2 flex flex-col gap-1.5 min-h-0 overflow-hidden">
+        {/* Title skeleton */}
+        {!isLogo && <SK w="3/4" />}
+
+        {isText ? (
+          /* Real text lines */
+          <div className="flex flex-col gap-1 flex-1 justify-center">
+            {[...Array(4)].map((_, i) => (
+              <p key={i} className="text-[7px] leading-tight text-gray-700 truncate">{vc.description}</p>
             ))}
           </div>
+        ) : isLogo ? (
+          /* Content skeletons after real logo */
+          <div className="flex flex-col gap-1.5 flex-1 justify-center">
+            <SK w="full" /><SK w="4/5" /><SK w="3/4" />
+          </div>
+        ) : (
+          /* Generic content skeletons */
+          <div className="flex flex-col gap-1.5 flex-1 justify-center">
+            <SK w="full" /><SK w="4/5" />
+            {!isButton && <SK w="3/4" />}
+            {!isButton && <SK w="1/2" />}
+          </div>
+        )}
+
+        {/* ── Button slot ── */}
+        <div className="shrink-0 pb-0.5">
+          {isButton ? (
+            <div className="w-full rounded py-1.5 flex items-center justify-center text-white text-[9px] font-semibold"
+              style={{ background: blue }}>
+              {vc.name}
+            </div>
+          ) : (
+            <div className="w-full h-[18px] rounded bg-gray-200" />
+          )}
         </div>
-      )
-    default:
-      return (
-        <div className="rounded-lg flex items-center justify-center py-3 border border-black/5" style={{ background: vc.bgColor }}>
-          <span className="text-base">{vc.initials}</span>
-        </div>
-      )
-  }
+      </div>
+    </div>
+  )
 }
 
 // ── Component Library Drawer ──────────────────────────────────────────────────
@@ -401,25 +429,30 @@ function ComponentLibraryDrawer({ open, onClose, onAdd }: {
             <p className="text-sm text-muted-foreground text-center py-8">Không có component nào</p>
           ) : (
             <div className="grid grid-cols-4 gap-3">
-              {filtered.map((c) => (
-                <button key={c.id} onClick={() => handleAdd(c)}
-                  className="rounded-xl border-2 border-border bg-white hover:border-blue-400 hover:shadow-sm p-3 text-left transition-all active:scale-95">
-                  <div className="mb-2.5">
-                    <LibraryCardPreview vc={c} />
-                  </div>
-                  {/* Name */}
-                  <p className="text-[11px] font-semibold truncate mb-1.5">{c.name}</p>
-                  {/* Type + Approval level */}
-                  <div className="flex items-center justify-between gap-1 mb-1">
-                    <span className="text-[10px] text-muted-foreground font-medium">{vcTypeLabel(c)}</span>
-                    <ApprovalLevelBadge level={vcApprovalLevel(c)} />
-                  </div>
-                  {/* Preview text for button/text */}
-                  {(c.kind === "button" || c.previewRender === "text") && (
-                    <p className="text-[10px] text-muted-foreground truncate italic">"{c.name}"</p>
-                  )}
-                </button>
-              ))}
+              {filtered.map((c) => {
+                const levels = vcApprovalLevels(c)
+                return (
+                  <button key={c.id} onClick={() => handleAdd(c)}
+                    className="rounded-xl border-2 border-border bg-white hover:border-blue-400 hover:shadow-sm p-2.5 text-left transition-all active:scale-95">
+                    {/* Template skeleton preview */}
+                    <TemplateSkeletonPreview vc={c} />
+                    {/* Name */}
+                    <p className="text-[11px] font-semibold truncate mt-2 mb-0.5">{c.name}</p>
+                    {/* Type label */}
+                    <p className="text-[10px] text-blue-600 font-medium mb-0.5">{vcTypeLabel(c)}</p>
+                    {/* Preview text for button / text */}
+                    {(c.kind === "button" || c.previewRender === "text") && (
+                      <p className="text-[10px] text-muted-foreground truncate italic mb-0.5">"{c.name}"</p>
+                    )}
+                    {/* Approval levels */}
+                    {levels.length > 0 && (
+                      <p className="text-[9px] text-muted-foreground">
+                        Cấp độ duyệt: {levels.join(", ")}
+                      </p>
+                    )}
+                  </button>
+                )
+              })}
             </div>
           )}
         </div>
