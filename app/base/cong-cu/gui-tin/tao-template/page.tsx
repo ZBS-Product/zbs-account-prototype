@@ -426,25 +426,23 @@ function ComponentLibraryDrawer({ open, onClose, onAdd }: {
           {filtered.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">Không có component nào</p>
           ) : (
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-5 gap-2.5">
               {filtered.map((c) => {
                 const levels = vcApprovalLevels(c)
                 return (
                   <button key={c.id} onClick={() => handleAdd(c)}
-                    className="rounded-xl border-2 border-border bg-white hover:border-blue-400 hover:shadow-sm p-2.5 text-left transition-all active:scale-95">
+                    className="rounded-xl border-2 border-border bg-white hover:border-blue-400 hover:shadow-sm p-2 text-left transition-all active:scale-95">
                     {/* Template skeleton preview */}
                     <TemplateSkeletonPreview vc={c} />
-                    {/* Name */}
-                    <p className="text-[11px] font-semibold truncate mt-2 mb-0.5">{c.name}</p>
                     {/* Type label */}
-                    <p className="text-[10px] text-blue-600 font-medium mb-0.5">{vcTypeLabel(c)}</p>
+                    <p className="text-[10px] text-blue-600 font-semibold mt-1.5 leading-tight">{vcTypeLabel(c)}</p>
                     {/* Preview text for button / text */}
                     {(c.kind === "button" || c.previewRender === "text") && (
-                      <p className="text-[10px] text-muted-foreground truncate italic mb-0.5">"{c.name}"</p>
+                      <p className="text-[9px] text-muted-foreground truncate italic leading-tight">"{c.name}"</p>
                     )}
                     {/* Approval levels */}
                     {levels.length > 0 && (
-                      <p className="text-[9px] text-muted-foreground">
+                      <p className="text-[9px] text-muted-foreground leading-tight">
                         Cấp độ duyệt: {levels.join(", ")}
                       </p>
                     )}
