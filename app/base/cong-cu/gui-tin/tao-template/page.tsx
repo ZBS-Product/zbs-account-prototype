@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect, useRef } from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   Check, X, Info, ChevronDown, ChevronUp, Minus, Plus,
   Search, Zap, AlertCircle, Library, Trash2, Upload, ImageIcon, GripVertical,
@@ -1624,9 +1624,8 @@ function Step3({ title, blocks, note, setNote, agreed, setAgreed, dark, setDark,
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function TaoTemplatePage() {
-  const pathname     = usePathname()
-  const router       = useRouter()
-  const searchParams = useSearchParams()
+  const pathname = usePathname()
+  const router   = useRouter()
   const ROOT_SECTIONS = new Set(["cong-cu", "chi-tieu", "cai-dat", "giao-dich", "bao-cao", ""])
   const seg      = pathname.split("/")[1] ?? ""
   const basePath = ROOT_SECTIONS.has(seg) ? "" : `/${seg}`
@@ -1643,14 +1642,14 @@ export default function TaoTemplatePage() {
   const [libHinted, setLibHinted] = useState(false)
 
   useEffect(() => {
-    if (searchParams.get("step") === "2") {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get("step") === "2") {
       setTemplateName("Demo Template ZBS")
       setSelectedApp("QC Test ZNS 4")
       setSelectedOA("Trợ lý tin doanh nghiệp")
       setStep(1)
       setDemoMode(true)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const [templateType, setTemplateType] = useState("tuy-chinh")
@@ -1849,3 +1848,4 @@ export default function TaoTemplatePage() {
     </div>
   )
 }
+
