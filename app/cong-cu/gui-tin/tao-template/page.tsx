@@ -419,17 +419,23 @@ const LIB_CATEGORIES: { id: LibCategory | "media"; label: string }[] = [
   { id: "media",  label: "Ảnh" },
 ]
 
-function ComponentLibraryPanel({ open, onClose, onAdd }: {
+function ComponentLibraryPanel({ open, onClose, onAdd, actionButtonCount }: {
   open: boolean; onClose: () => void
   onAdd: (c: VComponent) => void
+  actionButtonCount: number
 }) {
   const [search, setSearch]     = useState("")
   const [category, setCategory] = useState<LibCategory | "media">("all")
-  const [toast, setToast]       = useState<string | null>(null)
+  const [toast, setToast]       = useState<{ text: string; isError?: boolean } | null>(null)
 
   function handleAdd(c: VComponent) {
+    if (c.kind === "button" && actionButtonCount >= MAX_BUTTONS) {
+      setToast({ text: `Tối đa ${MAX_BUTTONS} nút thao tác`, isError: true })
+      setTimeout(() => setToast(null), 2000)
+      return
+    }
     onAdd(c)
-    setToast(c.name)
+    setToast({ text: c.name })
     setTimeout(() => setToast(null), 1600)
   }
 
@@ -521,11 +527,14 @@ function ComponentLibraryPanel({ open, onClose, onAdd }: {
 
         {/* Toast */}
         <div className={cn(
-          "absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-gray-900 text-white text-xs font-medium px-4 py-2 rounded-full shadow-lg transition-all duration-200 pointer-events-none whitespace-nowrap",
+          "absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 text-white text-xs font-medium px-4 py-2 rounded-full shadow-lg transition-all duration-200 pointer-events-none whitespace-nowrap",
+          toast?.isError ? "bg-red-600" : "bg-gray-900",
           toast ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
         )}>
-          <Check className="h-3.5 w-3.5 text-green-400" />
-          Đã thêm <span className="font-semibold">{toast}</span>
+          {toast?.isError
+            ? <><X className="h-3.5 w-3.5" />{toast.text}</>
+            : <><Check className="h-3.5 w-3.5 text-green-400" />Đã thêm <span className="font-semibold">{toast?.text}</span></>
+          }
         </div>
       </div>
     </div>
@@ -650,6 +659,16 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
   const contentVCs = verifiedComponents.filter((c) => c.kind === "content")
   const buttonVCs  = verifiedComponents.filter((c) => c.kind === "button")
 
+  useEffect(() => {
+    if (!lastAdded) return
+    const id =
+      lastAdded.type === "title"  ? "preview-hl-title"  :
+      lastAdded.type === "logo"   ? "preview-hl-logo"   :
+      lastAdded.type === "block"  ? `preview-hl-block-${lastAdded.id}` :
+      lastAdded.type === "button" ? `preview-hl-btn-${lastAdded.id}`   : null
+    if (id) document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+  }, [lastAdded])
+
   // Pricing
   const btnCost = actionButtons.reduce((sum, b) => {
     const type = ALL_BUTTON_TYPES.find((t) => t.id === b.type)
@@ -675,7 +694,9 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
           <div className={cn("rounded-lg border border-border overflow-hidden text-sm", dark ? "bg-gray-900 text-white" : "bg-white text-gray-900")}>
             {logoMode === "image" && uploadedImages.length > 0 ? (
               /* Image mode — show first image as banner */
-              <div className="relative h-28 overflow-hidden" style={{ background: uploadedImages[0].bg }}>
+              <div id="preview-hl-logo" className={cn("relative h-28 overflow-hidden transition-all duration-500",
+                lastAdded?.type === "logo" && "outline outline-[3px] outline-blue-500 outline-offset-[-3px]")}
+                style={{ background: uploadedImages[0].bg }}>
                 <div className="absolute inset-0 flex items-center justify-center text-4xl">{uploadedImages[0].emoji}</div>
                 {uploadedImages.length > 1 && (
                   <div className="absolute bottom-1.5 left-0 right-0 flex justify-center gap-1">
@@ -686,7 +707,9 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
                 )}
               </div>
             ) : (
-              <div className={cn("px-4 py-3 flex items-center gap-2", dark ? "bg-gray-800" : "bg-orange-50")}>
+              <div id="preview-hl-logo" className={cn("px-4 py-3 flex items-center gap-2 transition-all duration-500",
+                dark ? "bg-gray-800" : "bg-orange-50",
+                lastAdded?.type === "logo" && "outline outline-[3px] outline-blue-500 outline-offset-[-3px]")}>
                 {logoVC ? (
                   <>
                     <div className="h-6 w-6 rounded text-[9px] font-bold flex items-center justify-center shrink-0" style={{ background: logoVC.bgColor }}>
@@ -702,22 +725,24 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
               </div>
             )}
             <div className="px-4 py-3 space-y-2">
-              <p className={cn("text-[13px] font-semibold leading-snug rounded transition-all duration-500",
-                lastAdded?.type === "title" && "bg-blue-100 outline outline-2 outline-blue-400 px-1 -mx-1")}>
+              <p id="preview-hl-title" className={cn("text-[13px] font-semibold leading-snug rounded-sm transition-all duration-500",
+                lastAdded?.type === "title" && "bg-blue-100 outline outline-[3px] outline-blue-500 px-1 -mx-1")}>
                 {title || "Tiêu đề template"}
               </p>
               {blocks.map((b) => {
                 const hl = lastAdded?.type === "block" && lastAdded.id === b.id
                 if (b.type === "text") return (
-                  <p key={b.id} className={cn("text-[12px] leading-relaxed rounded transition-all duration-500",
-                    dark ? "text-gray-300" : "text-gray-700",
-                    hl && "bg-blue-100 outline outline-2 outline-blue-400 px-1 -mx-1")}>
+                  <p id={`preview-hl-block-${b.id}`} key={b.id}
+                    className={cn("text-[12px] leading-relaxed rounded-sm transition-all duration-500",
+                      dark ? "text-gray-300" : "text-gray-700",
+                      hl && "bg-blue-100 outline outline-[3px] outline-blue-500 px-1 -mx-1")}>
                     {b.value || <span className="italic text-gray-400">Nội dung văn bản...</span>}
                   </p>
                 )
                 return (
-                  <table key={b.id} className={cn("w-full text-[11px] rounded transition-all duration-500",
-                    hl && "outline outline-2 outline-blue-400 bg-blue-50")}>
+                  <table id={`preview-hl-block-${b.id}`} key={b.id}
+                    className={cn("w-full text-[11px] rounded transition-all duration-500",
+                      hl && "outline outline-[3px] outline-blue-500 bg-blue-100")}>
                     <tbody>
                       {b.rows.map((r, ri) => (
                         <tr key={ri} className={cn("border-t", dark ? "border-gray-700" : "border-gray-100")}>
@@ -744,10 +769,11 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
                   {actionButtons.map((ab, i) => {
                     const hl = lastAdded?.type === "button" && lastAdded.id === ab.id
                     return (
-                      <button key={ab.id} className={cn("w-full py-2 rounded text-xs font-semibold transition-all duration-500",
-                        (buttonVCs.length === 0 && i === 0) ? "text-white" : dark ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-700",
-                        hl && "outline outline-2 outline-blue-400"
-                      )} style={(buttonVCs.length === 0 && i === 0) ? { background: "oklch(0.488 0.243 264.376)" } : undefined}>
+                      <button id={`preview-hl-btn-${ab.id}`} key={ab.id}
+                        className={cn("w-full py-2 rounded text-xs font-semibold transition-all duration-500",
+                          (buttonVCs.length === 0 && i === 0) ? "text-white" : dark ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-700",
+                          hl && "outline outline-[3px] outline-blue-500"
+                        )} style={(buttonVCs.length === 0 && i === 0) ? { background: "oklch(0.488 0.243 264.376)" } : undefined}>
                         {ab.label || `Nút thao tác ${i + 1}`}
                       </button>
                     )
@@ -1097,6 +1123,17 @@ function Step2({
 }) {
   const [logoOpen, setLogoOpen] = useState(true)
   const [btnOpen, setBtnOpen]   = useState(true)
+
+  // Scroll to highlighted element when lastAdded changes
+  useEffect(() => {
+    if (!lastAdded) return
+    const id =
+      lastAdded.type === "title"  ? "edit-hl-title"  :
+      lastAdded.type === "logo"   ? "edit-hl-logo"   :
+      lastAdded.type === "block"  ? `edit-hl-block-${lastAdded.id}` :
+      lastAdded.type === "button" ? `edit-hl-btn-${lastAdded.id}`   : null
+    if (id) document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+  }, [lastAdded])
   const [dragIdx, setDragIdx]       = useState<number | null>(null)
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
 
@@ -1208,7 +1245,8 @@ function Step2({
         </section>
 
         {/* Logo / Hình ảnh */}
-        <section className="mb-4 rounded-lg border border-border bg-white overflow-hidden">
+        <section id="edit-hl-logo" className={cn("mb-4 rounded-lg border bg-white overflow-hidden transition-all duration-500",
+          lastAdded?.type === "logo" ? "border-blue-500 ring-[3px] ring-blue-400/50 shadow-[0_0_0_6px_rgba(59,130,246,0.15)]" : "border-border")}>
           <button onClick={() => setLogoOpen(!logoOpen)}
             className="flex items-center justify-between w-full px-4 py-3 text-sm font-semibold">
             <span>Logo, hình ảnh <span className="text-red-500">*</span></span>
@@ -1352,8 +1390,8 @@ function Step2({
           <div className="p-4 space-y-2">
 
             {/* ── Tiêu đề — fixed, cannot be deleted or moved ── */}
-            <div className={cn("rounded border p-3 bg-gray-50/40 transition-all duration-500",
-              lastAdded?.type === "title" ? "border-blue-400 ring-2 ring-blue-200 bg-blue-50/60" : "border-border")}>
+            <div id="edit-hl-title" className={cn("rounded border p-3 bg-gray-50/40 transition-all duration-500",
+              lastAdded?.type === "title" ? "border-blue-500 ring-[3px] ring-blue-400/50 bg-blue-50 shadow-[0_0_0_6px_rgba(59,130,246,0.15)]" : "border-border")}>
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <GripVertical className="h-3.5 w-3.5 text-gray-200 shrink-0" />
@@ -1369,6 +1407,7 @@ function Step2({
             {/* ── Draggable blocks ── */}
             {blocks.map((b, idx) => (
               <div key={b.id}
+                id={`edit-hl-block-${b.id}`}
                 draggable
                 onDragStart={(e) => handleDragStart(e, idx)}
                 onDragOver={(e) => handleDragOver(e, idx)}
@@ -1379,7 +1418,7 @@ function Step2({
                   dragOverIdx === idx && dragIdx !== idx
                     ? "border-blue-400 bg-blue-50/40 shadow-sm"
                     : lastAdded?.type === "block" && lastAdded.id === b.id
-                      ? "border-blue-400 ring-2 ring-blue-200 bg-blue-50/60"
+                      ? "border-blue-500 ring-[3px] ring-blue-400/50 bg-blue-50 shadow-[0_0_0_6px_rgba(59,130,246,0.15)]"
                       : "border-border bg-white",
                   dragIdx === idx && "opacity-40 scale-[0.99]",
                 )}>
@@ -1464,8 +1503,8 @@ function Step2({
             <div className="space-y-3">
               {/* Button cards — includes both manual and library VCs (shown with Đã duyệt badge) */}
               {actionButtons.map((btn, i) => (
-                <div key={btn.id} className={cn("rounded-lg transition-all duration-500",
-                  lastAdded?.type === "button" && lastAdded.id === btn.id && "ring-2 ring-blue-400 shadow-[0_0_0_4px_rgba(59,130,246,0.12)]")}>
+                <div key={btn.id} id={`edit-hl-btn-${btn.id}`} className={cn("rounded-lg transition-all duration-500",
+                  lastAdded?.type === "button" && lastAdded.id === btn.id && "ring-[3px] ring-blue-400/50 shadow-[0_0_0_6px_rgba(59,130,246,0.15)]")}>
                   <ActionButtonCard
                     btn={btn}
                     index={i}
@@ -1736,7 +1775,7 @@ export default function TaoTemplatePage() {
       </div>
 
       {step === 1 && (
-        <ComponentLibraryPanel open={drawerOpen} onClose={() => setDrawerOpen(false)} onAdd={handleAddVC} />
+        <ComponentLibraryPanel open={drawerOpen} onClose={() => setDrawerOpen(false)} onAdd={handleAddVC} actionButtonCount={actionButtons.length} />
       )}
 
       <div className="flex items-center justify-between px-8 py-4 border-t border-border bg-white shrink-0">
