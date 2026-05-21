@@ -1058,11 +1058,6 @@ function ActionButtonCard({
           </div>
         )}
 
-        {btn.label.trim() && !isLabelVerified(btn.label) && (
-          <p className="text-[10px] text-amber-600 pt-1">
-            ⚠ Nội dung chỉnh sửa sẽ không được tự động duyệt
-          </p>
-        )}
       </div>
     </div>
   )
@@ -1324,11 +1319,6 @@ function Step2({
                       )
                     })}
                   </div>
-                  {uploadedImages.length > 0 && !imagesVerified && (
-                    <p className="text-[10px] text-amber-600 mt-2">
-                      ⚠ Hình ảnh chỉnh sửa sẽ không được tự động duyệt
-                    </p>
-                  )}
                 </div>
               ) : (
                 /* ── Logo mode ── */
@@ -1459,10 +1449,7 @@ function Step2({
                       onMouseDown={(e) => e.stopPropagation()}
                       onChange={(e) => updateTextBlock(b.id, e.target.value.slice(0, 400))}
                       rows={3} className="w-full text-sm border-0 resize-none focus:outline-none select-text" placeholder="Nhập nội dung văn bản..." />
-                    <div className="flex items-center justify-between">
-                      {!isTextVerified(b.value) && b.value.trim()
-                        ? <p className="text-[10px] text-amber-600">⚠ Nội dung chỉnh sửa sẽ không được tự động duyệt</p>
-                        : <span />}
+                    <div className="flex items-center justify-end">
                       <div className="text-[10px] text-muted-foreground">{b.value.length}/400</div>
                     </div>
                   </>
