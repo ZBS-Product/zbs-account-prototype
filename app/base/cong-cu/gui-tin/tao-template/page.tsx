@@ -159,6 +159,8 @@ interface TextBlock  { type: "text";  id: number; value: string }
 interface TableBlock { type: "table"; id: number; rows: { label: string; value: string }[] }
 type Block = TextBlock | TableBlock
 
+type LastAdded = { type: "title" | "logo" | "block" | "button"; id?: number } | null
+
 function extractParams(title: string, blocks: Block[]): string[] {
   const re = /<([^>]+)>/g
   const set = new Set<string>()
@@ -635,12 +637,13 @@ function VCChip({ vc, onRemove, showMove, onMoveUp, onMoveDown, isFirst, isLast 
 
 // ── Step 2 right panel ────────────────────────────────────────────────────────
 
-function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, templateType, verifiedComponents, logoMode, uploadedImages }: {
+function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, templateType, verifiedComponents, logoMode, uploadedImages, lastAdded }: {
   dark: boolean; setDark: (v: boolean) => void
   title: string; blocks: Block[]; actionButtons: ActionButton[]; templateType: string
   verifiedComponents: VComponent[]
   logoMode: "logo" | "image"
   uploadedImages: UploadedImage[]
+  lastAdded: LastAdded
 }) {
   const typeInfo   = TEMPLATE_TYPES.find((t) => t.id === templateType)
   const logoVC     = verifiedComponents.find((c) => c.kind === "logo")
@@ -699,15 +702,22 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
               </div>
             )}
             <div className="px-4 py-3 space-y-2">
-              <p className="text-[13px] font-semibold leading-snug">{title || "Tiêu đề template"}</p>
+              <p className={cn("text-[13px] font-semibold leading-snug rounded transition-all duration-500",
+                lastAdded?.type === "title" && "bg-blue-100 outline outline-2 outline-blue-400 px-1 -mx-1")}>
+                {title || "Tiêu đề template"}
+              </p>
               {blocks.map((b) => {
+                const hl = lastAdded?.type === "block" && lastAdded.id === b.id
                 if (b.type === "text") return (
-                  <p key={b.id} className={cn("text-[12px] leading-relaxed", dark ? "text-gray-300" : "text-gray-700")}>
+                  <p key={b.id} className={cn("text-[12px] leading-relaxed rounded transition-all duration-500",
+                    dark ? "text-gray-300" : "text-gray-700",
+                    hl && "bg-blue-100 outline outline-2 outline-blue-400 px-1 -mx-1")}>
                     {b.value || <span className="italic text-gray-400">Nội dung văn bản...</span>}
                   </p>
                 )
                 return (
-                  <table key={b.id} className="w-full text-[11px]">
+                  <table key={b.id} className={cn("w-full text-[11px] rounded transition-all duration-500",
+                    hl && "outline outline-2 outline-blue-400 bg-blue-50")}>
                     <tbody>
                       {b.rows.map((r, ri) => (
                         <tr key={ri} className={cn("border-t", dark ? "border-gray-700" : "border-gray-100")}>
@@ -731,13 +741,17 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
                       {vc.name}
                     </button>
                   ))}
-                  {actionButtons.map((ab, i) => (
-                    <button key={ab.id} className={cn("w-full py-2 rounded text-xs font-semibold transition-colors",
-                      (buttonVCs.length === 0 && i === 0) ? "text-white" : dark ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-700"
-                    )} style={(buttonVCs.length === 0 && i === 0) ? { background: "oklch(0.488 0.243 264.376)" } : undefined}>
-                      {ab.label || `Nút thao tác ${i + 1}`}
-                    </button>
-                  ))}
+                  {actionButtons.map((ab, i) => {
+                    const hl = lastAdded?.type === "button" && lastAdded.id === ab.id
+                    return (
+                      <button key={ab.id} className={cn("w-full py-2 rounded text-xs font-semibold transition-all duration-500",
+                        (buttonVCs.length === 0 && i === 0) ? "text-white" : dark ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-700",
+                        hl && "outline outline-2 outline-blue-400"
+                      )} style={(buttonVCs.length === 0 && i === 0) ? { background: "oklch(0.488 0.243 264.376)" } : undefined}>
+                        {ab.label || `Nút thao tác ${i + 1}`}
+                      </button>
+                    )
+                  })}
                 </div>
               ) : null}
             </div>
@@ -1065,7 +1079,7 @@ function Step2({
   actionButtons, setActionButtons, dark, setDark,
   verifiedComponents, onRemoveVC, onMoveVC,
   logoMode, setLogoMode, uploadedImages, setUploadedImages,
-  imagesVerified, setImagesVerified,
+  imagesVerified, setImagesVerified, lastAdded,
 }: {
   templateType: string; setTemplateType: (v: string) => void
   purpose: string; setPurpose: (v: string) => void
@@ -1079,6 +1093,7 @@ function Step2({
   logoMode: "logo" | "image"; setLogoMode: (m: "logo" | "image") => void
   uploadedImages: UploadedImage[]; setUploadedImages: (imgs: UploadedImage[]) => void
   imagesVerified: boolean; setImagesVerified: (v: boolean) => void
+  lastAdded: LastAdded
 }) {
   const [logoOpen, setLogoOpen] = useState(true)
   const [btnOpen, setBtnOpen]   = useState(true)
@@ -1337,7 +1352,8 @@ function Step2({
           <div className="p-4 space-y-2">
 
             {/* ── Tiêu đề — fixed, cannot be deleted or moved ── */}
-            <div className="rounded border border-border p-3 bg-gray-50/40">
+            <div className={cn("rounded border p-3 bg-gray-50/40 transition-all duration-500",
+              lastAdded?.type === "title" ? "border-blue-400 ring-2 ring-blue-200 bg-blue-50/60" : "border-border")}>
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <GripVertical className="h-3.5 w-3.5 text-gray-200 shrink-0" />
@@ -1359,10 +1375,12 @@ function Step2({
                 onDrop={(e) => handleDrop(e, idx)}
                 onDragEnd={handleDragEnd}
                 className={cn(
-                  "rounded border p-3 transition-all select-none",
+                  "rounded border p-3 transition-all duration-500 select-none",
                   dragOverIdx === idx && dragIdx !== idx
                     ? "border-blue-400 bg-blue-50/40 shadow-sm"
-                    : "border-border bg-white",
+                    : lastAdded?.type === "block" && lastAdded.id === b.id
+                      ? "border-blue-400 ring-2 ring-blue-200 bg-blue-50/60"
+                      : "border-border bg-white",
                   dragIdx === idx && "opacity-40 scale-[0.99]",
                 )}>
                 {b.type === "text" ? (
@@ -1446,14 +1464,16 @@ function Step2({
             <div className="space-y-3">
               {/* Button cards — includes both manual and library VCs (shown with Đã duyệt badge) */}
               {actionButtons.map((btn, i) => (
-                <ActionButtonCard
-                  key={btn.id}
-                  btn={btn}
-                  index={i}
-                  total={actionButtons.length}
-                  onChange={(updated) => updateActionButton(btn.id, updated)}
-                  onRemove={() => removeActionButton(btn.id)}
-                />
+                <div key={btn.id} className={cn("rounded-lg transition-all duration-500",
+                  lastAdded?.type === "button" && lastAdded.id === btn.id && "ring-2 ring-blue-400 shadow-[0_0_0_4px_rgba(59,130,246,0.12)]")}>
+                  <ActionButtonCard
+                    btn={btn}
+                    index={i}
+                    total={actionButtons.length}
+                    onChange={(updated) => updateActionButton(btn.id, updated)}
+                    onRemove={() => removeActionButton(btn.id)}
+                  />
+                </div>
               ))}
 
               {/* Add button */}
@@ -1482,6 +1502,7 @@ function Step2({
         actionButtons={actionButtons} templateType={templateType}
         verifiedComponents={verifiedComponents}
         logoMode={logoMode} uploadedImages={uploadedImages}
+        lastAdded={lastAdded}
       />
     </div>
   )
@@ -1596,24 +1617,40 @@ export default function TaoTemplatePage() {
 
   const [verifiedComponents, setVerifiedComponents] = useState<VComponent[]>([])
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [lastAdded, setLastAdded] = useState<LastAdded>(null)
+
+  useEffect(() => {
+    if (!lastAdded) return
+    const t = setTimeout(() => setLastAdded(null), 1600)
+    return () => clearTimeout(t)
+  }, [lastAdded])
 
   function handleAddVC(c: VComponent) {
     if (c.kind === "logo") {
       setVerifiedComponents((prev) => [...prev.filter((v) => v.kind !== "logo"), c])
       setLogoMode("logo")
+      setLastAdded({ type: "logo" })
     } else if (c.kind === "button") {
       if (actionButtons.length >= MAX_BUTTONS) return
-      setActionButtons((prev) => [...prev, { id: Date.now(), type: "oa-profile", label: c.name, url: "" }])
+      const newId = Date.now()
+      setActionButtons((prev) => [...prev, { id: newId, type: "oa-profile", label: c.name, url: "" }])
+      setLastAdded({ type: "button", id: newId })
     } else if (c.previewRender === "title") {
       setTitle(c.name)
+      setLastAdded({ type: "title" })
     } else if (c.previewRender === "text") {
-      setBlocks((prev) => [...prev, { type: "text", id: Date.now(), value: c.description }])
+      const newId = Date.now()
+      setBlocks((prev) => [...prev, { type: "text", id: newId, value: c.description }])
+      setLastAdded({ type: "block", id: newId })
     } else if (c.previewRender === "table") {
-      setBlocks((prev) => [...prev, { type: "table", id: Date.now(), rows: c.tableRows ?? [] }])
+      const newId = Date.now()
+      setBlocks((prev) => [...prev, { type: "table", id: newId, rows: c.tableRows ?? [] }])
+      setLastAdded({ type: "block", id: newId })
     } else if (c.previewRender === "carousel") {
       setLogoMode("image")
       setUploadedImages([...MOCK_IMGS])
       setImagesVerified(true)
+      setLastAdded({ type: "logo" })
     } else if (c.previewRender === "image") {
       setLogoMode("image")
       setUploadedImages((prev) => {
@@ -1621,6 +1658,7 @@ export default function TaoTemplatePage() {
         return next
       })
       setImagesVerified(true)
+      setLastAdded({ type: "logo" })
     } else {
       setVerifiedComponents((prev) => prev.find((v) => v.id === c.id) ? prev : [...prev, c])
     }
@@ -1684,6 +1722,7 @@ export default function TaoTemplatePage() {
             logoMode={logoMode} setLogoMode={setLogoMode}
             uploadedImages={uploadedImages} setUploadedImages={setUploadedImages}
             imagesVerified={imagesVerified} setImagesVerified={setImagesVerified}
+            lastAdded={lastAdded}
           />
         )}
         {step === 2 && (
