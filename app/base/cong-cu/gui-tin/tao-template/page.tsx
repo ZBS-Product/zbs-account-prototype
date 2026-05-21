@@ -681,7 +681,7 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
       lastAdded.type === "logo"   ? "preview-hl-logo"   :
       lastAdded.type === "block"  ? `preview-hl-block-${lastAdded.id}` :
       lastAdded.type === "button" ? `preview-hl-btn-${lastAdded.id}`   : null
-    if (id) document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+    if (id) document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "center" })
   }, [lastAdded])
 
   // Pricing
@@ -1147,7 +1147,7 @@ function Step2({
       lastAdded.type === "logo"   ? "edit-hl-logo"   :
       lastAdded.type === "block"  ? `edit-hl-block-${lastAdded.id}` :
       lastAdded.type === "button" ? `edit-hl-btn-${lastAdded.id}`   : null
-    if (id) document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+    if (id) document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "center" })
   }, [lastAdded])
   const [dragIdx, setDragIdx]       = useState<number | null>(null)
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
