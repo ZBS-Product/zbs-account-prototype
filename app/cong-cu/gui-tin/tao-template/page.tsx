@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect, useRef } from "react"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import {
   Check, X, Info, ChevronDown, ChevronUp, Minus, Plus,
   Search, Zap, AlertCircle, Library, Trash2, Upload, ImageIcon, GripVertical,
@@ -1624,8 +1624,9 @@ function Step3({ title, blocks, note, setNote, agreed, setAgreed, dark, setDark,
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function TaoTemplatePage() {
-  const pathname = usePathname()
-  const router   = useRouter()
+  const pathname     = usePathname()
+  const router       = useRouter()
+  const searchParams = useSearchParams()
   const ROOT_SECTIONS = new Set(["cong-cu", "chi-tieu", "cai-dat", "giao-dich", "bao-cao", ""])
   const seg      = pathname.split("/")[1] ?? ""
   const basePath = ROOT_SECTIONS.has(seg) ? "" : `/${seg}`
@@ -1636,6 +1637,21 @@ export default function TaoTemplatePage() {
   const [templateName, setTemplateName] = useState("")
   const [selectedApp, setSelectedApp]   = useState("")
   const [selectedOA, setSelectedOA]     = useState("")
+
+  // Demo mode — skip step 1 when ?step=2 in URL
+  const [demoMode, setDemoMode]   = useState(false)
+  const [libHinted, setLibHinted] = useState(false)
+
+  useEffect(() => {
+    if (searchParams.get("step") === "2") {
+      setTemplateName("Demo Template ZBS")
+      setSelectedApp("QC Test ZNS 4")
+      setSelectedOA("Trợ lý tin doanh nghiệp")
+      setStep(1)
+      setDemoMode(true)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const [templateType, setTemplateType] = useState("tuy-chinh")
   const [purpose, setPurpose]           = useState("cap-do-1")
@@ -1785,15 +1801,34 @@ export default function TaoTemplatePage() {
           : <Button variant="outline" onClick={() => setStep(step - 1)}>Quay lại</Button>}
 
         {step === 1 && (
-          <Button data-library-toggle variant="outline" className="gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400" onClick={() => setDrawerOpen((v) => !v)}>
-            <Library className="h-4 w-4" />
-            Thư viện Component
-            {verifiedComponents.length > 0 && (
-              <span className="h-5 min-w-5 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center px-1">
-                {verifiedComponents.length}
-              </span>
+          <div className="relative">
+            {/* Demo mode pulse */}
+            {demoMode && !libHinted && (
+              <>
+                <span className="absolute -inset-1.5 rounded-lg animate-ping bg-blue-400/35 pointer-events-none" />
+                <span className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-[11px] font-semibold bg-blue-600 text-white px-2.5 py-1 rounded-full shadow-md pointer-events-none">
+                  👆 Bắt đầu tại đây
+                </span>
+              </>
             )}
-          </Button>
+            <Button
+              data-library-toggle
+              variant="outline"
+              className={cn(
+                "gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400 relative",
+                demoMode && !libHinted && "border-blue-500 bg-blue-50 shadow-[0_0_0_3px_rgba(59,130,246,0.25)]"
+              )}
+              onClick={() => { setDrawerOpen((v) => !v); setLibHinted(true) }}
+            >
+              <Library className="h-4 w-4" />
+              Thư viện Component
+              {verifiedComponents.length > 0 && (
+                <span className="h-5 min-w-5 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center px-1">
+                  {verifiedComponents.length}
+                </span>
+              )}
+            </Button>
+          </div>
         )}
 
         {step < 2 ? (
