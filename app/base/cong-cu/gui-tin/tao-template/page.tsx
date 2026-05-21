@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import {
   Check, X, Info, ChevronDown, ChevronUp, Minus, Plus,
@@ -460,9 +460,24 @@ function ComponentLibraryPanel({ open, onClose, onAdd, actionButtonCount }: {
     return ALL_LIBRARY.some((c) => c.kind === cat.id || c.previewRender === cat.id)
   })
 
+  const panelRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return
+    function handleMouseDown(e: MouseEvent) {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        // also ignore the toggle button (data-library-toggle)
+        const toggle = document.querySelector("[data-library-toggle]")
+        if (toggle && toggle.contains(e.target as Node)) return
+        onClose()
+      }
+    }
+    document.addEventListener("mousedown", handleMouseDown)
+    return () => document.removeEventListener("mousedown", handleMouseDown)
+  }, [open, onClose])
+
   return (
     /* Bottom panel — dark shelf, pushes content above upward */
-    <div className={cn(
+    <div ref={panelRef} className={cn(
       "shrink-0 bg-white overflow-hidden transition-all duration-300 ease-out",
       open ? "h-[380px] shadow-[0_-8px_24px_rgba(0,0,0,0.10)]" : "h-0",
     )}>
@@ -1783,7 +1798,7 @@ export default function TaoTemplatePage() {
           : <Button variant="outline" onClick={() => setStep(step - 1)}>Quay lại</Button>}
 
         {step === 1 && (
-          <Button variant="outline" className="gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400" onClick={() => setDrawerOpen(true)}>
+          <Button data-library-toggle variant="outline" className="gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400" onClick={() => setDrawerOpen((v) => !v)}>
             <Library className="h-4 w-4" />
             Thư viện Component
             {verifiedComponents.length > 0 && (
