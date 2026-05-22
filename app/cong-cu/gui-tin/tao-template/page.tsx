@@ -1202,7 +1202,7 @@ function ActionButtonCard({
                       <div className="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider bg-gray-50 border-b border-border">{group.group}</div>
                       {group.items.map((item) => (
                         <button key={item.id}
-                          onClick={() => { onChange({ ...btn, type: item.id }); setTypeOpen(false) }}
+                          onClick={() => { onChange({ ...btn, type: item.id, label: item.placeholder ?? "" }); setTypeOpen(false) }}
                           className={cn("w-full flex items-center justify-between px-3 py-2.5 hover:bg-blue-50 transition-colors text-left",
                             btn.type === item.id && "bg-blue-50"
                           )}
