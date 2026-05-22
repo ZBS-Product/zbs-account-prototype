@@ -59,10 +59,10 @@ interface ActionButton {
 
 const MAX_BUTTONS = 3
 const MAX_BUTTONS_BY_TYPE: Record<string, number> = {
-  "xac-thuc":   1,
+  "xac-thuc":   3,
   "danh-gia":   2,
-  "thanh-toan": 2,
-  "voucher":    2,
+  "thanh-toan": 3,
+  "voucher":    3,
   "tuy-chinh":  3,
 }
 
@@ -874,8 +874,8 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
               {samplePreview ? (
                 <>
                   {samplePreview}
-                  {/* Append user action buttons (skip for xac-thuc — button is baked into its preview) */}
-                  {templateType !== "xac-thuc" && actionButtons.length > 0 && (
+                  {/* Append user action buttons */}
+                  {actionButtons.length > 0 && (
                     <div className="mt-2 space-y-1.5">
                       {actionButtons.map((ab, i) => {
                         const hl = lastAdded?.type === "button" && lastAdded.id === ab.id
@@ -1298,6 +1298,7 @@ function Step2({
   voucherStartDate, setVoucherStartDate,
   voucherExpire, setVoucherExpire,
   voucherCode, setVoucherCode,
+  otpBody, setOtpBody,
 }: {
   templateType: string; setTemplateType: (v: string) => void
   purpose: string; setPurpose: (v: string) => void
@@ -1323,6 +1324,7 @@ function Step2({
   voucherStartDate: string; setVoucherStartDate: (v: string) => void
   voucherExpire: string; setVoucherExpire: (v: string) => void
   voucherCode: string; setVoucherCode: (v: string) => void
+  otpBody: string; setOtpBody: (v: string) => void
 }) {
   const [logoOpen, setLogoOpen] = useState(true)
   const [btnOpen, setBtnOpen]   = useState(true)
@@ -1607,8 +1609,21 @@ function Step2({
             </div>
             )}
 
-            {/* ── Draggable blocks — hidden for xac-thuc and danh-gia ── */}
-            {!["xac-thuc", "danh-gia"].includes(templateType) && blocks.map((b, idx) => (
+            {/* ── OTP body — xac-thuc only ── */}
+            {templateType === "xac-thuc" && (
+              <div className="rounded border p-3 bg-white">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-semibold">Nội dung gửi kèm mã OTP <span className="text-red-500">*</span></span>
+                </div>
+                <textarea value={otpBody} onChange={(e) => setOtpBody(e.target.value.slice(0, 400))}
+                  rows={4} className="w-full text-sm border border-border rounded-md p-2 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+                  placeholder="VD: Tuyệt đối KHÔNG chia sẻ mã xác thực cho bất kỳ ai dưới bất kỳ hình thức nào. Mã xác thực có hiệu lực trong 5 phút." />
+                <div className="text-right text-[10px] text-muted-foreground mt-1">{otpBody.length}/400</div>
+              </div>
+            )}
+
+            {/* ── Draggable blocks — hidden for xac-thuc ── */}
+            {templateType !== "xac-thuc" && blocks.map((b, idx) => (
               <div key={b.id}
                 id={`edit-hl-block-${b.id}`}
                 draggable
@@ -1680,16 +1695,13 @@ function Step2({
               </div>
             ))}
 
-            {/* ── Add block — hidden for xac-thuc and danh-gia ── */}
-            {!["xac-thuc", "danh-gia"].includes(templateType) && (
+            {/* ── Add block — hidden for xac-thuc ── */}
+            {templateType !== "xac-thuc" && (
             <div className="flex items-center gap-2 pt-1">
               <Plus className="h-4 w-4 text-muted-foreground" />
               <button onClick={() => addBlock("text")} className="flex items-center gap-1 text-xs border border-border rounded px-2 py-1 hover:bg-gray-50 transition-colors"><span>☰</span> Văn bản</button>
               <button onClick={() => addBlock("table")} className="flex items-center gap-1 text-xs border border-border rounded px-2 py-1 hover:bg-gray-50 transition-colors"><span>⊞</span> Bảng</button>
             </div>
-            )}
-            {["xac-thuc", "danh-gia"].includes(templateType) && (
-              <p className="text-xs text-muted-foreground text-center py-2">Nội dung được tạo tự động theo loại Template</p>
             )}
           </div>
         </section>
@@ -1839,8 +1851,8 @@ function Step2({
                 </div>
               ))}
 
-              {/* Add button — hidden for xac-thuc */}
-              {actionButtons.length < maxBtns && templateType !== "xac-thuc" && (
+              {/* Add button */}
+              {actionButtons.length < maxBtns && (
                 <button
                   onClick={addActionButton}
                   className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-gray-200 rounded-lg text-sm text-muted-foreground hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/40 transition-all"
@@ -1851,7 +1863,7 @@ function Step2({
                 </button>
               )}
 
-              {actionButtons.length === 0 && templateType !== "xac-thuc" && (
+              {actionButtons.length === 0 && (
                 <p className="text-xs text-muted-foreground text-center py-2">Chưa có nút nào — nhấn để thêm hoặc chọn từ Thư viện</p>
               )}
             </div>
@@ -2005,6 +2017,7 @@ export default function TaoTemplatePage() {
   const [voucherStartDate, setVoucherStartDate] = useState("<start_date>")
   const [voucherExpire, setVoucherExpire] = useState("<expire>")
   const [voucherCode, setVoucherCode] = useState("<voucher_code>")
+  const [otpBody, setOtpBody] = useState("Tuyệt đối KHÔNG chia sẻ mã xác thực cho bất kỳ ai dưới bất kỳ hình thức nào. Mã xác thực có hiệu lực trong 5 phút.")
 
   const [verifiedComponents, setVerifiedComponents] = useState<VComponent[]>([])
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -2138,6 +2151,7 @@ export default function TaoTemplatePage() {
             voucherStartDate={voucherStartDate} setVoucherStartDate={setVoucherStartDate}
             voucherExpire={voucherExpire} setVoucherExpire={setVoucherExpire}
             voucherCode={voucherCode} setVoucherCode={setVoucherCode}
+            otpBody={otpBody} setOtpBody={setOtpBody}
           />
         )}
         {step === 2 && (
