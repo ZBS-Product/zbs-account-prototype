@@ -858,25 +858,15 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
               <div id="preview-hl-logo" className={cn("px-4 pt-4 pb-2 flex items-center gap-2 transition-all duration-500",
                 lastAdded?.type === "logo" && "outline outline-[3px] outline-blue-500 outline-offset-[-3px]")}>
                 {logoVC ? (
-                  <>
-                    <div className="h-8 w-8 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 text-white" style={{ background: logoVC.bgColor }}>
-                      {logoVC.initials.slice(0, 2)}
-                    </div>
-                    <div className="flex flex-col leading-tight">
-                      <span className={cn("text-[11px] font-bold", dark ? "text-orange-400" : "text-orange-500")}>{logoVC.name.split(" ")[0]}</span>
-                      <span className={cn("text-[11px] font-bold", dark ? "text-white" : "text-gray-800")}>{logoVC.name.split(" ").slice(1).join(" ")}</span>
-                    </div>
-                  </>
+                  <p className="text-sm font-extrabold leading-none">
+                    <span className={dark ? "text-orange-400" : "text-orange-500"}>{logoVC.name.split(" ")[0]} </span>
+                    <span className={dark ? "text-white" : "text-gray-900"}>{logoVC.name.split(" ").slice(1).join(" ")}</span>
+                  </p>
                 ) : (
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden border border-orange-200" style={{ background: "oklch(0.96 0.03 50)" }}>
-                      <span className="text-[13px] font-black" style={{ color: "oklch(0.55 0.2 35)" }}>A</span>
-                    </div>
-                    <div className="leading-tight">
-                      <span className={cn("text-[11px] font-extrabold", dark ? "text-orange-400" : "text-orange-500")}>ATP </span>
-                      <span className={cn("text-[11px] font-extrabold", dark ? "text-white" : "text-gray-900")}>SOFTWARE</span>
-                    </div>
-                  </div>
+                  <p className="text-sm font-extrabold leading-none">
+                    <span className={dark ? "text-orange-400" : "text-orange-500"}>ATP </span>
+                    <span className={dark ? "text-white" : "text-gray-900"}>SOFTWARE</span>
+                  </p>
                 )}
               </div>
             )}
