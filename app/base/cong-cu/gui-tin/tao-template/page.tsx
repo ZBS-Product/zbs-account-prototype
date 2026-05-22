@@ -839,7 +839,7 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
             </button>
           </div>
 
-          <div className={cn("rounded-lg border border-border overflow-hidden text-sm", dark ? "bg-gray-900 text-white" : "bg-white text-gray-900")}>
+          <div className={cn("rounded-2xl border border-border overflow-hidden text-sm shadow-sm", dark ? "bg-gray-900 text-white" : "bg-white text-gray-900")}>
             {logoMode === "image" && uploadedImages.length > 0 ? (
               /* Image mode — show first image as banner */
               <div id="preview-hl-logo" className={cn("relative h-28 overflow-hidden transition-all duration-500",
@@ -855,19 +855,27 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
                 )}
               </div>
             ) : (
-              <div id="preview-hl-logo" className={cn("px-4 py-3 flex items-center gap-2 transition-all duration-500",
-                dark ? "bg-gray-800" : "bg-orange-50",
+              <div id="preview-hl-logo" className={cn("px-4 pt-4 pb-2 flex items-center gap-2 transition-all duration-500",
                 lastAdded?.type === "logo" && "outline outline-[3px] outline-blue-500 outline-offset-[-3px]")}>
                 {logoVC ? (
                   <>
-                    <div className="h-6 w-6 rounded text-[9px] font-bold flex items-center justify-center shrink-0" style={{ background: logoVC.bgColor }}>
+                    <div className="h-8 w-8 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 text-white" style={{ background: logoVC.bgColor }}>
                       {logoVC.initials.slice(0, 2)}
                     </div>
-                    <div className={cn("text-xs font-bold", dark ? "text-orange-400" : "text-orange-600")}>{logoVC.name}</div>
+                    <div className="flex flex-col leading-tight">
+                      <span className={cn("text-[11px] font-bold", dark ? "text-orange-400" : "text-orange-500")}>{logoVC.name.split(" ")[0]}</span>
+                      <span className={cn("text-[11px] font-bold", dark ? "text-white" : "text-gray-800")}>{logoVC.name.split(" ").slice(1).join(" ")}</span>
+                    </div>
                   </>
                 ) : (
-                  <div className={cn("text-xs font-bold", dark ? "text-orange-400" : "text-orange-600")}>
-                    ATP <span className={dark ? "text-white" : "text-gray-800"}>SOFTWARE</span>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden border border-orange-200" style={{ background: "oklch(0.96 0.03 50)" }}>
+                      <span className="text-[13px] font-black" style={{ color: "oklch(0.55 0.2 35)" }}>A</span>
+                    </div>
+                    <div className="leading-tight">
+                      <span className={cn("text-[11px] font-extrabold", dark ? "text-orange-400" : "text-orange-500")}>ATP </span>
+                      <span className={cn("text-[11px] font-extrabold", dark ? "text-white" : "text-gray-900")}>SOFTWARE</span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -924,9 +932,9 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
                 </>
               )}
               {templateType === "danh-gia" && (
-                <div className="flex justify-center gap-1.5 py-1">
+                <div className="flex justify-center gap-2 py-2">
                   {ratingLabels.map((_, i) => (
-                    <span key={i} className="text-xl text-yellow-400">☆</span>
+                    <span key={i} className="text-2xl leading-none" style={{ color: "oklch(0.82 0.12 55)", WebkitTextStroke: "1.5px oklch(0.7 0.18 50)" }}>☆</span>
                   ))}
                 </div>
               )}
