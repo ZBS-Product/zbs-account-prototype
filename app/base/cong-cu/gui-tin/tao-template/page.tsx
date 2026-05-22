@@ -722,11 +722,6 @@ function DanhGiaPreview({ dark }: { dark: boolean }) {
           <span key={i} className="text-xl text-yellow-400">☆</span>
         ))}
       </div>
-      <div className="mt-2">
-        <button className="w-full py-2 rounded text-xs font-semibold text-white" style={{ background: "oklch(0.488 0.243 264.376)" }}>
-          Đánh giá ngay
-        </button>
-      </div>
     </div>
   )
 }
@@ -886,7 +881,30 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
               </div>
             )}
             <div className="px-4 py-3 space-y-2">
-              {samplePreview ? samplePreview : (
+              {samplePreview ? (
+                <>
+                  {samplePreview}
+                  {/* Append user action buttons (skip for xac-thuc — button is baked into its preview) */}
+                  {templateType !== "xac-thuc" && actionButtons.length > 0 && (
+                    <div className="mt-2 space-y-1.5">
+                      {actionButtons.map((ab, i) => {
+                        const hl = lastAdded?.type === "button" && lastAdded.id === ab.id
+                        const placeholder = ALL_BUTTON_TYPES.find((t) => t.id === ab.type)?.placeholder
+                        return (
+                          <button id={`preview-hl-btn-${ab.id}`} key={ab.id}
+                            className={cn("w-full py-2 rounded text-xs font-semibold transition-all duration-500",
+                              i === 0 ? "text-white" : dark ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-700",
+                              hl && "outline outline-[3px] outline-blue-500"
+                            )}
+                            style={i === 0 ? { background: "oklch(0.488 0.243 264.376)" } : undefined}>
+                            {ab.label || placeholder || `Nút thao tác ${i + 1}`}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+                </>
+              ) : (
                 <>
                   <p id="preview-hl-title" className={cn("text-[13px] font-semibold leading-snug rounded-sm transition-all duration-500",
                     lastAdded?.type === "title" && "bg-blue-100 outline outline-[3px] outline-blue-500 px-1 -mx-1")}>
@@ -1442,32 +1460,6 @@ function Step2({
           </div>
         </section>
 
-        {/* Bình chọn — only for danh-gia */}
-        {templateType === "danh-gia" && (
-          <section className="mb-6">
-            <h2 className="text-sm font-semibold mb-1">Bình chọn</h2>
-            <p className="text-xs text-muted-foreground mb-3">Cấu hình thang điểm đánh giá dịch vụ</p>
-            <div className="rounded-lg border border-border bg-white overflow-hidden">
-              <div className="grid grid-cols-[80px_1fr_120px] gap-0 text-xs font-semibold text-muted-foreground px-4 py-2 border-b border-border bg-gray-50">
-                <span>Thang điểm</span><span>Tiêu đề <span className="text-red-500">*</span></span><span />
-              </div>
-              {[
-                <><span className="text-yellow-400">★</span><span className="text-gray-300">★★★★</span></>,
-                <><span className="text-yellow-400">★★</span><span className="text-gray-300">★★★</span></>,
-                <><span className="text-yellow-400">★★★</span><span className="text-gray-300">★★</span></>,
-                <><span className="text-yellow-400">★★★★</span><span className="text-gray-300">★</span></>,
-                <><span className="text-yellow-400">★★★★★</span></>,
-              ].map((stars, i) => (
-                <div key={i} className="grid grid-cols-[80px_1fr_120px] gap-3 items-center px-4 py-2.5 border-b border-border last:border-0">
-                  <div className="flex gap-0.5 text-sm">{stars}</div>
-                  <Input value={ratingLabels[i] ?? ""} onChange={(e) => { const arr = [...ratingLabels]; arr[i] = e.target.value; setRatingLabels(arr) }} className="h-8 text-sm" />
-                  <button className="text-xs text-blue-600 hover:underline text-right">Thêm chi tiết</button>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
         {/* Logo / Hình ảnh */}
         <section id="edit-hl-logo" className={cn("mb-4 rounded-lg border bg-white overflow-hidden transition-all duration-500",
           lastAdded?.type === "logo" ? "border-blue-500 ring-[3px] ring-blue-400/50 shadow-[0_0_0_6px_rgba(59,130,246,0.15)]" : "border-border")}>
@@ -1601,98 +1593,6 @@ function Step2({
           )}
         </section>
 
-        {/* Thông tin thanh toán — only for thanh-toan */}
-        {templateType === "thanh-toan" && (
-          <section className="mb-6">
-            <h2 className="text-sm font-semibold mb-3">Thông tin thanh toán <span className="text-red-500">*</span></h2>
-            <div className="rounded-lg border border-border bg-white overflow-hidden">
-              <div className="px-4 py-3 border-b border-border bg-blue-50 flex gap-2">
-                <Info className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
-                <div className="text-xs text-blue-800 space-y-1">
-                  <p className="font-semibold">Lưu ý</p>
-                  <ul className="space-y-0.5 list-disc list-inside">
-                    <li>Vui lòng kiểm tra kĩ thông tin bên dưới trước khi gửi.</li>
-                    <li>Tài khoản thu hưởng cần là tài khoản của doanh nghiệp sở hữu OA.</li>
-                    <li>Zalo không chịu trách nhiệm nếu thông tin thanh toán không chính xác.</li>
-                  </ul>
-                </div>
-              </div>
-              <div className="divide-y divide-border">
-                <div className="grid grid-cols-[180px_1fr] gap-4 items-start px-4 py-3">
-                  <label className="text-sm font-medium pt-1.5">Ngân hàng<span className="text-red-500 ml-0.5">*</span></label>
-                  <div className="flex gap-2">
-                    <button className="shrink-0 border border-border rounded px-3 h-9 text-sm bg-white hover:bg-gray-50">Chọn ngân hàng</button>
-                    <select value={paymentBank} onChange={(e) => setPaymentBank(e.target.value)} className="flex-1 border border-border rounded px-3 h-9 text-sm bg-white focus:outline-none">
-                      <option value="">-- Chọn Ngân Hàng --</option>
-                      {["Vietcombank","Techcombank","MB Bank","BIDV","VietinBank","Agribank","TPBank","ACB","VPBank","Sacombank"].map(b => <option key={b}>{b}</option>)}
-                    </select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-[180px_1fr] gap-4 items-start px-4 py-3">
-                  <label className="text-sm font-medium pt-1.5">Tên tài khoản<span className="text-red-500 ml-0.5">*</span></label>
-                  <div><Input value={paymentAccountName} onChange={(e) => setPaymentAccountName(e.target.value)} className="h-9 text-sm w-full" /></div>
-                </div>
-                <div className="grid grid-cols-[180px_1fr] gap-4 items-start px-4 py-3">
-                  <label className="text-sm font-medium pt-1.5">Số tài khoản<span className="text-red-500 ml-0.5">*</span></label>
-                  <div><Input value={paymentAccountNum} onChange={(e) => setPaymentAccountNum(e.target.value)} className="h-9 text-sm w-full" /></div>
-                </div>
-                <div className="grid grid-cols-[180px_1fr] gap-4 items-start px-4 py-3">
-                  <label className="text-sm font-medium pt-1.5">Số tiền (VND)<span className="text-red-500 ml-0.5">*</span></label>
-                  <div><Input value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} className="h-9 text-sm w-full" placeholder="<transfer_amount>" /></div>
-                </div>
-                <div className="grid grid-cols-[180px_1fr] gap-4 items-start px-4 py-3">
-                  <label className="text-sm font-medium pt-1.5">Nội dung chuyển khoản</label>
-                  <div>
-                    <Input value={paymentNote} onChange={(e) => setPaymentNote(e.target.value.slice(0,90))} className="h-9 text-sm w-full" placeholder="<bank_transfer_note>" />
-                    <p className="text-[10px] text-muted-foreground text-right mt-0.5">{paymentNote.length} / 90</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Thông tin voucher — only for voucher */}
-        {templateType === "voucher" && (
-          <section className="mb-6">
-            <h2 className="text-sm font-semibold mb-3">Thông tin voucher <span className="text-red-500">*</span></h2>
-            <div className="rounded-lg border border-border bg-white">
-              <div className="divide-y divide-border">
-                {[
-                  { label: "Tiêu đề", required: true, maxLen: 30, val: voucherTitle, set: setVoucherTitle },
-                  { label: "Điều kiện áp dụng", required: true, maxLen: 40, val: voucherCondition, set: setVoucherCondition },
-                ].map(({ label, required, maxLen, val, set }) => (
-                  <div key={label} className="grid grid-cols-[180px_1fr] gap-4 items-start px-4 py-3">
-                    <label className="text-sm font-medium pt-1.5">{label}{required && <span className="text-red-500 ml-0.5">*</span>}</label>
-                    <div>
-                      <Input value={val} onChange={(e) => set(e.target.value.slice(0, maxLen))} className="h-9 text-sm w-full" />
-                      <p className="text-[10px] text-muted-foreground text-right mt-0.5">{val.length}/{maxLen}</p>
-                    </div>
-                  </div>
-                ))}
-                <div className="grid grid-cols-[180px_1fr] gap-4 items-center px-4 py-3">
-                  <label className="text-sm font-medium">Ngày bắt đầu</label>
-                  <div className="flex gap-2 items-center">
-                    <button className="shrink-0 border border-border rounded px-3 h-9 text-xs bg-white hover:bg-gray-50 flex items-center gap-1">Nhập tham số <span className="text-muted-foreground">⇌</span></button>
-                    <Input value={voucherStartDate} onChange={(e) => setVoucherStartDate(e.target.value)} className="h-9 text-sm flex-1" placeholder="<start_date>" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-[180px_1fr] gap-4 items-center px-4 py-3">
-                  <label className="text-sm font-medium">Hạn sử dụng <span className="text-red-500">*</span></label>
-                  <div className="flex gap-2 items-center">
-                    <button className="shrink-0 border border-border rounded px-3 h-9 text-xs bg-white hover:bg-gray-50 flex items-center gap-1">Nhập tham số <span className="text-muted-foreground">⇌</span></button>
-                    <Input value={voucherExpire} onChange={(e) => setVoucherExpire(e.target.value)} className="h-9 text-sm flex-1" placeholder="<expire>" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-[180px_1fr] gap-4 items-center px-4 py-3">
-                  <label className="text-sm font-medium">Mã voucher <span className="text-red-500">*</span></label>
-                  <Input value={voucherCode} onChange={(e) => setVoucherCode(e.target.value)} className="h-9 text-sm" placeholder="<voucher_code>" />
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
         {/* Content */}
         <section className="mb-4 rounded-lg border border-border bg-white overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-border">
@@ -1803,6 +1703,124 @@ function Step2({
             )}
           </div>
         </section>
+
+        {/* ── Bình chọn — danh-gia only ── */}
+        {templateType === "danh-gia" && (
+          <section className="mb-6">
+            <h2 className="text-sm font-semibold mb-1">Bình chọn</h2>
+            <p className="text-xs text-muted-foreground mb-3">Cấu hình thang điểm đánh giá dịch vụ</p>
+            <div className="rounded-lg border border-border bg-white overflow-hidden">
+              <div className="grid grid-cols-[80px_1fr_120px] gap-0 text-xs font-semibold text-muted-foreground px-4 py-2 border-b border-border bg-gray-50">
+                <span>Thang điểm</span><span>Tiêu đề <span className="text-red-500">*</span></span><span />
+              </div>
+              {([
+                <><span className="text-yellow-400">★</span><span className="text-gray-300">★★★★</span></>,
+                <><span className="text-yellow-400">★★</span><span className="text-gray-300">★★★</span></>,
+                <><span className="text-yellow-400">★★★</span><span className="text-gray-300">★★</span></>,
+                <><span className="text-yellow-400">★★★★</span><span className="text-gray-300">★</span></>,
+                <><span className="text-yellow-400">★★★★★</span></>,
+              ] as React.ReactNode[]).map((stars, i) => (
+                <div key={i} className="grid grid-cols-[80px_1fr_120px] gap-3 items-center px-4 py-2.5 border-b border-border last:border-0">
+                  <div className="flex gap-0.5 text-sm">{stars}</div>
+                  <Input value={ratingLabels[i] ?? ""} onChange={(e) => { const arr = [...ratingLabels]; arr[i] = e.target.value; setRatingLabels(arr) }} className="h-8 text-sm" />
+                  <button className="text-xs text-blue-600 hover:underline text-right">Thêm chi tiết</button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ── Thông tin thanh toán — thanh-toan only ── */}
+        {templateType === "thanh-toan" && (
+          <section className="mb-6">
+            <h2 className="text-sm font-semibold mb-3">Thông tin thanh toán <span className="text-red-500">*</span></h2>
+            <div className="rounded-lg border border-border bg-white overflow-hidden">
+              <div className="px-4 py-3 border-b border-border bg-blue-50 flex gap-2">
+                <Info className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                <div className="text-xs text-blue-800 space-y-1">
+                  <p className="font-semibold">Lưu ý</p>
+                  <ul className="space-y-0.5 list-disc list-inside">
+                    <li>Vui lòng kiểm tra kĩ thông tin bên dưới trước khi gửi.</li>
+                    <li>Tài khoản thu hưởng cần là tài khoản của doanh nghiệp sở hữu OA.</li>
+                    <li>Zalo không chịu trách nhiệm nếu thông tin thanh toán không chính xác.</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="divide-y divide-border">
+                <div className="grid grid-cols-[180px_1fr] gap-4 items-start px-4 py-3">
+                  <label className="text-sm font-medium pt-1.5">Ngân hàng<span className="text-red-500 ml-0.5">*</span></label>
+                  <div className="flex gap-2">
+                    <button className="shrink-0 border border-border rounded px-3 h-9 text-sm bg-white hover:bg-gray-50">Chọn ngân hàng</button>
+                    <select value={paymentBank} onChange={(e) => setPaymentBank(e.target.value)} className="flex-1 border border-border rounded px-3 h-9 text-sm bg-white focus:outline-none">
+                      <option value="">-- Chọn Ngân Hàng --</option>
+                      {["Vietcombank","Techcombank","MB Bank","BIDV","VietinBank","Agribank","TPBank","ACB","VPBank","Sacombank"].map(b => <option key={b}>{b}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-[180px_1fr] gap-4 items-start px-4 py-3">
+                  <label className="text-sm font-medium pt-1.5">Tên tài khoản<span className="text-red-500 ml-0.5">*</span></label>
+                  <div><Input value={paymentAccountName} onChange={(e) => setPaymentAccountName(e.target.value)} className="h-9 text-sm w-full" /></div>
+                </div>
+                <div className="grid grid-cols-[180px_1fr] gap-4 items-start px-4 py-3">
+                  <label className="text-sm font-medium pt-1.5">Số tài khoản<span className="text-red-500 ml-0.5">*</span></label>
+                  <div><Input value={paymentAccountNum} onChange={(e) => setPaymentAccountNum(e.target.value)} className="h-9 text-sm w-full" /></div>
+                </div>
+                <div className="grid grid-cols-[180px_1fr] gap-4 items-start px-4 py-3">
+                  <label className="text-sm font-medium pt-1.5">Số tiền (VND)<span className="text-red-500 ml-0.5">*</span></label>
+                  <div><Input value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} className="h-9 text-sm w-full" placeholder="<transfer_amount>" /></div>
+                </div>
+                <div className="grid grid-cols-[180px_1fr] gap-4 items-start px-4 py-3">
+                  <label className="text-sm font-medium pt-1.5">Nội dung chuyển khoản</label>
+                  <div>
+                    <Input value={paymentNote} onChange={(e) => setPaymentNote(e.target.value.slice(0,90))} className="h-9 text-sm w-full" placeholder="<bank_transfer_note>" />
+                    <p className="text-[10px] text-muted-foreground text-right mt-0.5">{paymentNote.length} / 90</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Thông tin voucher — voucher only ── */}
+        {templateType === "voucher" && (
+          <section className="mb-6">
+            <h2 className="text-sm font-semibold mb-3">Thông tin voucher <span className="text-red-500">*</span></h2>
+            <div className="rounded-lg border border-border bg-white">
+              <div className="divide-y divide-border">
+                {([
+                  { label: "Tiêu đề", required: true, maxLen: 30, val: voucherTitle, set: setVoucherTitle },
+                  { label: "Điều kiện áp dụng", required: true, maxLen: 40, val: voucherCondition, set: setVoucherCondition },
+                ] as { label: string; required: boolean; maxLen: number; val: string; set: (v: string) => void }[]).map(({ label, required, maxLen, val, set }) => (
+                  <div key={label} className="grid grid-cols-[180px_1fr] gap-4 items-start px-4 py-3">
+                    <label className="text-sm font-medium pt-1.5">{label}{required && <span className="text-red-500 ml-0.5">*</span>}</label>
+                    <div>
+                      <Input value={val} onChange={(e) => set(e.target.value.slice(0, maxLen))} className="h-9 text-sm w-full" />
+                      <p className="text-[10px] text-muted-foreground text-right mt-0.5">{val.length}/{maxLen}</p>
+                    </div>
+                  </div>
+                ))}
+                <div className="grid grid-cols-[180px_1fr] gap-4 items-center px-4 py-3">
+                  <label className="text-sm font-medium">Ngày bắt đầu</label>
+                  <div className="flex gap-2 items-center">
+                    <button className="shrink-0 border border-border rounded px-3 h-9 text-xs bg-white hover:bg-gray-50 flex items-center gap-1">Nhập tham số <span className="text-muted-foreground">⇌</span></button>
+                    <Input value={voucherStartDate} onChange={(e) => setVoucherStartDate(e.target.value)} className="h-9 text-sm flex-1" placeholder="<start_date>" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-[180px_1fr] gap-4 items-center px-4 py-3">
+                  <label className="text-sm font-medium">Hạn sử dụng <span className="text-red-500">*</span></label>
+                  <div className="flex gap-2 items-center">
+                    <button className="shrink-0 border border-border rounded px-3 h-9 text-xs bg-white hover:bg-gray-50 flex items-center gap-1">Nhập tham số <span className="text-muted-foreground">⇌</span></button>
+                    <Input value={voucherExpire} onChange={(e) => setVoucherExpire(e.target.value)} className="h-9 text-sm flex-1" placeholder="<expire>" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-[180px_1fr] gap-4 items-center px-4 py-3">
+                  <label className="text-sm font-medium">Mã voucher <span className="text-red-500">*</span></label>
+                  <Input value={voucherCode} onChange={(e) => setVoucherCode(e.target.value)} className="h-9 text-sm" placeholder="<voucher_code>" />
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Action buttons */}
         <section className="mb-6">
@@ -2012,7 +2030,7 @@ export default function TaoTemplatePage() {
   useEffect(() => {
     const defaultBtns: Record<string, ActionButton[]> = {
       "xac-thuc":   [{ id: Date.now(),     type: "sao-chep",       label: "", url: "" }],
-      "danh-gia":   [{ id: Date.now(),     type: "oa-profile",     label: "Quan tâm OA", url: "" }],
+      "danh-gia":   [], // No default button — rating stars ARE the interaction
       "thanh-toan": [{ id: Date.now(),     type: "thanh-toan-btn", label: "", url: "" }],
       "voucher":    [{ id: Date.now(),     type: "xem-chi-tiet",   label: "", url: "" }],
       "tuy-chinh":  [{ id: Date.now(),     type: "oa-profile",     label: "Đến trang thông tin OA", url: "" }],
