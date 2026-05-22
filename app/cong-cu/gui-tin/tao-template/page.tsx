@@ -659,6 +659,129 @@ function VCChip({ vc, onRemove, showMove, onMoveUp, onMoveDown, isFirst, isLast 
   )
 }
 
+// ── Per-type base prices ──────────────────────────────────────────────────────
+
+const TYPE_PRICES: Record<string, number> = {
+  "tuy-chinh":  300,
+  "xac-thuc":   400,
+  "danh-gia":   300,
+  "thanh-toan": 300,
+  "voucher":    400,
+}
+
+// ── Type-specific sample preview bodies ──────────────────────────────────────
+
+function XacThucPreview({ dark }: { dark: boolean }) {
+  const muted = dark ? "text-gray-400" : "text-gray-500"
+  return (
+    <div className="space-y-2">
+      <p className={cn("text-[13px] font-semibold leading-snug")}>Mã xác minh của bạn là</p>
+      <div className={cn("text-center py-3 rounded-lg", dark ? "bg-gray-800" : "bg-blue-50")}>
+        <span className="text-xl font-bold tracking-widest" style={{ color: "oklch(0.488 0.243 264.376)" }}>&lt;otp&gt;</span>
+      </div>
+      <p className={cn("text-[11px] leading-relaxed", muted)}>
+        Tuyệt đối KHÔNG chia sẻ mã xác thực cho bất kỳ ai dưới bất kỳ hình thức nào. Mã xác thực có hiệu lực trong 5 phút.
+      </p>
+      <div className="mt-2">
+        <button className="w-full py-2 rounded text-xs font-semibold text-white" style={{ background: "oklch(0.488 0.243 264.376)" }}>
+          Sao chép mã
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function DanhGiaPreview({ dark }: { dark: boolean }) {
+  const muted = dark ? "text-gray-300" : "text-gray-700"
+  return (
+    <div className="space-y-2">
+      <p className="text-[13px] font-semibold leading-snug">Đánh giá sản phẩm</p>
+      <p className={cn("text-[12px] leading-relaxed", muted)}>
+        Xin chào <span className="font-semibold">&lt;customer_name&gt;</span>, đơn hàng{" "}
+        <span className="font-semibold">&lt;order_id&gt;</span> đã được giao thành công.
+        Bạn có hài lòng về sản phẩm từ <span className="font-semibold">&lt;shop_name&gt;</span> không?
+        Vui lòng để lại đánh giá cho <span className="font-semibold">&lt;shop_name&gt;</span> biết nhé!
+      </p>
+      <div className="flex justify-center gap-1.5 py-1">
+        {[1,2,3,4,5].map((i) => (
+          <span key={i} className="text-xl text-yellow-400">☆</span>
+        ))}
+      </div>
+      <div className="mt-2">
+        <button className="w-full py-2 rounded text-xs font-semibold text-white" style={{ background: "oklch(0.488 0.243 264.376)" }}>
+          Đánh giá ngay
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function ThanhToanPreview({ dark }: { dark: boolean }) {
+  const muted = dark ? "text-gray-400" : "text-gray-500"
+  const cardBg = dark ? "bg-gray-800 border-gray-700" : "bg-blue-50 border-blue-100"
+  return (
+    <div className="space-y-2">
+      <p className="text-[13px] font-semibold leading-snug">Thông tin thanh toán</p>
+      <p className={cn("text-[11px]", muted)}>OA name trân trọng thông báo đến Quý khách cước phí như sau:</p>
+      <table className="w-full text-[11px]">
+        <tbody>
+          {[
+            ["Quý khách", "<customer_name>"],
+            ["Mã hợp đồng", "<contract_number>"],
+            ["Số tiền", "<price>"],
+            ["Ghi chú", "Quý khách vui lòng thanh toán đúng hạn."],
+          ].map(([label, value], i) => (
+            <tr key={i} className={cn("border-t", dark ? "border-gray-700" : "border-gray-100")}>
+              <td className={cn("py-1 pr-2 font-medium", muted)}>{label}</td>
+              <td className="py-1 font-semibold">{value}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className={cn("rounded-lg border p-2.5 text-[11px]", cardBg)}>
+        <p className={cn("mb-0.5", muted)}>Số tiền thanh toán</p>
+        <p className="font-bold text-sm" style={{ color: "oklch(0.488 0.243 264.376)" }}>&lt;transfer_amount&gt;đ</p>
+        <p className={cn("text-[10px] mt-0.5", muted)}>Tài khoản: 0123456789 - CÔNG TY OA NAME</p>
+      </div>
+      <div className="mt-2">
+        <button className="w-full py-2 rounded text-xs font-semibold text-white" style={{ background: "oklch(0.488 0.243 264.376)" }}>
+          Thanh toán ngay
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function VoucherPreview({ dark }: { dark: boolean }) {
+  const muted = dark ? "text-gray-300" : "text-gray-700"
+  const cardBg = dark ? "bg-gray-800 border-gray-700" : "bg-orange-50 border-orange-200"
+  return (
+    <div className="space-y-2">
+      <p className="text-[13px] font-semibold leading-snug">
+        Gửi <span style={{ color: "oklch(0.488 0.243 264.376)" }}>&lt;customer_name&gt;</span> mã giảm giá 70.000đ
+      </p>
+      <p className={cn("text-[12px] leading-relaxed", muted)}>
+        Gửi khách hàng mã thành viên <span className="font-semibold">&lt;customer_id&gt;</span>, khi đặt hàng trực tiếp tại shop,
+        giảm trực tiếp lên đến 70.000đ từ nay cho đến hết <span className="font-semibold">&lt;expire&gt;</span>.
+      </p>
+      <div className={cn("rounded-lg border p-2.5 flex items-start gap-2.5", cardBg)}>
+        <div className="shrink-0 rounded bg-orange-400 text-white text-[9px] font-bold px-1.5 py-1 leading-tight text-center">
+          GIẢM<br/>70K
+        </div>
+        <div className="text-[10px]">
+          <p className="font-semibold">Cho đơn hàng trên 200K</p>
+          <p className={cn(dark ? "text-gray-400" : "text-gray-500")}>HSD: &lt;start_date&gt; - &lt;expire&gt;</p>
+        </div>
+      </div>
+      <div className="mt-2">
+        <button className="w-full py-2 rounded text-xs font-semibold text-white" style={{ background: "oklch(0.488 0.243 264.376)" }}>
+          Xem mã ưu đãi
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ── Step 2 right panel ────────────────────────────────────────────────────────
 
 function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, templateType, verifiedComponents, logoMode, uploadedImages, lastAdded }: {
@@ -689,8 +812,16 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
     const type = ALL_BUTTON_TYPES.find((t) => t.id === b.type)
     return sum + (type?.cost ?? 0)
   }, 0)
-  const basePrice = 300
+  const basePrice  = TYPE_PRICES[templateType] ?? 300
   const totalPrice = basePrice + btnCost
+
+  // Type-specific sample preview — shown when type is not tuy-chinh
+  const samplePreview =
+    templateType === "xac-thuc"   ? <XacThucPreview dark={dark} />   :
+    templateType === "danh-gia"   ? <DanhGiaPreview dark={dark} />   :
+    templateType === "thanh-toan" ? <ThanhToanPreview dark={dark} /> :
+    templateType === "voucher"    ? <VoucherPreview dark={dark} />   :
+    null
 
   return (
     <div className="w-[300px] shrink-0 border-l border-border bg-gray-50 flex flex-col overflow-hidden">
@@ -740,61 +871,64 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
               </div>
             )}
             <div className="px-4 py-3 space-y-2">
-              <p id="preview-hl-title" className={cn("text-[13px] font-semibold leading-snug rounded-sm transition-all duration-500",
-                lastAdded?.type === "title" && "bg-blue-100 outline outline-[3px] outline-blue-500 px-1 -mx-1")}>
-                {title || "Tiêu đề template"}
-              </p>
-              {blocks.map((b) => {
-                const hl = lastAdded?.type === "block" && lastAdded.id === b.id
-                if (b.type === "text") return (
-                  <p id={`preview-hl-block-${b.id}`} key={b.id}
-                    className={cn("text-[12px] leading-relaxed rounded-sm transition-all duration-500",
-                      dark ? "text-gray-300" : "text-gray-700",
-                      hl && "bg-blue-100 outline outline-[3px] outline-blue-500 px-1 -mx-1")}>
-                    {b.value || <span className="italic text-gray-400">Nội dung văn bản...</span>}
+              {samplePreview ? samplePreview : (
+                <>
+                  <p id="preview-hl-title" className={cn("text-[13px] font-semibold leading-snug rounded-sm transition-all duration-500",
+                    lastAdded?.type === "title" && "bg-blue-100 outline outline-[3px] outline-blue-500 px-1 -mx-1")}>
+                    {title || "Tiêu đề template"}
                   </p>
-                )
-                return (
-                  <table id={`preview-hl-block-${b.id}`} key={b.id}
-                    className={cn("w-full text-[11px] rounded transition-all duration-500",
-                      hl && "outline outline-[3px] outline-blue-500 bg-blue-100")}>
-                    <tbody>
-                      {b.rows.map((r, ri) => (
-                        <tr key={ri} className={cn("border-t", dark ? "border-gray-700" : "border-gray-100")}>
-                          <td className={cn("py-1 pr-2 font-medium", dark ? "text-gray-400" : "text-gray-500")}>{r.label}</td>
-                          <td className="py-1 font-semibold">{r.value}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )
-              })}
-              {contentVCs.map((vc) => (
-                <PreviewItem key={vc.id} vc={vc} dark={dark} />
-              ))}
-              {/* Buttons — library VCs + manual action buttons combined */}
-              {(buttonVCs.length > 0 || actionButtons.length > 0) ? (
-                <div className="mt-2 space-y-1.5">
-                  {buttonVCs.map((vc, i) => (
-                    <button key={vc.id} className={cn("w-full py-2 rounded text-xs font-semibold text-white")}
-                      style={{ background: "oklch(0.488 0.243 264.376)" }}>
-                      {vc.name}
-                    </button>
-                  ))}
-                  {actionButtons.map((ab, i) => {
-                    const hl = lastAdded?.type === "button" && lastAdded.id === ab.id
+                  {blocks.map((b) => {
+                    const hl = lastAdded?.type === "block" && lastAdded.id === b.id
+                    if (b.type === "text") return (
+                      <p id={`preview-hl-block-${b.id}`} key={b.id}
+                        className={cn("text-[12px] leading-relaxed rounded-sm transition-all duration-500",
+                          dark ? "text-gray-300" : "text-gray-700",
+                          hl && "bg-blue-100 outline outline-[3px] outline-blue-500 px-1 -mx-1")}>
+                        {b.value || <span className="italic text-gray-400">Nội dung văn bản...</span>}
+                      </p>
+                    )
                     return (
-                      <button id={`preview-hl-btn-${ab.id}`} key={ab.id}
-                        className={cn("w-full py-2 rounded text-xs font-semibold transition-all duration-500",
-                          (buttonVCs.length === 0 && i === 0) ? "text-white" : dark ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-700",
-                          hl && "outline outline-[3px] outline-blue-500"
-                        )} style={(buttonVCs.length === 0 && i === 0) ? { background: "oklch(0.488 0.243 264.376)" } : undefined}>
-                        {ab.label || `Nút thao tác ${i + 1}`}
-                      </button>
+                      <table id={`preview-hl-block-${b.id}`} key={b.id}
+                        className={cn("w-full text-[11px] rounded transition-all duration-500",
+                          hl && "outline outline-[3px] outline-blue-500 bg-blue-100")}>
+                        <tbody>
+                          {b.rows.map((r, ri) => (
+                            <tr key={ri} className={cn("border-t", dark ? "border-gray-700" : "border-gray-100")}>
+                              <td className={cn("py-1 pr-2 font-medium", dark ? "text-gray-400" : "text-gray-500")}>{r.label}</td>
+                              <td className="py-1 font-semibold">{r.value}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     )
                   })}
-                </div>
-              ) : null}
+                  {contentVCs.map((vc) => (
+                    <PreviewItem key={vc.id} vc={vc} dark={dark} />
+                  ))}
+                  {(buttonVCs.length > 0 || actionButtons.length > 0) && (
+                    <div className="mt-2 space-y-1.5">
+                      {buttonVCs.map((vc) => (
+                        <button key={vc.id} className="w-full py-2 rounded text-xs font-semibold text-white"
+                          style={{ background: "oklch(0.488 0.243 264.376)" }}>
+                          {vc.name}
+                        </button>
+                      ))}
+                      {actionButtons.map((ab, i) => {
+                        const hl = lastAdded?.type === "button" && lastAdded.id === ab.id
+                        return (
+                          <button id={`preview-hl-btn-${ab.id}`} key={ab.id}
+                            className={cn("w-full py-2 rounded text-xs font-semibold transition-all duration-500",
+                              (buttonVCs.length === 0 && i === 0) ? "text-white" : dark ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-700",
+                              hl && "outline outline-[3px] outline-blue-500"
+                            )} style={(buttonVCs.length === 0 && i === 0) ? { background: "oklch(0.488 0.243 264.376)" } : undefined}>
+                            {ab.label || `Nút thao tác ${i + 1}`}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
 
@@ -802,7 +936,7 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
           <div className="rounded border p-3 space-y-1.5 text-xs">
             <div className="flex justify-between">
               <span className="text-muted-foreground">{typeInfo?.label ?? "Mẫu tuỳ chỉnh"}</span>
-              <span className="font-semibold">300 VNĐ</span>
+              <span className="font-semibold">{basePrice} VNĐ</span>
             </div>
             {actionButtons.map((ab, i) => {
               const type = ALL_BUTTON_TYPES.find((t) => t.id === ab.type)
