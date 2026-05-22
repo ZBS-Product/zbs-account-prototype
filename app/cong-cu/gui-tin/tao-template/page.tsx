@@ -753,11 +753,6 @@ function ThanhToanPreview({ dark }: { dark: boolean }) {
         <p className="font-bold text-sm" style={{ color: "oklch(0.488 0.243 264.376)" }}>&lt;transfer_amount&gt;đ</p>
         <p className={cn("text-[10px] mt-0.5", muted)}>Tài khoản: 0123456789 - CÔNG TY OA NAME</p>
       </div>
-      <div className="mt-2">
-        <button className="w-full py-2 rounded text-xs font-semibold text-white" style={{ background: "oklch(0.488 0.243 264.376)" }}>
-          Thanh toán ngay
-        </button>
-      </div>
     </div>
   )
 }
@@ -782,11 +777,6 @@ function VoucherPreview({ dark }: { dark: boolean }) {
           <p className="font-semibold">Cho đơn hàng trên 200K</p>
           <p className={cn(dark ? "text-gray-400" : "text-gray-500")}>HSD: &lt;start_date&gt; - &lt;expire&gt;</p>
         </div>
-      </div>
-      <div className="mt-2">
-        <button className="w-full py-2 rounded text-xs font-semibold text-white" style={{ background: "oklch(0.488 0.243 264.376)" }}>
-          Xem mã ưu đãi
-        </button>
       </div>
     </div>
   )
