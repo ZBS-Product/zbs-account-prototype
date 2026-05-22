@@ -784,13 +784,21 @@ function VoucherPreview({ dark }: { dark: boolean }) {
 
 // ── Step 2 right panel ────────────────────────────────────────────────────────
 
-function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, templateType, verifiedComponents, logoMode, uploadedImages, lastAdded }: {
+function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, templateType, verifiedComponents, logoMode, uploadedImages, lastAdded,
+  otpBody, ratingLabels,
+  paymentAccountName, paymentAccountNum, paymentAmount, paymentNote,
+  voucherTitle, voucherCondition, voucherStartDate, voucherExpire, voucherCode,
+}: {
   dark: boolean; setDark: (v: boolean) => void
   title: string; blocks: Block[]; actionButtons: ActionButton[]; templateType: string
   verifiedComponents: VComponent[]
   logoMode: "logo" | "image"
   uploadedImages: UploadedImage[]
   lastAdded: LastAdded
+  otpBody: string
+  ratingLabels: string[]
+  paymentAccountName: string; paymentAccountNum: string; paymentAmount: string; paymentNote: string
+  voucherTitle: string; voucherCondition: string; voucherStartDate: string; voucherExpire: string; voucherCode: string
 }) {
   const typeInfo   = TEMPLATE_TYPES.find((t) => t.id === templateType)
   const logoVC     = verifiedComponents.find((c) => c.kind === "logo")
@@ -815,13 +823,7 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
   const basePrice  = TYPE_PRICES[templateType] ?? 300
   const totalPrice = basePrice + btnCost
 
-  // Type-specific sample preview — shown when type is not tuy-chinh
-  const samplePreview =
-    templateType === "xac-thuc"   ? <XacThucPreview dark={dark} />   :
-    templateType === "danh-gia"   ? <DanhGiaPreview dark={dark} />   :
-    templateType === "thanh-toan" ? <ThanhToanPreview dark={dark} /> :
-    templateType === "voucher"    ? <VoucherPreview dark={dark} />   :
-    null
+  const muted = dark ? "text-gray-400" : "text-gray-500"
 
   return (
     <div className="w-[300px] shrink-0 border-l border-border bg-gray-50 flex flex-col overflow-hidden">
@@ -871,86 +873,109 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
               </div>
             )}
             <div className="px-4 py-3 space-y-2">
-              {samplePreview ? (
-                <>
-                  {samplePreview}
-                  {/* Append user action buttons */}
-                  {actionButtons.length > 0 && (
-                    <div className="mt-2 space-y-1.5">
-                      {actionButtons.map((ab, i) => {
-                        const hl = lastAdded?.type === "button" && lastAdded.id === ab.id
-                        const placeholder = ALL_BUTTON_TYPES.find((t) => t.id === ab.type)?.placeholder
-                        return (
-                          <button id={`preview-hl-btn-${ab.id}`} key={ab.id}
-                            className={cn("w-full py-2 rounded text-xs font-semibold transition-all duration-500",
-                              i === 0 ? "text-white" : dark ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-700",
-                              hl && "outline outline-[3px] outline-blue-500"
-                            )}
-                            style={i === 0 ? { background: "oklch(0.488 0.243 264.376)" } : undefined}>
-                            {ab.label || placeholder || `Nút thao tác ${i + 1}`}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <>
-                  <p id="preview-hl-title" className={cn("text-[13px] font-semibold leading-snug rounded-sm transition-all duration-500",
-                    lastAdded?.type === "title" && "bg-blue-100 outline outline-[3px] outline-blue-500 px-1 -mx-1")}>
-                    {title || "Tiêu đề template"}
+              {/* ── Title — all types except xac-thuc ── */}
+              {templateType !== "xac-thuc" && (
+                <p id="preview-hl-title" className={cn("text-[13px] font-semibold leading-snug rounded-sm transition-all duration-500",
+                  lastAdded?.type === "title" && "bg-blue-100 outline outline-[3px] outline-blue-500 px-1 -mx-1")}>
+                  {title || "Tiêu đề template"}
+                </p>
+              )}
+
+              {/* ── Blocks — all types except xac-thuc ── */}
+              {templateType !== "xac-thuc" && blocks.map((b) => {
+                const hl = lastAdded?.type === "block" && lastAdded.id === b.id
+                if (b.type === "text") return (
+                  <p id={`preview-hl-block-${b.id}`} key={b.id}
+                    className={cn("text-[12px] leading-relaxed rounded-sm transition-all duration-500",
+                      dark ? "text-gray-300" : "text-gray-700",
+                      hl && "bg-blue-100 outline outline-[3px] outline-blue-500 px-1 -mx-1")}>
+                    {b.value || <span className="italic text-gray-400">Nội dung văn bản...</span>}
                   </p>
-                  {blocks.map((b) => {
-                    const hl = lastAdded?.type === "block" && lastAdded.id === b.id
-                    if (b.type === "text") return (
-                      <p id={`preview-hl-block-${b.id}`} key={b.id}
-                        className={cn("text-[12px] leading-relaxed rounded-sm transition-all duration-500",
-                          dark ? "text-gray-300" : "text-gray-700",
-                          hl && "bg-blue-100 outline outline-[3px] outline-blue-500 px-1 -mx-1")}>
-                        {b.value || <span className="italic text-gray-400">Nội dung văn bản...</span>}
-                      </p>
-                    )
+                )
+                return (
+                  <table id={`preview-hl-block-${b.id}`} key={b.id}
+                    className={cn("w-full text-[11px] rounded transition-all duration-500",
+                      hl && "outline outline-[3px] outline-blue-500 bg-blue-100")}>
+                    <tbody>
+                      {b.rows.map((r, ri) => (
+                        <tr key={ri} className={cn("border-t", dark ? "border-gray-700" : "border-gray-100")}>
+                          <td className={cn("py-1 pr-2 font-medium", muted)}>{r.label}</td>
+                          <td className="py-1 font-semibold">{r.value}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )
+              })}
+
+              {/* ── Verified content components (tuy-chinh) ── */}
+              {contentVCs.map((vc) => (
+                <PreviewItem key={vc.id} vc={vc} dark={dark} />
+              ))}
+
+              {/* ── Type-specific extras ── */}
+              {templateType === "xac-thuc" && (
+                <>
+                  <p className="text-[13px] font-semibold leading-snug">Mã xác minh của bạn là</p>
+                  <div className={cn("text-center py-3 rounded-lg", dark ? "bg-gray-800" : "bg-blue-50")}>
+                    <span className="text-xl font-bold tracking-widest" style={{ color: "oklch(0.488 0.243 264.376)" }}>&lt;otp&gt;</span>
+                  </div>
+                  {otpBody && <p className={cn("text-[11px] leading-relaxed", muted)}>{otpBody}</p>}
+                </>
+              )}
+              {templateType === "danh-gia" && (
+                <div className="flex justify-center gap-1.5 py-1">
+                  {ratingLabels.map((_, i) => (
+                    <span key={i} className="text-xl text-yellow-400">☆</span>
+                  ))}
+                </div>
+              )}
+              {templateType === "thanh-toan" && (
+                <div className={cn("rounded-lg border p-2.5 text-[11px]", dark ? "bg-gray-800 border-gray-700" : "bg-blue-50 border-blue-100")}>
+                  <p className={cn("mb-0.5", muted)}>Số tiền thanh toán</p>
+                  <p className="font-bold text-sm" style={{ color: "oklch(0.488 0.243 264.376)" }}>{paymentAmount}đ</p>
+                  <p className={cn("text-[10px] mt-0.5", muted)}>Tài khoản: {paymentAccountNum} - {paymentAccountName}</p>
+                  {paymentNote && <p className={cn("text-[10px] mt-0.5", muted)}>{paymentNote}</p>}
+                </div>
+              )}
+              {templateType === "voucher" && (
+                <div className={cn("rounded-lg border p-2.5 flex items-start gap-2.5", dark ? "bg-gray-800 border-gray-700" : "bg-orange-50 border-orange-200")}>
+                  <div className="shrink-0 rounded bg-orange-400 text-white text-[9px] font-bold px-1.5 py-1 leading-tight text-center">
+                    {voucherTitle || "VOUCHER"}
+                  </div>
+                  <div className="text-[10px]">
+                    <p className="font-semibold">{voucherCondition || "Điều kiện áp dụng"}</p>
+                    <p className={cn(dark ? "text-gray-400" : "text-gray-500")}>
+                      Mã: {voucherCode} · HSD: {voucherStartDate} - {voucherExpire}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Action buttons ── */}
+              {(buttonVCs.length > 0 || actionButtons.length > 0) && (
+                <div className="mt-2 space-y-1.5">
+                  {buttonVCs.map((vc) => (
+                    <button key={vc.id} className="w-full py-2 rounded text-xs font-semibold text-white"
+                      style={{ background: "oklch(0.488 0.243 264.376)" }}>
+                      {vc.name}
+                    </button>
+                  ))}
+                  {actionButtons.map((ab, i) => {
+                    const hl = lastAdded?.type === "button" && lastAdded.id === ab.id
+                    const placeholder = ALL_BUTTON_TYPES.find((t) => t.id === ab.type)?.placeholder
                     return (
-                      <table id={`preview-hl-block-${b.id}`} key={b.id}
-                        className={cn("w-full text-[11px] rounded transition-all duration-500",
-                          hl && "outline outline-[3px] outline-blue-500 bg-blue-100")}>
-                        <tbody>
-                          {b.rows.map((r, ri) => (
-                            <tr key={ri} className={cn("border-t", dark ? "border-gray-700" : "border-gray-100")}>
-                              <td className={cn("py-1 pr-2 font-medium", dark ? "text-gray-400" : "text-gray-500")}>{r.label}</td>
-                              <td className="py-1 font-semibold">{r.value}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                      <button id={`preview-hl-btn-${ab.id}`} key={ab.id}
+                        className={cn("w-full py-2 rounded text-xs font-semibold transition-all duration-500",
+                          (buttonVCs.length === 0 && i === 0) ? "text-white" : dark ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-700",
+                          hl && "outline outline-[3px] outline-blue-500"
+                        )}
+                        style={(buttonVCs.length === 0 && i === 0) ? { background: "oklch(0.488 0.243 264.376)" } : undefined}>
+                        {ab.label || placeholder || `Nút thao tác ${i + 1}`}
+                      </button>
                     )
                   })}
-                  {contentVCs.map((vc) => (
-                    <PreviewItem key={vc.id} vc={vc} dark={dark} />
-                  ))}
-                  {(buttonVCs.length > 0 || actionButtons.length > 0) && (
-                    <div className="mt-2 space-y-1.5">
-                      {buttonVCs.map((vc) => (
-                        <button key={vc.id} className="w-full py-2 rounded text-xs font-semibold text-white"
-                          style={{ background: "oklch(0.488 0.243 264.376)" }}>
-                          {vc.name}
-                        </button>
-                      ))}
-                      {actionButtons.map((ab, i) => {
-                        const hl = lastAdded?.type === "button" && lastAdded.id === ab.id
-                        return (
-                          <button id={`preview-hl-btn-${ab.id}`} key={ab.id}
-                            className={cn("w-full py-2 rounded text-xs font-semibold transition-all duration-500",
-                              (buttonVCs.length === 0 && i === 0) ? "text-white" : dark ? "bg-gray-700 text-gray-200" : "bg-gray-100 text-gray-700",
-                              hl && "outline outline-[3px] outline-blue-500"
-                            )} style={(buttonVCs.length === 0 && i === 0) ? { background: "oklch(0.488 0.243 264.376)" } : undefined}>
-                            {ab.label || `Nút thao tác ${i + 1}`}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  )}
-                </>
+                </div>
               )}
             </div>
           </div>
@@ -1878,6 +1903,11 @@ function Step2({
         verifiedComponents={verifiedComponents}
         logoMode={logoMode} uploadedImages={uploadedImages}
         lastAdded={lastAdded}
+        otpBody={otpBody} ratingLabels={ratingLabels}
+        paymentAccountName={paymentAccountName} paymentAccountNum={paymentAccountNum}
+        paymentAmount={paymentAmount} paymentNote={paymentNote}
+        voucherTitle={voucherTitle} voucherCondition={voucherCondition}
+        voucherStartDate={voucherStartDate} voucherExpire={voucherExpire} voucherCode={voucherCode}
       />
     </div>
   )
