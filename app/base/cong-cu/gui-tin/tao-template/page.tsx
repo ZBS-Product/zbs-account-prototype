@@ -922,9 +922,9 @@ function Step2RightPanel({ dark, setDark, title, blocks, actionButtons, template
                 </>
               )}
               {templateType === "danh-gia" && (
-                <div className="flex justify-center gap-2 py-2">
+                <div className={cn("rounded-xl border px-3 py-3 flex justify-center gap-3", dark ? "border-gray-700 bg-gray-800/50" : "border-gray-200 bg-white")}>
                   {ratingLabels.map((_, i) => (
-                    <span key={i} className="text-2xl leading-none" style={{ color: "oklch(0.82 0.12 55)", WebkitTextStroke: "1.5px oklch(0.7 0.18 50)" }}>☆</span>
+                    <span key={i} className="text-2xl leading-none select-none" style={{ color: "oklch(0.85 0.1 55)", WebkitTextStroke: "1.8px oklch(0.65 0.18 48)" }}>☆</span>
                   ))}
                 </div>
               )}
