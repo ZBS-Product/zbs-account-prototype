@@ -2059,16 +2059,63 @@ export default function TaoTemplatePage() {
     return () => clearTimeout(t)
   }, [lastAdded])
 
-  // Auto-set action buttons when templateType changes
+  // Auto-reset title, blocks, action buttons when templateType changes
   useEffect(() => {
-    const defaultBtns: Record<string, ActionButton[]> = {
-      "xac-thuc":   [{ id: Date.now(),     type: "sao-chep",       label: "", url: "" }],
-      "danh-gia":   [], // No default button — rating stars ARE the interaction
-      "thanh-toan": [{ id: Date.now(),     type: "thanh-toan-btn", label: "", url: "" }],
-      "voucher":    [{ id: Date.now(),     type: "xem-chi-tiet",   label: "", url: "" }],
-      "tuy-chinh":  [{ id: Date.now(),     type: "oa-profile",     label: "Đến trang thông tin OA", url: "" }],
+    const t = Date.now()
+    type TypeDefaults = {
+      title: string
+      blocks: Block[]
+      buttons: ActionButton[]
     }
-    setActionButtons(defaultBtns[templateType] ?? [])
+    const defaults: Record<string, TypeDefaults> = {
+      "tuy-chinh": {
+        title: "Xin chào <customer_name>,",
+        blocks: [
+          { id: t,   type: "text", value: "Cảm ơn bạn đã mua sản phẩm <product_name> tại cửa hàng chúng tôi." },
+          { id: t+1, type: "text", value: "Chúng tôi rất vui vì trong rất nhiều lựa chọn, bạn đã luôn chọn sử dụng <company_name>." },
+          { id: t+2, type: "table", rows: [{ label: "Mã đơn hàng", value: "<order_code>" }, { label: "Trạng thái", value: "<payment_status>" }] },
+        ],
+        buttons: [{ id: t+3, type: "oa-profile", label: "Đến trang thông tin OA", url: "" }],
+      },
+      "xac-thuc": {
+        title: "",
+        blocks: [],
+        buttons: [{ id: t, type: "sao-chep", label: "", url: "" }],
+      },
+      "danh-gia": {
+        title: "Đánh giá sản phẩm",
+        blocks: [
+          { id: t, type: "text", value: "Xin chào <customer_name>, đơn hàng <order_id> đã được giao thành công. Bạn có hài lòng về sản phẩm từ bên <shop_name> không? Bạn vui lòng để lại đánh giá cho <shop_name> biết nhé!" },
+        ],
+        buttons: [],
+      },
+      "thanh-toan": {
+        title: "Thông tin thanh toán",
+        blocks: [
+          { id: t,   type: "text", value: "OA name trân trọng thông báo đến Quý khách cước phí như sau:" },
+          { id: t+1, type: "table", rows: [
+            { label: "Quý khách",    value: "<customer_name>" },
+            { label: "Mã hợp đồng", value: "<contract_number>" },
+            { label: "Số tiền",      value: "<price>" },
+            { label: "Ghi chú",      value: "Quý khách vui lòng thanh toán đúng hạn." },
+          ]},
+        ],
+        buttons: [{ id: t+2, type: "thanh-toan-btn", label: "", url: "" }],
+      },
+      "voucher": {
+        title: "Gửi <customer_name> mã giảm giá 70.000đ",
+        blocks: [
+          { id: t, type: "text", value: "Gửi khách hàng với mã thành viên <customer_id>, khi đặt hàng trực tiếp tại shop, giảm trực tiếp lên đến 70.000đ từ nay cho đến hết <expire>." },
+        ],
+        buttons: [{ id: t+1, type: "xem-chi-tiet", label: "", url: "" }],
+      },
+    }
+    const d = defaults[templateType]
+    if (d) {
+      setTitle(d.title)
+      setBlocks(d.blocks)
+      setActionButtons(d.buttons)
+    }
   }, [templateType])
 
   function handleAddVC(c: VComponent) {
