@@ -39,7 +39,14 @@ const BUTTON_TYPES = [
     { id: "custom-url", label: "Đến URL tùy chỉnh",            cost: 100, hasUrl: true,  placeholder: "https://..." },
   ]},
 ]
-const ALL_BUTTON_TYPES = BUTTON_TYPES.flatMap((g) => g.items)
+// Special built-in button types for specific template types
+const SPECIAL_BTN_TYPES = [
+  { id: "sao-chep",       label: "Sao chép",     cost: 0, hasUrl: false, placeholder: "Sao chép mã" },
+  { id: "thanh-toan-btn", label: "Thanh toán",   cost: 0, hasUrl: false, placeholder: "Thanh toán ngay" },
+  { id: "xem-chi-tiet",   label: "Xem chi tiết", cost: 0, hasUrl: false, placeholder: "Xem mã ưu đãi" },
+]
+
+const ALL_BUTTON_TYPES = [...BUTTON_TYPES.flatMap((g) => g.items), ...SPECIAL_BTN_TYPES]
 
 // ActionButton — each button in a template
 interface ActionButton {
@@ -51,6 +58,13 @@ interface ActionButton {
 }
 
 const MAX_BUTTONS = 3
+const MAX_BUTTONS_BY_TYPE: Record<string, number> = {
+  "xac-thuc":   1,
+  "danh-gia":   2,
+  "thanh-toan": 2,
+  "voucher":    2,
+  "tuy-chinh":  3,
+}
 
 const TECH_SETTINGS = ["Tên khách hàng (30)", "Tên sản phẩm / Thương hiệu (200)", "Số điện thoại (15)", "Mã giao dịch (50)", "Trạng thái (50)", "Ngày giờ (20)", "Số tiền (20)", "Địa chỉ (200)"]
 
@@ -419,18 +433,19 @@ const LIB_CATEGORIES: { id: LibCategory | "media"; label: string }[] = [
   { id: "media",  label: "Ảnh" },
 ]
 
-function ComponentLibraryPanel({ open, onClose, onAdd, actionButtonCount }: {
+function ComponentLibraryPanel({ open, onClose, onAdd, actionButtonCount, maxButtons }: {
   open: boolean; onClose: () => void
   onAdd: (c: VComponent) => void
   actionButtonCount: number
+  maxButtons: number
 }) {
   const [search, setSearch]     = useState("")
   const [category, setCategory] = useState<LibCategory | "media">("all")
   const [toast, setToast]       = useState<{ text: string; isError?: boolean } | null>(null)
 
   function handleAdd(c: VComponent) {
-    if (c.kind === "button" && actionButtonCount >= MAX_BUTTONS) {
-      setToast({ text: `Tối đa ${MAX_BUTTONS} nút thao tác`, isError: true })
+    if (c.kind === "button" && actionButtonCount >= maxButtons) {
+      setToast({ text: `Tối đa ${maxButtons} nút thao tác`, isError: true })
       setTimeout(() => setToast(null), 2000)
       return
     }
@@ -1090,11 +1105,12 @@ function PreviewPanel({ dark, setDark, title, blocks, actionButtons, templateTyp
 // ── Action Button Card (one per button in the form) ───────────────────────────
 
 function ActionButtonCard({
-  btn, index, total, onChange, onRemove,
+  btn, index, total, onChange, onRemove, isFixed,
 }: {
   btn: ActionButton; index: number; total: number
   onChange: (updated: ActionButton) => void
   onRemove: () => void
+  isFixed?: boolean
 }) {
   const [typeOpen, setTypeOpen] = useState(false)
   const selectedType = ALL_BUTTON_TYPES.find((t) => t.id === btn.type)
@@ -1105,67 +1121,79 @@ function ActionButtonCard({
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold">Nút thao tác {index + 1}</span>
-          {isLabelVerified(btn.label) && (
+          {isFixed && (
+            <span className="text-[10px] font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">Mặc định</span>
+          )}
+          {!isFixed && isLabelVerified(btn.label) && (
             <span className="flex items-center gap-1 text-[10px] font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
               <Check className="h-2.5 w-2.5" /> Đã duyệt
             </span>
           )}
         </div>
-        <button onClick={onRemove} className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors">
-          <Trash2 className="h-4 w-4" />
-        </button>
+        {!isFixed && (
+          <button onClick={onRemove} className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors">
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       <div className="px-4 py-4 space-y-4">
-        {/* Loại nút — custom dropdown */}
+        {/* Loại nút — static display if fixed, dropdown otherwise */}
         <div>
           <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Loại nút</label>
-          <div className="relative">
-            <button
-              onClick={() => setTypeOpen(!typeOpen)}
-              className={cn("w-full flex items-center justify-between border border-border rounded-lg px-3 h-10 text-sm bg-white hover:border-blue-400 transition-colors", typeOpen && "border-blue-500 ring-1 ring-blue-500")}
-            >
-              <span className={selectedType ? "text-foreground font-medium" : "text-muted-foreground"}>
-                {selectedType ? selectedType.label : "Chọn loại nút..."}
-              </span>
-              <div className="flex items-center gap-2">
-                {selectedType && (
-                  <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded",
-                    selectedType.cost === 0 ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
-                  )}>+{selectedType.cost}đ</span>
-                )}
-                <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", typeOpen && "rotate-180")} />
-              </div>
-            </button>
-            {typeOpen && (
-              <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-border rounded-lg shadow-lg overflow-hidden">
-                {BUTTON_TYPES.map((group) => (
-                  <div key={group.group}>
-                    <div className="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider bg-gray-50 border-b border-border">{group.group}</div>
-                    {group.items.map((item) => (
-                      <button key={item.id}
-                        onClick={() => { onChange({ ...btn, type: item.id }); setTypeOpen(false) }}
-                        className={cn("w-full flex items-center justify-between px-3 py-2.5 hover:bg-blue-50 transition-colors text-left",
-                          btn.type === item.id && "bg-blue-50"
-                        )}
-                      >
-                        <div>
-                          <div className="text-sm font-medium">{item.label}</div>
-                          <div className="text-[11px] text-muted-foreground">{item.placeholder}</div>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0 ml-3">
-                          <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded",
-                            item.cost === 0 ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
-                          )}>+{item.cost}đ</span>
-                          {btn.type === item.id && <Check className="h-3.5 w-3.5 text-blue-600" />}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {isFixed ? (
+            <div className="w-full flex items-center justify-between border border-border rounded-lg px-3 h-10 text-sm bg-gray-50">
+              <span className="text-foreground font-medium">{selectedType?.label ?? "—"}</span>
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-green-100 text-green-700">+0đ</span>
+            </div>
+          ) : (
+            <div className="relative">
+              <button
+                onClick={() => setTypeOpen(!typeOpen)}
+                className={cn("w-full flex items-center justify-between border border-border rounded-lg px-3 h-10 text-sm bg-white hover:border-blue-400 transition-colors", typeOpen && "border-blue-500 ring-1 ring-blue-500")}
+              >
+                <span className={selectedType ? "text-foreground font-medium" : "text-muted-foreground"}>
+                  {selectedType ? selectedType.label : "Chọn loại nút..."}
+                </span>
+                <div className="flex items-center gap-2">
+                  {selectedType && (
+                    <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded",
+                      selectedType.cost === 0 ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
+                    )}>+{selectedType.cost}đ</span>
+                  )}
+                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", typeOpen && "rotate-180")} />
+                </div>
+              </button>
+              {typeOpen && (
+                <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-border rounded-lg shadow-lg overflow-hidden">
+                  {BUTTON_TYPES.map((group) => (
+                    <div key={group.group}>
+                      <div className="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider bg-gray-50 border-b border-border">{group.group}</div>
+                      {group.items.map((item) => (
+                        <button key={item.id}
+                          onClick={() => { onChange({ ...btn, type: item.id }); setTypeOpen(false) }}
+                          className={cn("w-full flex items-center justify-between px-3 py-2.5 hover:bg-blue-50 transition-colors text-left",
+                            btn.type === item.id && "bg-blue-50"
+                          )}
+                        >
+                          <div>
+                            <div className="text-sm font-medium">{item.label}</div>
+                            <div className="text-[11px] text-muted-foreground">{item.placeholder}</div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0 ml-3">
+                            <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded",
+                              item.cost === 0 ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
+                            )}>+{item.cost}đ</span>
+                            {btn.type === item.id && <Check className="h-3.5 w-3.5 text-blue-600" />}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Nội dung nút */}
@@ -1173,14 +1201,15 @@ function ActionButtonCard({
           <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Nội dung nút <span className="text-red-500">*</span></label>
           <Input
             value={btn.label}
-            onChange={(e) => onChange({ ...btn, label: e.target.value })}
-            placeholder="VD: Xem đơn hàng, Tìm hiểu thêm..."
-            className="h-9 text-sm"
+            onChange={isFixed ? undefined : (e) => onChange({ ...btn, label: e.target.value })}
+            readOnly={isFixed}
+            placeholder={isFixed ? (selectedType?.placeholder ?? "...") : "VD: Xem đơn hàng, Tìm hiểu thêm..."}
+            className={cn("h-9 text-sm", isFixed && "bg-gray-50")}
           />
         </div>
 
         {/* URL (chỉ hiện khi type = custom-url) */}
-        {selectedType?.hasUrl && (
+        {!isFixed && selectedType?.hasUrl && (
           <div>
             <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Đường dẫn liên kết <span className="text-red-500">*</span></label>
             <Input
@@ -1250,6 +1279,17 @@ function Step2({
   verifiedComponents, onRemoveVC, onMoveVC,
   logoMode, setLogoMode, uploadedImages, setUploadedImages,
   imagesVerified, setImagesVerified, lastAdded,
+  ratingLabels, setRatingLabels,
+  paymentBank, setPaymentBank,
+  paymentAccountName, setPaymentAccountName,
+  paymentAccountNum, setPaymentAccountNum,
+  paymentAmount, setPaymentAmount,
+  paymentNote, setPaymentNote,
+  voucherTitle, setVoucherTitle,
+  voucherCondition, setVoucherCondition,
+  voucherStartDate, setVoucherStartDate,
+  voucherExpire, setVoucherExpire,
+  voucherCode, setVoucherCode,
 }: {
   templateType: string; setTemplateType: (v: string) => void
   purpose: string; setPurpose: (v: string) => void
@@ -1264,9 +1304,23 @@ function Step2({
   uploadedImages: UploadedImage[]; setUploadedImages: (imgs: UploadedImage[]) => void
   imagesVerified: boolean; setImagesVerified: (v: boolean) => void
   lastAdded: LastAdded
+  ratingLabels: string[]; setRatingLabels: (v: string[]) => void
+  paymentBank: string; setPaymentBank: (v: string) => void
+  paymentAccountName: string; setPaymentAccountName: (v: string) => void
+  paymentAccountNum: string; setPaymentAccountNum: (v: string) => void
+  paymentAmount: string; setPaymentAmount: (v: string) => void
+  paymentNote: string; setPaymentNote: (v: string) => void
+  voucherTitle: string; setVoucherTitle: (v: string) => void
+  voucherCondition: string; setVoucherCondition: (v: string) => void
+  voucherStartDate: string; setVoucherStartDate: (v: string) => void
+  voucherExpire: string; setVoucherExpire: (v: string) => void
+  voucherCode: string; setVoucherCode: (v: string) => void
 }) {
   const [logoOpen, setLogoOpen] = useState(true)
   const [btnOpen, setBtnOpen]   = useState(true)
+
+  const maxBtns = MAX_BUTTONS_BY_TYPE[templateType] ?? MAX_BUTTONS
+  const isFirstBtnFixed = ["xac-thuc", "thanh-toan", "voucher"].includes(templateType)
 
   // Scroll to highlighted element when lastAdded changes
   useEffect(() => {
@@ -1387,6 +1441,32 @@ function Step2({
             ))}
           </div>
         </section>
+
+        {/* Bình chọn — only for danh-gia */}
+        {templateType === "danh-gia" && (
+          <section className="mb-6">
+            <h2 className="text-sm font-semibold mb-1">Bình chọn</h2>
+            <p className="text-xs text-muted-foreground mb-3">Cấu hình thang điểm đánh giá dịch vụ</p>
+            <div className="rounded-lg border border-border bg-white overflow-hidden">
+              <div className="grid grid-cols-[80px_1fr_120px] gap-0 text-xs font-semibold text-muted-foreground px-4 py-2 border-b border-border bg-gray-50">
+                <span>Thang điểm</span><span>Tiêu đề <span className="text-red-500">*</span></span><span />
+              </div>
+              {[
+                <><span className="text-yellow-400">★</span><span className="text-gray-300">★★★★</span></>,
+                <><span className="text-yellow-400">★★</span><span className="text-gray-300">★★★</span></>,
+                <><span className="text-yellow-400">★★★</span><span className="text-gray-300">★★</span></>,
+                <><span className="text-yellow-400">★★★★</span><span className="text-gray-300">★</span></>,
+                <><span className="text-yellow-400">★★★★★</span></>,
+              ].map((stars, i) => (
+                <div key={i} className="grid grid-cols-[80px_1fr_120px] gap-3 items-center px-4 py-2.5 border-b border-border last:border-0">
+                  <div className="flex gap-0.5 text-sm">{stars}</div>
+                  <Input value={ratingLabels[i] ?? ""} onChange={(e) => { const arr = [...ratingLabels]; arr[i] = e.target.value; setRatingLabels(arr) }} className="h-8 text-sm" />
+                  <button className="text-xs text-blue-600 hover:underline text-right">Thêm chi tiết</button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Logo / Hình ảnh */}
         <section id="edit-hl-logo" className={cn("mb-4 rounded-lg border bg-white overflow-hidden transition-all duration-500",
@@ -1521,6 +1601,98 @@ function Step2({
           )}
         </section>
 
+        {/* Thông tin thanh toán — only for thanh-toan */}
+        {templateType === "thanh-toan" && (
+          <section className="mb-6">
+            <h2 className="text-sm font-semibold mb-3">Thông tin thanh toán <span className="text-red-500">*</span></h2>
+            <div className="rounded-lg border border-border bg-white overflow-hidden">
+              <div className="px-4 py-3 border-b border-border bg-blue-50 flex gap-2">
+                <Info className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                <div className="text-xs text-blue-800 space-y-1">
+                  <p className="font-semibold">Lưu ý</p>
+                  <ul className="space-y-0.5 list-disc list-inside">
+                    <li>Vui lòng kiểm tra kĩ thông tin bên dưới trước khi gửi.</li>
+                    <li>Tài khoản thu hưởng cần là tài khoản của doanh nghiệp sở hữu OA.</li>
+                    <li>Zalo không chịu trách nhiệm nếu thông tin thanh toán không chính xác.</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="divide-y divide-border">
+                <div className="grid grid-cols-[180px_1fr] gap-4 items-start px-4 py-3">
+                  <label className="text-sm font-medium pt-1.5">Ngân hàng<span className="text-red-500 ml-0.5">*</span></label>
+                  <div className="flex gap-2">
+                    <button className="shrink-0 border border-border rounded px-3 h-9 text-sm bg-white hover:bg-gray-50">Chọn ngân hàng</button>
+                    <select value={paymentBank} onChange={(e) => setPaymentBank(e.target.value)} className="flex-1 border border-border rounded px-3 h-9 text-sm bg-white focus:outline-none">
+                      <option value="">-- Chọn Ngân Hàng --</option>
+                      {["Vietcombank","Techcombank","MB Bank","BIDV","VietinBank","Agribank","TPBank","ACB","VPBank","Sacombank"].map(b => <option key={b}>{b}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-[180px_1fr] gap-4 items-start px-4 py-3">
+                  <label className="text-sm font-medium pt-1.5">Tên tài khoản<span className="text-red-500 ml-0.5">*</span></label>
+                  <div><Input value={paymentAccountName} onChange={(e) => setPaymentAccountName(e.target.value)} className="h-9 text-sm w-full" /></div>
+                </div>
+                <div className="grid grid-cols-[180px_1fr] gap-4 items-start px-4 py-3">
+                  <label className="text-sm font-medium pt-1.5">Số tài khoản<span className="text-red-500 ml-0.5">*</span></label>
+                  <div><Input value={paymentAccountNum} onChange={(e) => setPaymentAccountNum(e.target.value)} className="h-9 text-sm w-full" /></div>
+                </div>
+                <div className="grid grid-cols-[180px_1fr] gap-4 items-start px-4 py-3">
+                  <label className="text-sm font-medium pt-1.5">Số tiền (VND)<span className="text-red-500 ml-0.5">*</span></label>
+                  <div><Input value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} className="h-9 text-sm w-full" placeholder="<transfer_amount>" /></div>
+                </div>
+                <div className="grid grid-cols-[180px_1fr] gap-4 items-start px-4 py-3">
+                  <label className="text-sm font-medium pt-1.5">Nội dung chuyển khoản</label>
+                  <div>
+                    <Input value={paymentNote} onChange={(e) => setPaymentNote(e.target.value.slice(0,90))} className="h-9 text-sm w-full" placeholder="<bank_transfer_note>" />
+                    <p className="text-[10px] text-muted-foreground text-right mt-0.5">{paymentNote.length} / 90</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Thông tin voucher — only for voucher */}
+        {templateType === "voucher" && (
+          <section className="mb-6">
+            <h2 className="text-sm font-semibold mb-3">Thông tin voucher <span className="text-red-500">*</span></h2>
+            <div className="rounded-lg border border-border bg-white">
+              <div className="divide-y divide-border">
+                {[
+                  { label: "Tiêu đề", required: true, maxLen: 30, val: voucherTitle, set: setVoucherTitle },
+                  { label: "Điều kiện áp dụng", required: true, maxLen: 40, val: voucherCondition, set: setVoucherCondition },
+                ].map(({ label, required, maxLen, val, set }) => (
+                  <div key={label} className="grid grid-cols-[180px_1fr] gap-4 items-start px-4 py-3">
+                    <label className="text-sm font-medium pt-1.5">{label}{required && <span className="text-red-500 ml-0.5">*</span>}</label>
+                    <div>
+                      <Input value={val} onChange={(e) => set(e.target.value.slice(0, maxLen))} className="h-9 text-sm w-full" />
+                      <p className="text-[10px] text-muted-foreground text-right mt-0.5">{val.length}/{maxLen}</p>
+                    </div>
+                  </div>
+                ))}
+                <div className="grid grid-cols-[180px_1fr] gap-4 items-center px-4 py-3">
+                  <label className="text-sm font-medium">Ngày bắt đầu</label>
+                  <div className="flex gap-2 items-center">
+                    <button className="shrink-0 border border-border rounded px-3 h-9 text-xs bg-white hover:bg-gray-50 flex items-center gap-1">Nhập tham số <span className="text-muted-foreground">⇌</span></button>
+                    <Input value={voucherStartDate} onChange={(e) => setVoucherStartDate(e.target.value)} className="h-9 text-sm flex-1" placeholder="<start_date>" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-[180px_1fr] gap-4 items-center px-4 py-3">
+                  <label className="text-sm font-medium">Hạn sử dụng <span className="text-red-500">*</span></label>
+                  <div className="flex gap-2 items-center">
+                    <button className="shrink-0 border border-border rounded px-3 h-9 text-xs bg-white hover:bg-gray-50 flex items-center gap-1">Nhập tham số <span className="text-muted-foreground">⇌</span></button>
+                    <Input value={voucherExpire} onChange={(e) => setVoucherExpire(e.target.value)} className="h-9 text-sm flex-1" placeholder="<expire>" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-[180px_1fr] gap-4 items-center px-4 py-3">
+                  <label className="text-sm font-medium">Mã voucher <span className="text-red-500">*</span></label>
+                  <Input value={voucherCode} onChange={(e) => setVoucherCode(e.target.value)} className="h-9 text-sm" placeholder="<voucher_code>" />
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Content */}
         <section className="mb-4 rounded-lg border border-border bg-white overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-border">
@@ -1528,7 +1700,8 @@ function Step2({
           </div>
           <div className="p-4 space-y-2">
 
-            {/* ── Tiêu đề — fixed, cannot be deleted or moved ── */}
+            {/* ── Tiêu đề — hidden for xac-thuc ── */}
+            {templateType !== "xac-thuc" && (
             <div id="edit-hl-title" className={cn("rounded border p-3 bg-gray-50/40 transition-all duration-500",
               lastAdded?.type === "title" ? "border-blue-500 ring-[3px] ring-blue-400/50 bg-blue-50 shadow-[0_0_0_6px_rgba(59,130,246,0.15)]" : "border-border")}>
               <div className="flex items-center justify-between mb-1">
@@ -1542,9 +1715,10 @@ function Step2({
                 className="text-sm border-0 px-0 focus-visible:ring-0 h-8" placeholder="Nhập tiêu đề..." />
               <div className="text-right text-[10px] text-muted-foreground mt-1">{title.length}/65</div>
             </div>
+            )}
 
-            {/* ── Draggable blocks ── */}
-            {blocks.map((b, idx) => (
+            {/* ── Draggable blocks — hidden for xac-thuc and danh-gia ── */}
+            {!["xac-thuc", "danh-gia"].includes(templateType) && blocks.map((b, idx) => (
               <div key={b.id}
                 id={`edit-hl-block-${b.id}`}
                 draggable
@@ -1616,12 +1790,17 @@ function Step2({
               </div>
             ))}
 
-            {/* ── Add block ── */}
+            {/* ── Add block — hidden for xac-thuc and danh-gia ── */}
+            {!["xac-thuc", "danh-gia"].includes(templateType) && (
             <div className="flex items-center gap-2 pt-1">
               <Plus className="h-4 w-4 text-muted-foreground" />
               <button onClick={() => addBlock("text")} className="flex items-center gap-1 text-xs border border-border rounded px-2 py-1 hover:bg-gray-50 transition-colors"><span>☰</span> Văn bản</button>
               <button onClick={() => addBlock("table")} className="flex items-center gap-1 text-xs border border-border rounded px-2 py-1 hover:bg-gray-50 transition-colors"><span>⊞</span> Bảng</button>
             </div>
+            )}
+            {["xac-thuc", "danh-gia"].includes(templateType) && (
+              <p className="text-xs text-muted-foreground text-center py-2">Nội dung được tạo tự động theo loại Template</p>
+            )}
           </div>
         </section>
 
@@ -1630,7 +1809,7 @@ function Step2({
           <div className="flex items-center justify-between mb-3">
             <button onClick={() => setBtnOpen(!btnOpen)} className="flex items-center gap-2 text-sm font-semibold hover:text-blue-600 transition-colors">
               Nút thao tác
-              <span className="text-[10px] font-normal text-muted-foreground">({actionButtons.length}/{MAX_BUTTONS})</span>
+              <span className="text-[10px] font-normal text-muted-foreground">({actionButtons.length}/{maxBtns})</span>
               {btnOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </button>
           </div>
@@ -1647,23 +1826,24 @@ function Step2({
                     total={actionButtons.length}
                     onChange={(updated) => updateActionButton(btn.id, updated)}
                     onRemove={() => removeActionButton(btn.id)}
+                    isFixed={isFirstBtnFixed && i === 0}
                   />
                 </div>
               ))}
 
-              {/* Add button */}
-              {actionButtons.length < MAX_BUTTONS && (
+              {/* Add button — hidden for xac-thuc */}
+              {actionButtons.length < maxBtns && templateType !== "xac-thuc" && (
                 <button
                   onClick={addActionButton}
                   className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-gray-200 rounded-lg text-sm text-muted-foreground hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/40 transition-all"
                 >
                   <Plus className="h-4 w-4" />
                   Thêm nút thao tác
-                  <span className="text-[10px] text-muted-foreground">({actionButtons.length}/{MAX_BUTTONS})</span>
+                  <span className="text-[10px] text-muted-foreground">({actionButtons.length}/{maxBtns})</span>
                 </button>
               )}
 
-              {actionButtons.length === 0 && (
+              {actionButtons.length === 0 && templateType !== "xac-thuc" && (
                 <p className="text-xs text-muted-foreground text-center py-2">Chưa có nút nào — nhấn để thêm hoặc chọn từ Thư viện</p>
               )}
             </div>
@@ -1805,6 +1985,19 @@ export default function TaoTemplatePage() {
   const [note, setNote]     = useState("")
   const [agreed, setAgreed] = useState(false)
 
+  // Type-specific fields
+  const [ratingLabels, setRatingLabels] = useState(["Rất không hài lòng", "Không hài lòng", "Bình thường", "Hài lòng", "Rất hài lòng"])
+  const [paymentBank, setPaymentBank] = useState("")
+  const [paymentAccountName, setPaymentAccountName] = useState("CÔNG TY OA NAME")
+  const [paymentAccountNum, setPaymentAccountNum] = useState("0123456789")
+  const [paymentAmount, setPaymentAmount] = useState("<transfer_amount>")
+  const [paymentNote, setPaymentNote] = useState("<bank_transfer_note>")
+  const [voucherTitle, setVoucherTitle] = useState("Giảm 70.000đ")
+  const [voucherCondition, setVoucherCondition] = useState("Cho đơn hàng trên 200K")
+  const [voucherStartDate, setVoucherStartDate] = useState("<start_date>")
+  const [voucherExpire, setVoucherExpire] = useState("<expire>")
+  const [voucherCode, setVoucherCode] = useState("<voucher_code>")
+
   const [verifiedComponents, setVerifiedComponents] = useState<VComponent[]>([])
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [lastAdded, setLastAdded] = useState<LastAdded>(null)
@@ -1815,13 +2008,26 @@ export default function TaoTemplatePage() {
     return () => clearTimeout(t)
   }, [lastAdded])
 
+  // Auto-set action buttons when templateType changes
+  useEffect(() => {
+    const defaultBtns: Record<string, ActionButton[]> = {
+      "xac-thuc":   [{ id: Date.now(),     type: "sao-chep",       label: "", url: "" }],
+      "danh-gia":   [{ id: Date.now(),     type: "oa-profile",     label: "Quan tâm OA", url: "" }],
+      "thanh-toan": [{ id: Date.now(),     type: "thanh-toan-btn", label: "", url: "" }],
+      "voucher":    [{ id: Date.now(),     type: "xem-chi-tiet",   label: "", url: "" }],
+      "tuy-chinh":  [{ id: Date.now(),     type: "oa-profile",     label: "Đến trang thông tin OA", url: "" }],
+    }
+    setActionButtons(defaultBtns[templateType] ?? [])
+  }, [templateType])
+
   function handleAddVC(c: VComponent) {
     if (c.kind === "logo") {
       setVerifiedComponents((prev) => [...prev.filter((v) => v.kind !== "logo"), c])
       setLogoMode("logo")
       setLastAdded({ type: "logo" })
     } else if (c.kind === "button") {
-      if (actionButtons.length >= MAX_BUTTONS) return
+      const maxBtnsPage = MAX_BUTTONS_BY_TYPE[templateType] ?? MAX_BUTTONS
+      if (actionButtons.length >= maxBtnsPage) return
       const newId = Date.now()
       setActionButtons((prev) => [...prev, { id: newId, type: "oa-profile", label: c.name, url: "" }])
       setLastAdded({ type: "button", id: newId })
@@ -1913,6 +2119,17 @@ export default function TaoTemplatePage() {
             uploadedImages={uploadedImages} setUploadedImages={setUploadedImages}
             imagesVerified={imagesVerified} setImagesVerified={setImagesVerified}
             lastAdded={lastAdded}
+            ratingLabels={ratingLabels} setRatingLabels={setRatingLabels}
+            paymentBank={paymentBank} setPaymentBank={setPaymentBank}
+            paymentAccountName={paymentAccountName} setPaymentAccountName={setPaymentAccountName}
+            paymentAccountNum={paymentAccountNum} setPaymentAccountNum={setPaymentAccountNum}
+            paymentAmount={paymentAmount} setPaymentAmount={setPaymentAmount}
+            paymentNote={paymentNote} setPaymentNote={setPaymentNote}
+            voucherTitle={voucherTitle} setVoucherTitle={setVoucherTitle}
+            voucherCondition={voucherCondition} setVoucherCondition={setVoucherCondition}
+            voucherStartDate={voucherStartDate} setVoucherStartDate={setVoucherStartDate}
+            voucherExpire={voucherExpire} setVoucherExpire={setVoucherExpire}
+            voucherCode={voucherCode} setVoucherCode={setVoucherCode}
           />
         )}
         {step === 2 && (
@@ -1926,7 +2143,7 @@ export default function TaoTemplatePage() {
       </div>
 
       {step === 1 && (
-        <ComponentLibraryPanel open={drawerOpen} onClose={() => setDrawerOpen(false)} onAdd={handleAddVC} actionButtonCount={actionButtons.length} />
+        <ComponentLibraryPanel open={drawerOpen} onClose={() => setDrawerOpen(false)} onAdd={handleAddVC} actionButtonCount={actionButtons.length} maxButtons={MAX_BUTTONS_BY_TYPE[templateType] ?? MAX_BUTTONS} />
       )}
 
       <div className="flex items-center justify-between px-8 py-4 border-t border-border bg-white shrink-0">
