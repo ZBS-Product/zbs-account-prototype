@@ -8,9 +8,11 @@ import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import {
   Search, Plus, ChevronDown, ChevronUp, X, Check,
   HelpCircle, Trash2, MessageSquarePlus, ChevronLeft, ChevronRight, Pencil,
+  ChevronsUpDown, Info,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -79,6 +81,30 @@ const MOCK_OAS = [
 const ROLES = ["Quản trị viên", "Quản trị viên cao cấp", "Tài chính viên", "Nhân viên"]
 
 type Threshold = { id: number; pct: string; system?: boolean }
+
+// ── Sort ──────────────────────────────────────────────────────────────────────
+
+type SortCol = "name" | "toDate" | "limit" | "spent" | "progress" | "status"
+type SortDir = "asc" | "desc"
+
+const STATUS_ORDER: Record<BudgetStatus, number> = {
+  "vuot-muc":    0,
+  "canh-bao":    1,
+  "binh-thuong": 2,
+  "da-ket-thuc": 3,
+}
+
+function parseVnDate(d: string) {
+  const [dd, mm, yyyy] = d.split("/")
+  return new Date(+yyyy, +mm - 1, +dd).getTime()
+}
+
+function SortIcon({ col, sortCol, sortDir }: { col: SortCol; sortCol: SortCol; sortDir: SortDir }) {
+  if (sortCol !== col) return <ChevronsUpDown className="h-3 w-3 opacity-40 shrink-0" />
+  return sortDir === "asc"
+    ? <ChevronUp   className="h-3 w-3 shrink-0" style={{ color: "oklch(0.45 0.22 265)" }} />
+    : <ChevronDown className="h-3 w-3 shrink-0" style={{ color: "oklch(0.45 0.22 265)" }} />
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -176,8 +202,22 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
   const [notifOn,  setNotifOn]  = useState(true)
   const [selRoles, setSelRoles] = useState(["Quản trị viên", "Quản trị viên cao cấp", "Tài chính viên"])
 
-  function toggleApp(id: string)  { setSelApps(prev => prev.includes(id)  ? prev.filter(x => x !== id)  : [...prev, id]) }
-  function toggleOa(id: string)   { setSelOas(prev  => prev.includes(id)  ? prev.filter(x => x !== id)  : [...prev, id]) }
+  function toggleApp(id: string) {
+    setSelApps(prev => {
+      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+      // Bỏ tick 1 app con → tắt "Tất cả App"
+      if (prev.includes(id)) setAllApps(false)
+      return next
+    })
+  }
+  function toggleOa(id: string) {
+    setSelOas(prev => {
+      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+      // Bỏ tick 1 OA con → tắt "Tất cả OA"
+      if (prev.includes(id)) setAllOas(false)
+      return next
+    })
+  }
   function toggleRole(r: string)  { setSelRoles(prev => prev.includes(r)  ? prev.filter(x => x !== r)   : [...prev, r]) }
 
   const filteredApps = MOCK_APPS.filter(a => a.label.toLowerCase().includes(appSearch.toLowerCase()))
@@ -222,7 +262,7 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
                       </span>
                     </label>
                     <button className="text-xs font-medium cursor-pointer rounded px-2 py-0.5 hover:bg-blue-50 transition-colors" style={{ color: "oklch(0.488 0.243 264.376)" }}
-                      onClick={() => { setAllApps(false); setExpandApps(v => !v) }}>
+                      onClick={() => setExpandApps(v => !v)}>
                       {expandApps ? "Thu gọn" : "Tùy chỉnh App"}
                     </button>
                   </div>
@@ -234,8 +274,21 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
                           placeholder="Tìm kiếm App" className="w-full pl-6 pr-2 py-1 text-xs border border-border rounded outline-none focus:border-blue-400" />
                       </div>
                       <label className="flex items-center gap-2 cursor-pointer py-0.5">
-                        <Checkbox checked={selApps.length === MOCK_APPS.length} onChange={v => { setSelApps(v ? MOCK_APPS.map(a => a.id) : []); setAllApps(v) }} />
+                        <Checkbox checked={allApps} onChange={v => {
+                          setAllApps(v)
+                          if (v) setSelApps(MOCK_APPS.map(a => a.id))
+                        }} />
                         <span className="text-xs font-medium flex-1">Tất cả App</span>
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="h-3 w-3 text-muted-foreground cursor-default shrink-0" />
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-[220px] text-xs">
+                              Bao gồm tất cả App liên kết với Ví hiện tại, và các App liên kết mới sau này.
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </label>
                       <div className="border-t border-border" />
                       {filteredApps.map(app => (
@@ -264,7 +317,7 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
                       {allOas ? "Tất cả OA" : `${selOas.length}/${MOCK_OAS.length} OA`}
                     </span>
                     <button className="text-xs font-medium cursor-pointer rounded px-2 py-0.5 hover:bg-blue-50 transition-colors" style={{ color: "oklch(0.488 0.243 264.376)" }}
-                      onClick={() => { setAllOas(false); setExpandOas(v => !v) }}>
+                      onClick={() => setExpandOas(v => !v)}>
                       {expandOas ? "Thu gọn" : "Tùy chỉnh OA"}
                     </button>
                   </div>
@@ -277,13 +330,26 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
                         {oaSearch && <button className="absolute right-2 top-1/2 -translate-y-1/2" onClick={() => setOaSearch("")}><X className="h-3 w-3 text-muted-foreground" /></button>}
                       </div>
                       <label className="flex items-center gap-2 cursor-pointer py-0.5">
-                        <Checkbox checked={allOas} onChange={v => { setAllOas(v); if (v) setSelOas(MOCK_OAS.map(o => o.id)) }} />
+                        <Checkbox checked={allOas} onChange={v => {
+                          setAllOas(v)
+                          if (v) setSelOas(MOCK_OAS.map(o => o.id))
+                        }} />
                         <span className="text-xs font-medium flex-1">Tất cả OA</span>
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="h-3 w-3 text-muted-foreground cursor-default shrink-0" />
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-[220px] text-xs">
+                              Bao gồm tất cả OA liên kết với Ví hiện tại, và các OA liên kết mới sau này.
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </label>
                       <div className="border-t border-border" />
                       {filteredOas.map(oa => (
                         <label key={oa.id} className="flex items-center gap-2 cursor-pointer py-0.5">
-                          <Checkbox checked={selOas.includes(oa.id)} onChange={() => { setAllOas(false); toggleOa(oa.id) }} />
+                          <Checkbox checked={selOas.includes(oa.id)} onChange={() => toggleOa(oa.id)} />
                           <span className="inline-flex h-4 w-4 rounded-full text-[7px] font-bold text-white items-center justify-center" style={{ background: oa.color }}>
                             {oa.label.slice(0,1)}
                           </span>
@@ -548,7 +614,19 @@ export default function QuanLyNganSachPage() {
   const [successName,  setSuccessName]  = useState<string | null>(null)
   const [detailId,     setDetailId]     = useState<number | null>(null)
   const [page,         setPage]         = useState(1)
+  const [sortCol,      setSortCol]      = useState<SortCol>("status")
+  const [sortDir,      setSortDir]      = useState<SortDir>("asc")
   const PER_PAGE = 10
+
+  function handleSort(col: SortCol) {
+    if (sortCol === col) {
+      setSortDir(d => d === "asc" ? "desc" : "asc")
+    } else {
+      setSortCol(col)
+      setSortDir("asc")
+    }
+    setPage(1)
+  }
 
   const filtered = budgets.filter(b => {
     if (filterStatus !== "tat-ca" && b.status !== filterStatus) return false
@@ -556,8 +634,21 @@ export default function QuanLyNganSachPage() {
     return true
   })
 
-  const totalPages = Math.ceil(filtered.length / PER_PAGE)
-  const paged      = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+  const sorted = [...filtered].sort((a, b) => {
+    let cmp = 0
+    switch (sortCol) {
+      case "name":     cmp = a.name.localeCompare(b.name, "vi"); break
+      case "toDate":   cmp = parseVnDate(a.toDate) - parseVnDate(b.toDate); break
+      case "limit":    cmp = a.limit - b.limit; break
+      case "spent":    cmp = a.spent - b.spent; break
+      case "progress": cmp = (a.spent / a.limit) - (b.spent / b.limit); break
+      case "status":   cmp = STATUS_ORDER[a.status] - STATUS_ORDER[b.status]; break
+    }
+    return sortDir === "asc" ? cmp : -cmp
+  })
+
+  const totalPages = Math.ceil(sorted.length / PER_PAGE)
+  const paged      = sorted.slice((page - 1) * PER_PAGE, page * PER_PAGE)
 
   const detailBudget = budgets.find(b => b.id === detailId)
 
@@ -648,12 +739,18 @@ export default function QuanLyNganSachPage() {
                 <div className="rounded-lg border border-border bg-white overflow-hidden">
                   <div className="grid text-xs font-semibold text-muted-foreground bg-gray-50 border-b border-border px-4 py-2.5"
                     style={{ gridTemplateColumns: "2fr 1.4fr 1.8fr 1.6fr 1.8fr 1.4fr" }}>
-                    <span>Tên ngân sách</span>
-                    <span>Thời hạn</span>
-                    <span className="flex items-center gap-0.5 cursor-pointer hover:text-foreground">Ngân sách (VNĐ) <ChevronDown className="h-3 w-3" /></span>
-                    <span className="flex items-center gap-0.5 cursor-pointer hover:text-foreground">Đã tiêu (VNĐ) <ChevronDown className="h-3 w-3" /></span>
-                    <span className="flex items-center gap-0.5 cursor-pointer hover:text-foreground">Tiến độ <ChevronDown className="h-3 w-3" /></span>
-                    <span>Trạng thái</span>
+                    {(["name","toDate","limit","spent","progress","status"] as SortCol[]).map((col, i) => {
+                      const labels = ["Tên ngân sách", "Thời hạn", "Ngân sách (VNĐ)", "Đã tiêu (VNĐ)", "Tiến độ", "Trạng thái"]
+                      return (
+                        <span key={col}
+                          onClick={() => handleSort(col)}
+                          className={cn("flex items-center gap-0.5 cursor-pointer select-none hover:text-foreground transition-colors",
+                            sortCol === col && "text-foreground")}>
+                          {labels[i]}
+                          <SortIcon col={col} sortCol={sortCol} sortDir={sortDir} />
+                        </span>
+                      )
+                    })}
                   </div>
                   {paged.map((b, i) => (
                     <div key={b.id}
@@ -677,9 +774,9 @@ export default function QuanLyNganSachPage() {
               )}
 
               {/* Pagination */}
-              {!isNullSearch && filtered.length > 0 && (
+              {!isNullSearch && sorted.length > 0 && (
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>1–{Math.min(PER_PAGE, filtered.length)} trên {filtered.length} mục</span>
+                  <span>{(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, sorted.length)} trên {sorted.length} mục</span>
                   <div className="flex items-center gap-1">
                     <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
                       className="h-7 w-7 rounded border border-border flex items-center justify-center hover:bg-gray-50 disabled:opacity-40">
