@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import {
   Search, Plus, ChevronDown, ChevronUp, X, Check,
   HelpCircle, Trash2, MessageSquarePlus, ChevronLeft, ChevronRight, Pencil,
+  ChevronsUpDown,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -79,6 +80,30 @@ const MOCK_OAS = [
 const ROLES = ["Quản trị viên", "Quản trị viên cao cấp", "Tài chính viên", "Nhân viên"]
 
 type Threshold = { id: number; pct: string; system?: boolean }
+
+// ── Sort ──────────────────────────────────────────────────────────────────────
+
+type SortCol = "name" | "toDate" | "limit" | "spent" | "progress" | "status"
+type SortDir = "asc" | "desc"
+
+const STATUS_ORDER: Record<BudgetStatus, number> = {
+  "vuot-muc":    0,
+  "canh-bao":    1,
+  "binh-thuong": 2,
+  "da-ket-thuc": 3,
+}
+
+function parseVnDate(d: string) {
+  const [dd, mm, yyyy] = d.split("/")
+  return new Date(+yyyy, +mm - 1, +dd).getTime()
+}
+
+function SortIcon({ col, sortCol, sortDir }: { col: SortCol; sortCol: SortCol; sortDir: SortDir }) {
+  if (sortCol !== col) return <ChevronsUpDown className="h-3 w-3 opacity-40 shrink-0" />
+  return sortDir === "asc"
+    ? <ChevronUp   className="h-3 w-3 shrink-0" style={{ color: "oklch(0.45 0.22 265)" }} />
+    : <ChevronDown className="h-3 w-3 shrink-0" style={{ color: "oklch(0.45 0.22 265)" }} />
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -548,7 +573,19 @@ export default function QuanLyNganSachPage() {
   const [successName,  setSuccessName]  = useState<string | null>(null)
   const [detailId,     setDetailId]     = useState<number | null>(null)
   const [page,         setPage]         = useState(1)
+  const [sortCol,      setSortCol]      = useState<SortCol>("status")
+  const [sortDir,      setSortDir]      = useState<SortDir>("asc")
   const PER_PAGE = 10
+
+  function handleSort(col: SortCol) {
+    if (sortCol === col) {
+      setSortDir(d => d === "asc" ? "desc" : "asc")
+    } else {
+      setSortCol(col)
+      setSortDir("asc")
+    }
+    setPage(1)
+  }
 
   const filtered = budgets.filter(b => {
     if (filterStatus !== "tat-ca" && b.status !== filterStatus) return false
@@ -556,8 +593,21 @@ export default function QuanLyNganSachPage() {
     return true
   })
 
-  const totalPages = Math.ceil(filtered.length / PER_PAGE)
-  const paged      = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+  const sorted = [...filtered].sort((a, b) => {
+    let cmp = 0
+    switch (sortCol) {
+      case "name":     cmp = a.name.localeCompare(b.name, "vi"); break
+      case "toDate":   cmp = parseVnDate(a.toDate) - parseVnDate(b.toDate); break
+      case "limit":    cmp = a.limit - b.limit; break
+      case "spent":    cmp = a.spent - b.spent; break
+      case "progress": cmp = (a.spent / a.limit) - (b.spent / b.limit); break
+      case "status":   cmp = STATUS_ORDER[a.status] - STATUS_ORDER[b.status]; break
+    }
+    return sortDir === "asc" ? cmp : -cmp
+  })
+
+  const totalPages = Math.ceil(sorted.length / PER_PAGE)
+  const paged      = sorted.slice((page - 1) * PER_PAGE, page * PER_PAGE)
 
   const detailBudget = budgets.find(b => b.id === detailId)
 
@@ -648,12 +698,18 @@ export default function QuanLyNganSachPage() {
                 <div className="rounded-lg border border-border bg-white overflow-hidden">
                   <div className="grid text-xs font-semibold text-muted-foreground bg-gray-50 border-b border-border px-4 py-2.5"
                     style={{ gridTemplateColumns: "2fr 1.4fr 1.8fr 1.6fr 1.8fr 1.4fr" }}>
-                    <span>Tên ngân sách</span>
-                    <span>Thời hạn</span>
-                    <span className="flex items-center gap-0.5 cursor-pointer hover:text-foreground">Ngân sách (VNĐ) <ChevronDown className="h-3 w-3" /></span>
-                    <span className="flex items-center gap-0.5 cursor-pointer hover:text-foreground">Đã tiêu (VNĐ) <ChevronDown className="h-3 w-3" /></span>
-                    <span className="flex items-center gap-0.5 cursor-pointer hover:text-foreground">Tiến độ <ChevronDown className="h-3 w-3" /></span>
-                    <span>Trạng thái</span>
+                    {(["name","toDate","limit","spent","progress","status"] as SortCol[]).map((col, i) => {
+                      const labels = ["Tên ngân sách", "Thời hạn", "Ngân sách (VNĐ)", "Đã tiêu (VNĐ)", "Tiến độ", "Trạng thái"]
+                      return (
+                        <span key={col}
+                          onClick={() => handleSort(col)}
+                          className={cn("flex items-center gap-0.5 cursor-pointer select-none hover:text-foreground transition-colors",
+                            sortCol === col && "text-foreground")}>
+                          {labels[i]}
+                          <SortIcon col={col} sortCol={sortCol} sortDir={sortDir} />
+                        </span>
+                      )
+                    })}
                   </div>
                   {paged.map((b, i) => (
                     <div key={b.id}
@@ -677,9 +733,9 @@ export default function QuanLyNganSachPage() {
               )}
 
               {/* Pagination */}
-              {!isNullSearch && filtered.length > 0 && (
+              {!isNullSearch && sorted.length > 0 && (
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>1–{Math.min(PER_PAGE, filtered.length)} trên {filtered.length} mục</span>
+                  <span>{(page - 1) * PER_PAGE + 1}–{Math.min(page * PER_PAGE, sorted.length)} trên {sorted.length} mục</span>
                   <div className="flex items-center gap-1">
                     <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
                       className="h-7 w-7 rounded border border-border flex items-center justify-center hover:bg-gray-50 disabled:opacity-40">
