@@ -201,8 +201,16 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
   const [notifOn,  setNotifOn]  = useState(true)
   const [selRoles, setSelRoles] = useState(["Quản trị viên", "Quản trị viên cao cấp", "Tài chính viên"])
 
-  function toggleApp(id: string)  { setSelApps(prev => prev.includes(id)  ? prev.filter(x => x !== id)  : [...prev, id]) }
-  function toggleOa(id: string)   { setSelOas(prev  => prev.includes(id)  ? prev.filter(x => x !== id)  : [...prev, id]) }
+  function toggleApp(id: string) {
+    const next = selApps.includes(id) ? selApps.filter(x => x !== id) : [...selApps, id]
+    setSelApps(next)
+    setAllApps(next.length === MOCK_APPS.length)
+  }
+  function toggleOa(id: string) {
+    const next = selOas.includes(id) ? selOas.filter(x => x !== id) : [...selOas, id]
+    setSelOas(next)
+    setAllOas(next.length === MOCK_OAS.length)
+  }
   function toggleRole(r: string)  { setSelRoles(prev => prev.includes(r)  ? prev.filter(x => x !== r)   : [...prev, r]) }
 
   const filteredApps = MOCK_APPS.filter(a => a.label.toLowerCase().includes(appSearch.toLowerCase()))
@@ -247,7 +255,7 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
                       </span>
                     </label>
                     <button className="text-xs font-medium cursor-pointer rounded px-2 py-0.5 hover:bg-blue-50 transition-colors" style={{ color: "oklch(0.488 0.243 264.376)" }}
-                      onClick={() => { setAllApps(false); setExpandApps(v => !v) }}>
+                      onClick={() => setExpandApps(v => !v)}>
                       {expandApps ? "Thu gọn" : "Tùy chỉnh App"}
                     </button>
                   </div>
@@ -289,7 +297,7 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
                       {allOas ? "Tất cả OA" : `${selOas.length}/${MOCK_OAS.length} OA`}
                     </span>
                     <button className="text-xs font-medium cursor-pointer rounded px-2 py-0.5 hover:bg-blue-50 transition-colors" style={{ color: "oklch(0.488 0.243 264.376)" }}
-                      onClick={() => { setAllOas(false); setExpandOas(v => !v) }}>
+                      onClick={() => setExpandOas(v => !v)}>
                       {expandOas ? "Thu gọn" : "Tùy chỉnh OA"}
                     </button>
                   </div>
