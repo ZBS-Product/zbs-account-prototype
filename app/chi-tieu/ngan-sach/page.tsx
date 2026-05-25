@@ -8,10 +8,11 @@ import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import {
   Search, Plus, ChevronDown, ChevronUp, X, Check,
   HelpCircle, Trash2, MessageSquarePlus, ChevronLeft, ChevronRight, Pencil,
-  ChevronsUpDown,
+  ChevronsUpDown, Info,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -201,8 +202,22 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
   const [notifOn,  setNotifOn]  = useState(true)
   const [selRoles, setSelRoles] = useState(["Quản trị viên", "Quản trị viên cao cấp", "Tài chính viên"])
 
-  function toggleApp(id: string) { setSelApps(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]) }
-  function toggleOa(id: string)  { setSelOas(prev  => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]) }
+  function toggleApp(id: string) {
+    setSelApps(prev => {
+      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+      // Bỏ tick 1 app con → tắt "Tất cả App"
+      if (prev.includes(id)) setAllApps(false)
+      return next
+    })
+  }
+  function toggleOa(id: string) {
+    setSelOas(prev => {
+      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+      // Bỏ tick 1 OA con → tắt "Tất cả OA"
+      if (prev.includes(id)) setAllOas(false)
+      return next
+    })
+  }
   function toggleRole(r: string)  { setSelRoles(prev => prev.includes(r)  ? prev.filter(x => x !== r)   : [...prev, r]) }
 
   const filteredApps = MOCK_APPS.filter(a => a.label.toLowerCase().includes(appSearch.toLowerCase()))
@@ -259,9 +274,21 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
                           placeholder="Tìm kiếm App" className="w-full pl-6 pr-2 py-1 text-xs border border-border rounded outline-none focus:border-blue-400" />
                       </div>
                       <label className="flex items-center gap-2 cursor-pointer py-0.5">
-                        <Checkbox checked={allApps} onChange={v => setAllApps(v)} />
+                        <Checkbox checked={allApps} onChange={v => {
+                          setAllApps(v)
+                          if (v) setSelApps(MOCK_APPS.map(a => a.id))
+                        }} />
                         <span className="text-xs font-medium flex-1">Tất cả App</span>
-                        <span className="text-[10px] text-muted-foreground">Kể cả app thêm mới sau này</span>
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="h-3 w-3 text-muted-foreground cursor-default shrink-0" />
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-[180px] text-xs">
+                              Kể cả app thêm mới sau này
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </label>
                       <div className="border-t border-border" />
                       {filteredApps.map(app => (
@@ -303,14 +330,26 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
                         {oaSearch && <button className="absolute right-2 top-1/2 -translate-y-1/2" onClick={() => setOaSearch("")}><X className="h-3 w-3 text-muted-foreground" /></button>}
                       </div>
                       <label className="flex items-center gap-2 cursor-pointer py-0.5">
-                        <Checkbox checked={allOas} onChange={v => setAllOas(v)} />
+                        <Checkbox checked={allOas} onChange={v => {
+                          setAllOas(v)
+                          if (v) setSelOas(MOCK_OAS.map(o => o.id))
+                        }} />
                         <span className="text-xs font-medium flex-1">Tất cả OA</span>
-                        <span className="text-[10px] text-muted-foreground">Kể cả OA thêm mới sau này</span>
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="h-3 w-3 text-muted-foreground cursor-default shrink-0" />
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-[180px] text-xs">
+                              Kể cả OA thêm mới sau này
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </label>
                       <div className="border-t border-border" />
                       {filteredOas.map(oa => (
                         <label key={oa.id} className="flex items-center gap-2 cursor-pointer py-0.5">
-                          <Checkbox checked={selOas.includes(oa.id)} onChange={() => { setAllOas(false); toggleOa(oa.id) }} />
+                          <Checkbox checked={selOas.includes(oa.id)} onChange={() => toggleOa(oa.id)} />
                           <span className="inline-flex h-4 w-4 rounded-full text-[7px] font-bold text-white items-center justify-center" style={{ background: oa.color }}>
                             {oa.label.slice(0,1)}
                           </span>
