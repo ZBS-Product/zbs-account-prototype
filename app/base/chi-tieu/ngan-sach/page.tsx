@@ -201,16 +201,8 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
   const [notifOn,  setNotifOn]  = useState(true)
   const [selRoles, setSelRoles] = useState(["Quản trị viên", "Quản trị viên cao cấp", "Tài chính viên"])
 
-  function toggleApp(id: string) {
-    const next = selApps.includes(id) ? selApps.filter(x => x !== id) : [...selApps, id]
-    setSelApps(next)
-    setAllApps(next.length === MOCK_APPS.length)
-  }
-  function toggleOa(id: string) {
-    const next = selOas.includes(id) ? selOas.filter(x => x !== id) : [...selOas, id]
-    setSelOas(next)
-    setAllOas(next.length === MOCK_OAS.length)
-  }
+  function toggleApp(id: string) { setSelApps(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]) }
+  function toggleOa(id: string)  { setSelOas(prev  => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]) }
   function toggleRole(r: string)  { setSelRoles(prev => prev.includes(r)  ? prev.filter(x => x !== r)   : [...prev, r]) }
 
   const filteredApps = MOCK_APPS.filter(a => a.label.toLowerCase().includes(appSearch.toLowerCase()))
@@ -267,8 +259,9 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
                           placeholder="Tìm kiếm App" className="w-full pl-6 pr-2 py-1 text-xs border border-border rounded outline-none focus:border-blue-400" />
                       </div>
                       <label className="flex items-center gap-2 cursor-pointer py-0.5">
-                        <Checkbox checked={selApps.length === MOCK_APPS.length} onChange={v => { setSelApps(v ? MOCK_APPS.map(a => a.id) : []); setAllApps(v) }} />
+                        <Checkbox checked={allApps} onChange={v => setAllApps(v)} />
                         <span className="text-xs font-medium flex-1">Tất cả App</span>
+                        <span className="text-[10px] text-muted-foreground">Kể cả app thêm mới sau này</span>
                       </label>
                       <div className="border-t border-border" />
                       {filteredApps.map(app => (
@@ -310,8 +303,9 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
                         {oaSearch && <button className="absolute right-2 top-1/2 -translate-y-1/2" onClick={() => setOaSearch("")}><X className="h-3 w-3 text-muted-foreground" /></button>}
                       </div>
                       <label className="flex items-center gap-2 cursor-pointer py-0.5">
-                        <Checkbox checked={allOas} onChange={v => { setAllOas(v); if (v) setSelOas(MOCK_OAS.map(o => o.id)) }} />
+                        <Checkbox checked={allOas} onChange={v => setAllOas(v)} />
                         <span className="text-xs font-medium flex-1">Tất cả OA</span>
+                        <span className="text-[10px] text-muted-foreground">Kể cả OA thêm mới sau này</span>
                       </label>
                       <div className="border-t border-border" />
                       {filteredOas.map(oa => (
