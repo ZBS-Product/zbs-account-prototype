@@ -284,8 +284,8 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
                             <TooltipTrigger asChild>
                               <Info className="h-3 w-3 text-muted-foreground cursor-default shrink-0" />
                             </TooltipTrigger>
-                            <TooltipContent side="top" className="max-w-[180px] text-xs">
-                              Kể cả app thêm mới sau này
+                            <TooltipContent side="top" className="max-w-[220px] text-xs">
+                              Bao gồm tất cả App liên kết với Ví hiện tại, và các App liên kết mới sau này.
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
@@ -340,8 +340,8 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
                             <TooltipTrigger asChild>
                               <Info className="h-3 w-3 text-muted-foreground cursor-default shrink-0" />
                             </TooltipTrigger>
-                            <TooltipContent side="top" className="max-w-[180px] text-xs">
-                              Kể cả OA thêm mới sau này
+                            <TooltipContent side="top" className="max-w-[220px] text-xs">
+                              Bao gồm tất cả OA liên kết với Ví hiện tại, và các OA liên kết mới sau này.
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
