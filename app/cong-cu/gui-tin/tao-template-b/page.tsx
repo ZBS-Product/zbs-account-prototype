@@ -221,6 +221,16 @@ function LeftConfigSidebar({
 }) {
   return (
     <aside className="w-[220px] shrink-0 border-r border-border bg-white overflow-y-auto flex flex-col">
+      {/* Section: Tên template */}
+      <div className="px-3 pt-4 pb-3 border-b border-border">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Tên template</p>
+        <input
+          type="text"
+          placeholder="Nhập tên template..."
+          className="w-full px-2.5 py-1.5 text-xs border border-border rounded-lg outline-none focus:ring-2 focus:ring-blue-400 placeholder:text-gray-300 bg-white"
+        />
+      </div>
+
       {/* Section: Loại template */}
       <div className="px-3 pt-4 pb-2">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Loại template</p>
@@ -539,16 +549,6 @@ function CenterComposer({
       </div>
 
       <div className="flex-1 p-6 space-y-4">
-        {/* Template name */}
-        <div className="rounded-xl border border-border bg-white p-4">
-          <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Tên template</label>
-          <input
-            type="text"
-            placeholder="Nhập tên template để dễ quản lý..."
-            className="w-full text-sm border-0 outline-none bg-transparent placeholder:text-gray-300"
-          />
-        </div>
-
         {/* Logo section */}
         <div className="rounded-xl border border-border bg-white p-4">
           <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Logo</label>
