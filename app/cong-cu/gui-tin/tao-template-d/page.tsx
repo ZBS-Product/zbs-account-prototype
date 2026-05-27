@@ -538,11 +538,7 @@ export default function TaoTemplateDPage() {
       {/* Toolbar */}
       <div className="sticky top-[68px] z-40 bg-white border-b border-border px-5 py-2.5 flex items-center gap-3">
         <button className="text-xs text-muted-foreground hover:text-foreground transition-colors">← Danh sách template</button>
-        <div className="h-4 w-px bg-border" />
-        <input value={templateName} onChange={e => setTemplateName(e.target.value)}
-          className="flex-1 text-sm font-semibold focus:outline-none text-center bg-transparent placeholder:text-muted-foreground"
-          placeholder="Tên template..." />
-        <div className="h-4 w-px bg-border" />
+        <div className="flex-1" />
         <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full text-white" style={{ background: "oklch(0.6 0.18 185)" }}>
           Option D · Canvas
         </span>
@@ -554,49 +550,119 @@ export default function TaoTemplateDPage() {
 
       {/* Main layout */}
       <div className="flex flex-1 overflow-hidden" style={{ height: "calc(100vh - 68px - 49px)" }}>
+
+        {/* Left sidebar — template name + meta config */}
+        <div className="w-[220px] shrink-0 border-r border-border bg-white overflow-y-auto flex flex-col"
+          onClick={e => e.stopPropagation()}>
+          <div className="px-4 py-3 border-b border-border">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Tên template</p>
+            <input
+              value={templateName} onChange={e => setTemplateName(e.target.value)}
+              className="w-full px-2.5 py-1.5 text-sm font-medium border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+              placeholder="Nhập tên template..." />
+          </div>
+
+          <div className="px-4 py-3 border-b border-border">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Loại template</p>
+            <div className="space-y-1">
+              {TEMPLATE_TYPES.map(t => (
+                <button key={t.id} onClick={() => setTemplateType(t.id as TemplateType)}
+                  className={cn("w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-left transition-all text-xs",
+                    templateType === t.id
+                      ? "border-blue-500 bg-blue-50 text-blue-700 font-medium"
+                      : "border-border bg-white text-foreground hover:border-blue-300")}>
+                  <span>{t.icon}</span>
+                  <span className="flex-1">{t.label}</span>
+                  <span className="text-[10px] text-muted-foreground">{t.price}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="px-4 py-3 border-b border-border">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Mục đích</p>
+            <div className="space-y-1">
+              {[["cap-1","Cấp độ 1","Giao dịch"],["cap-2","Cấp độ 2","Chăm sóc KH"],["cap-3","Cấp độ 3","Hậu mãi"]].map(([id, label, sub]) => (
+                <label key={id} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-border hover:border-blue-300 cursor-pointer">
+                  <input type="radio" name="purpose" defaultChecked={id === "cap-1"} className="accent-blue-600 shrink-0" />
+                  <span className="text-xs flex-1">{label}</span>
+                  <span className="text-[10px] text-muted-foreground">{sub}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="px-4 py-3">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">App & OA</p>
+            <div className="space-y-2">
+              <select className="w-full px-2.5 py-1.5 text-xs border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white">
+                <option>QC Test ZNS 4</option>
+                <option>ZNS Service</option>
+                <option>Test ZBS App</option>
+              </select>
+              <select className="w-full px-2.5 py-1.5 text-xs border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white">
+                <option>QC Test ZNS 4</option>
+                <option>Trợ lý tin doanh nghiệp</option>
+                <option>ZBS Account</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="mt-auto px-4 py-3 border-t border-border">
+            <div className="rounded-lg px-3 py-2 text-xs" style={{ background: "oklch(0.96 0.04 265)" }}>
+              <span className="font-bold" style={{ color: BLUE }}>
+                {TEMPLATE_TYPES.find(t => t.id === templateType)?.price}
+              </span>
+              <span className="text-muted-foreground"> / tin</span>
+            </div>
+          </div>
+        </div>
+
         {/* Canvas area */}
         <div
           className="flex-1 overflow-y-auto flex items-start justify-center pt-12 pb-16 px-8"
           style={{ background: "oklch(0.94 0.02 265)" }}
           onClick={() => setSelected({ type: "none" })}>
           <div className="flex flex-col items-center gap-3">
-            {/* Label */}
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs text-gray-400 font-medium">Click vào bất kỳ phần nào để chỉnh sửa</span>
-            </div>
+            <span className="text-xs text-gray-400 font-medium mb-2">Click vào bất kỳ phần nào để chỉnh sửa</span>
             <CanvasCard
               selected={selected} setSelected={setSelected}
               logo={logo} title={title} setTitle={setTitle}
               blocks={blocks} setBlocks={setBlocks}
               buttons={buttons} templateType={templateType}
             />
-            <p className="text-[11px] text-gray-400 mt-2">
-              {TEMPLATE_TYPES.find(t => t.id === templateType)?.icon} {TEMPLATE_TYPES.find(t => t.id === templateType)?.label} · {TEMPLATE_TYPES.find(t => t.id === templateType)?.price}/tin
-            </p>
           </div>
         </div>
 
         {/* Inspector panel */}
-        <div className="w-[340px] shrink-0 border-l border-border bg-white overflow-y-auto">
-          <div className="px-5 py-3 border-b border-border bg-gray-50 flex items-center gap-2">
+        <div className="w-[300px] shrink-0 border-l border-border bg-white overflow-y-auto">
+          <div className="px-4 py-3 border-b border-border bg-gray-50">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              {selected.type === "none"    && "Cài đặt template"}
-              {selected.type === "logo"    && "Logo"}
-              {selected.type === "title"   && "Tiêu đề"}
-              {selected.type === "block"   && (blocks.find(b => b.id === (selected as any).id)?.kind === "text" ? "Văn bản" : "Bảng")}
-              {selected.type === "button"  && "Nút hành động"}
+              {selected.type === "none"   && "Chọn phần để chỉnh sửa"}
+              {selected.type === "logo"   && "Logo"}
+              {selected.type === "title"  && "Tiêu đề"}
+              {selected.type === "block"  && (blocks.find(b => b.id === (selected as any).id)?.kind === "text" ? "Văn bản" : "Bảng")}
+              {selected.type === "button" && "Nút hành động"}
             </span>
           </div>
-          <Inspector
-            key={selected.type + ((selected as any).id ?? "")}
-            selected={selected}
-            templateType={templateType} setTemplateType={setTemplateType}
-            logo={logo} setLogo={setLogo}
-            title={title} setTitle={setTitle}
-            blocks={blocks} setBlocks={setBlocks}
-            buttons={buttons} setButtons={setButtons}
-            onDeselect={() => setSelected({ type: "none" })}
-          />
+          {selected.type === "none" ? (
+            <div className="flex flex-col items-center justify-center h-48 gap-2 text-center px-6">
+              <div className="text-2xl">👆</div>
+              <p className="text-sm font-medium text-gray-700">Click vào phần muốn chỉnh sửa</p>
+              <p className="text-xs text-muted-foreground">Logo, tiêu đề, văn bản, bảng, hoặc nút hành động</p>
+            </div>
+          ) : (
+            <Inspector
+              key={selected.type + ((selected as any).id ?? "")}
+              selected={selected}
+              templateType={templateType} setTemplateType={setTemplateType}
+              logo={logo} setLogo={setLogo}
+              title={title} setTitle={setTitle}
+              blocks={blocks} setBlocks={setBlocks}
+              buttons={buttons} setButtons={setButtons}
+              onDeselect={() => setSelected({ type: "none" })}
+            />
+          )}
         </div>
       </div>
     </div>
