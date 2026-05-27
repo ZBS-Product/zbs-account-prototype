@@ -10,7 +10,7 @@ import ZbsHeader from "@/components/zbs-header"
 const ROOT_SECTIONS = new Set(["cong-cu", "chi-tieu", "cai-dat", "giao-dich", "bao-cao", ""])
 
 // Pages có standalone layout riêng — không wrap bằng gui-tin layout
-const STANDALONE_ROUTES = ["/tao-moi", "/tao-template"]
+const STANDALONE_ROUTES = ["/tao-moi", "/tao-template", "/tao-template-b", "/tao-template-c", "/tao-template-d"]
 
 function buildSections(basePath: string) {
   return [
@@ -36,6 +36,13 @@ function buildSections(basePath: string) {
       icon: Smartphone,
       items: [
         { label: "Gửi theo chiến dịch", href: `${basePath}/cong-cu/gui-tin/gui-theo-chien-dich` },
+      ],
+    },
+    {
+      label: "UX Prototypes",
+      icon: Zap,
+      items: [
+        { label: "So sánh 3 hướng redesign", href: `${basePath}/cong-cu/gui-tin/ux-lab` },
       ],
     },
   ]
