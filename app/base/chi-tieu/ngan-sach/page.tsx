@@ -258,7 +258,7 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
                       <Checkbox checked={useApi} onChange={setUseApi} />
                       <span className="text-sm font-medium">API</span>
                       <span className="text-xs text-muted-foreground">
-                        {allApps ? "(Tất cả App)" : `(${selApps.length}/${MOCK_APPS.length} app)`}
+                        {!allApps && `(${selApps.length}/${MOCK_APPS.length} app)`}
                       </span>
                     </label>
                     <button className="text-xs font-medium cursor-pointer rounded px-2 py-0.5 hover:bg-blue-50 transition-colors" style={{ color: "oklch(0.488 0.243 264.376)" }}
@@ -277,18 +277,21 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
                         <Checkbox checked={allApps} onChange={v => {
                           setAllApps(v)
                           if (v) setSelApps(MOCK_APPS.map(a => a.id))
+                          else setSelApps([])
                         }} />
-                        <span className="text-xs font-medium flex-1">Tất cả App</span>
-                        <TooltipProvider delayDuration={200}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Info className="h-3 w-3 text-muted-foreground cursor-default shrink-0" />
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="max-w-[220px] text-xs">
-                              Bao gồm tất cả App liên kết với Ví hiện tại, và các App liên kết mới sau này.
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <span className="text-xs font-medium flex items-center gap-1">
+                          Tất cả App
+                          <TooltipProvider delayDuration={200}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Info className="h-3 w-3 text-muted-foreground cursor-default shrink-0" />
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="max-w-[220px] text-xs">
+                                Bao gồm tất cả App liên kết với Ví hiện tại, và các App liên kết mới sau này.
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </span>
                       </label>
                       <div className="border-t border-border" />
                       {filteredApps.map(app => (
@@ -310,7 +313,19 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
               </div>
 
               <div>
-                <p className="text-xs font-medium text-foreground mb-2">OA áp dụng</p>
+                <div className="flex items-center gap-1 mb-2">
+                  <p className="text-xs font-medium text-foreground">OA thụ hưởng</p>
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-3 w-3 text-muted-foreground cursor-default shrink-0" />
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-[260px] text-xs">
+                        OA phát sinh chi phí thanh toán vào Ví khi sử dụng dịch vụ ZBS (Mua gói OA, ZBS Template Message, Tin tư vấn).
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 <div className="rounded-lg border border-border overflow-hidden">
                   <div className="flex items-center justify-between px-3 py-2.5">
                     <span className="text-sm font-medium">
@@ -333,18 +348,21 @@ function CreateSheet({ open, onClose, onSuccess }: { open: boolean; onClose: () 
                         <Checkbox checked={allOas} onChange={v => {
                           setAllOas(v)
                           if (v) setSelOas(MOCK_OAS.map(o => o.id))
+                          else setSelOas([])
                         }} />
-                        <span className="text-xs font-medium flex-1">Tất cả OA</span>
-                        <TooltipProvider delayDuration={200}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Info className="h-3 w-3 text-muted-foreground cursor-default shrink-0" />
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="max-w-[220px] text-xs">
-                              Bao gồm tất cả OA liên kết với Ví hiện tại, và các OA liên kết mới sau này.
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <span className="text-xs font-medium flex items-center gap-1">
+                          Tất cả OA
+                          <TooltipProvider delayDuration={200}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Info className="h-3 w-3 text-muted-foreground cursor-default shrink-0" />
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="max-w-[240px] text-xs">
+                                Bao gồm OA liên kết với Ví và OA uỷ quyền cho App liên kết với Ví — kể cả các OA mới sau này.
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </span>
                       </label>
                       <div className="border-t border-border" />
                       {filteredOas.map(oa => (
