@@ -179,7 +179,7 @@ export default function TaoTemplatePage() {
   return (
     <div className="min-h-screen flex flex-col bg-white">
       {/* Header */}
-      <header className="flex h-10 items-center border-b border-border px-5 shrink-0 bg-white">
+      <header className="flex h-10 items-center border-b border-border px-5 shrink-0">
         <Link href="/cong-cu/gui-tin" className="text-muted-foreground hover:text-foreground mr-3">
           <ArrowLeft className="h-4 w-4" />
         </Link>
