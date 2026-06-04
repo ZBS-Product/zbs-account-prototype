@@ -161,7 +161,7 @@ function SectionBox({ num, title, hasHelp, children }: { num: number; title: str
 
 function Checkbox({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <button onClick={() => onChange(!checked)}
+    <button onClick={e => { e.stopPropagation(); onChange(!checked) }}
       className={cn("h-4 w-4 rounded border flex items-center justify-center shrink-0 transition-colors",
         checked ? "border-blue-500 bg-blue-500" : "border-gray-300 bg-white")}>
       {checked && <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />}
