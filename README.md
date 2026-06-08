@@ -7,7 +7,7 @@
 
 ## 🌐 Xem prototype online
 
-**👉 https://zbs-prototype.surge.sh**
+**👉 https://zbs-prod.vercel.app**
 
 ---
 
@@ -82,7 +82,7 @@ Làm trang này theo design: [kéo thả ảnh vào đây]
 ### 🚢 Deploy lên surge sau khi làm xong
 
 ```
-Deploy prototype lên https://zbs-prototype.surge.sh
+Deploy prototype lên https://zbs-prod.vercel.app
 ```
 
 ---
