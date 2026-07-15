@@ -1,231 +1,710 @@
-<title>Wireframe — Xác thực OA (3 bước)</title>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prototype — Wizard xác thực OA</title>
 <style>
   :root{
-    --ink:#1c1c1a; --ink-soft:#54524b; --ink-mute:#8a8880;
-    --line:#dedad0; --line-strong:#c3beb0;
-    --paper:#faf9f6; --card:#ffffff; --panel:#f1efe8;
-    --accent:#3d5a80;
+    --ink:#1a1a1a; --ink-soft:#5c5c5c; --ink-mute:#8f8f8f;
+    --line:#dcdcdc; --line-strong:#b8b8b8;
+    --bg:#f3f3f1; --card:#ffffff; --panel:#eaeaea; --panel-dark:#dcdcdc;
+    --hl-btn:#f0c040; --hl-input:#a8e0a0; --hl-link:#7eb8f7; --hl-sort:#f0a0d0;
   }
-  *{box-sizing:border-box; margin:0; padding:0;}
+  *{box-sizing:border-box;}
   body{
-    background:var(--paper); color:var(--ink);
+    margin:0; background:var(--bg); color:var(--ink);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
-    line-height:1.65; font-size:15px;
+    line-height:1.5; padding-top:44px;
   }
 
-  /* ── Page header ── */
-  .page-header{
-    border-bottom:1px solid var(--line-strong);
-    padding:28px 0 24px;
-    margin-bottom:48px;
+  .annobar{
+    position:fixed; top:0; left:0; right:0; height:44px; background:#111;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 20px; z-index:1000; font-size:13px; color:#fff;
   }
-  .page-header-inner{
-    max-width:680px; margin:0 auto; padding:0 32px;
-    display:flex; align-items:flex-start; justify-content:space-between; gap:24px;
+  .annobar .left{display:flex; align-items:center; gap:14px;}
+  .annobar .toggle{display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;}
+  .switch{width:34px; height:18px; border-radius:9px; background:#555; position:relative; transition:background .15s;}
+  .switch::after{content:""; position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%; background:#fff; transition:transform .15s;}
+  body.hl-on .switch{background:#f0c040;}
+  body.hl-on .switch::after{transform:translateX(16px);}
+  .switch.on{background:#f0c040;}
+  .switch.on::after{transform:translateX(16px);}
+  .layout.debug-hidden{justify-content:center;}
+  .layout.debug-hidden .debug-panel{display:none;}
+  .annobar .legend{display:flex; gap:14px; font-size:11.5px; color:#ccc;}
+  .annobar .legend span{display:flex; align-items:center; gap:5px;}
+  .annobar .legend i{width:9px; height:9px; border-radius:3px; display:inline-block;}
+  .annobar .stepinfo{font-size:11.5px; color:#aaa;}
+
+  body.hl-on [data-hl]{position:relative; outline:2px solid transparent; outline-offset:2px;}
+  body.hl-on [data-hl]::after{
+    content:""; position:absolute; top:-4px; right:-4px; width:9px; height:9px;
+    border-radius:50%; box-shadow:0 0 0 1.5px #fff;
   }
-  .page-header-title{
-    font-size:18px; font-weight:600; letter-spacing:-0.015em; color:var(--ink);
+  body.hl-on [data-hl="btn"]{outline-color:var(--hl-btn);}
+  body.hl-on [data-hl="btn"]::after{background:var(--hl-btn);}
+  body.hl-on [data-hl="input"]{outline-color:var(--hl-input);}
+  body.hl-on [data-hl="input"]::after{background:var(--hl-input);}
+  body.hl-on [data-hl="link"]{outline-color:var(--hl-link);}
+  body.hl-on [data-hl="link"]::after{background:var(--hl-link);}
+  body.hl-on [data-hl].readonly{pointer-events:none; opacity:0.6;}
+
+  .layout{display:flex; align-items:flex-start; max-width:1180px; margin:0 auto;}
+  .wrap{max-width:640px; width:640px; margin:0; padding:36px 20px 90px; flex-shrink:0;}
+
+  .debug-panel{
+    width:460px; flex-shrink:0; background:#1e1f22; color:#d8d8d8;
+    font-family:'SF Mono', Consolas, 'Courier New', monospace; font-size:11.5px; line-height:1.55;
+    padding:28px 22px 60px; min-height:calc(100vh - 44px); position:sticky; top:44px;
+    border-left:1px solid #333;
   }
-  .page-header-sub{
-    font-size:13px; color:var(--ink-mute); margin-top:4px;
+  .dbg-title{font-size:12px; font-weight:700; letter-spacing:0.06em; color:#fff; text-transform:uppercase;}
+  .dbg-sub{font-size:11px; color:#888; margin-top:4px; margin-bottom:18px;}
+  .dbg-empty{color:#666; font-style:italic; font-size:11.5px; margin-top:10px;}
+  .dbg-framing{background:#26282c; border-radius:6px; padding:10px 12px; margin-bottom:16px;}
+  .dbg-framing .dbg-because{color:#f0c040;}
+  .dbg-framing .dbg-then{color:#bbb; margin-top:4px;}
+  .dbg-reason{border-left:2px solid #f0c040; padding:8px 0 8px 12px; margin-bottom:12px;}
+  .dbg-because{color:#9cdcfe; font-size:11.5px; margin-bottom:5px;}
+  .dbg-then{font-size:11.5px; margin-bottom:3px; color:#d8d8d8;}
+  .dbg-then b{color:#a8c8ff; font-weight:700;}
+  .dbg-output-title{font-size:11.5px; font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:0.04em; margin:24px 0 12px; padding-top:16px; border-top:1px solid #333;}
+  .dbg-output-group{margin-bottom:14px;}
+  .dbg-output-label{font-size:10.5px; font-weight:700; color:#7eb8f7; margin-bottom:6px;}
+  .dbg-output-item{color:#d8d8d8; margin-bottom:4px;}
+  .dbg-output-item.muted{color:#666; font-style:italic;}
+
+  .steps-nav{display:flex; align-items:center; gap:6px; margin-bottom:28px;}
+  .steps-nav .dot{display:flex; align-items:center; gap:8px; flex:1;}
+  .steps-nav .circle{
+    width:26px; height:26px; border-radius:50%; background:var(--panel); border:1px solid var(--line-strong);
+    display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--ink-mute); flex-shrink:0;
   }
-  .page-header-meta{
-    font-size:11.5px; color:var(--ink-mute); text-align:right; line-height:1.8; flex-shrink:0;
+  .steps-nav .circle.active{background:var(--ink); color:#fff; border-color:var(--ink);}
+  .steps-nav .circle.done{background:var(--ink-soft); color:#fff; border-color:var(--ink-soft);}
+  .steps-nav .label{font-size:12.5px; color:var(--ink-mute); white-space:nowrap;}
+  .steps-nav .label.active{color:var(--ink); font-weight:600;}
+  .steps-nav .bar{height:1px; background:var(--line-strong); flex:0.6;}
+
+  .card{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:26px 28px;}
+  .step-tag{font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-mute); margin-bottom:6px;}
+  .question{font-size:16.5px; font-weight:600; margin:0 0 18px;}
+  .question-plain{font-size:16.5px; font-weight:400; margin:0 0 18px;}
+
+  .option{
+    display:flex; align-items:flex-start; gap:12px; background:#fff; position:relative;
+    border:1px solid var(--line-strong); border-radius:8px; padding:12px 14px; margin-bottom:9px;
+    cursor:pointer; transition:border-color .1s;
   }
-  .tag{
-    display:inline-block; font-size:10px; text-transform:uppercase; letter-spacing:0.07em;
-    font-weight:600; padding:3px 9px; border-radius:4px;
-    background:var(--panel); color:var(--ink-mute); border:1px solid var(--line-strong);
-    margin-bottom:8px;
+  .option-badge{
+    position:absolute; top:-9px; right:12px; background:var(--ink); color:#fff; font-weight:600; font-size:10.5px;
+    text-transform:uppercase; letter-spacing:0.03em; padding:3px 10px; border-radius:20px;
+  }
+  .option:hover{border-color:var(--ink-mute);}
+  .option.sel{border:2px solid var(--ink); padding:11px 13px;}
+  .option .radio{width:16px; height:16px; border-radius:50%; border:1.5px solid var(--ink-mute); flex-shrink:0; margin-top:2px; position:relative;}
+  .option.sel .radio{border-color:var(--ink);}
+  .option.sel .radio::after{content:""; position:absolute; inset:3px; border-radius:50%; background:var(--ink);}
+  .option .label{font-weight:600; font-size:13.5px;}
+  .option .hint{font-size:11.5px; color:var(--ink-mute); margin-top:2px;}
+  .option .example{font-size:11.5px; color:var(--ink-soft); font-style:italic; margin-top:5px;}
+
+  .field{margin-bottom:16px;}
+  .field label{display:block; font-size:12.5px; color:var(--ink-soft); margin-bottom:6px;}
+  select{
+    width:100%; padding:9px 10px; border:1px solid var(--line-strong); border-radius:7px;
+    font-size:13.5px; background:#fff; color:var(--ink);
   }
 
-  /* ── Main layout ── */
-  .main{max-width:680px; margin:0 auto; padding:0 32px 80px;}
+  .checklist-item{
+    display:flex; align-items:center; gap:10px; background:var(--panel); border:1px solid var(--line);
+    border-radius:7px; padding:10px 12px; margin-bottom:7px; font-size:13px; cursor:pointer;
+  }
+  .checklist-item .box{width:15px; height:15px; border:1.5px solid var(--ink-mute); border-radius:4px; flex-shrink:0; background:#fff; position:relative;}
+  .checklist-item.checked .box{background:var(--ink); border-color:var(--ink);}
+  .checklist-item.checked .box::after{content:"✓"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-size:10px;}
+  .checklist-item.checked{background:#e4e4e0;}
 
-  /* ── Step block ── */
-  .step-wrap{ margin-bottom:52px; }
-  .step-label{
-    display:flex; align-items:center; gap:12px; margin-bottom:14px;
-  }
-  .step-num{
-    width:26px; height:26px; border-radius:50%;
-    background:var(--ink); color:#fff;
-    font-size:11.5px; font-weight:700;
-    display:flex; align-items:center; justify-content:center;
-    flex-shrink:0;
-  }
-  .step-title{
-    font-size:14.5px; font-weight:600; color:var(--ink);
-  }
-  .step-note{
-    font-size:12px; color:var(--ink-mute); margin-left:auto;
-    font-style:italic;
-  }
+  .note{background:var(--panel); border-left:3px solid var(--ink-mute); border-radius:0 6px 6px 0; padding:10px 12px; font-size:12px; color:var(--ink-soft); margin-top:12px;}
+  .note.warn{border-left-color:var(--ink); background:var(--panel-dark); color:var(--ink);}
+  .note.locked{background:var(--panel-dark); border-left-color:#888;}
 
-  /* ── Divider ── */
-  .flow-connector{
-    display:flex; align-items:center; gap:10px;
-    margin:-28px 0 28px 12px;
-    color:var(--ink-mute); font-size:11.5px;
+  .default-card{
+    background:#fff; border:2px solid var(--ink); border-radius:8px; padding:14px 16px; margin-bottom:12px;
   }
-  .flow-connector::before{
-    content:"";
-    display:block; width:1px; height:28px;
-    background:var(--line-strong);
-    margin-left:0;
+  .default-card .badge{
+    display:inline-block; background:var(--ink); color:#fff; font-weight:600; font-size:10.5px;
+    text-transform:uppercase; letter-spacing:0.03em; padding:3px 9px; border-radius:20px; margin-bottom:8px;
   }
+  .default-card .label{font-weight:600; font-size:13.5px; margin-bottom:4px;}
+  .default-card .hint{font-size:12px; color:var(--ink-mute);}
 
-  /* ── wf-card styles (kept from original) ── */
-  .wf-card{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:24px 26px; font-size:14px; box-shadow:0 1px 3px rgba(0,0,0,.04);}
-  .wf-steptag{font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-mute); margin-bottom:10px;}
-  .wf-question{font-size:15.5px; font-weight:600; margin:0 0 14px; color:var(--ink);}
-  .wf-field{margin-bottom:14px;}
-  .wf-field label{display:block; font-size:12.5px; color:var(--ink-soft); margin-bottom:6px;}
-  .wf-input{width:100%; padding:8px 10px; border:1px solid var(--line-strong); border-radius:7px; font-size:13.5px; background:#fff; color:var(--ink); appearance:none; -webkit-appearance:none;}
-  .wf-input[readonly]{background:var(--panel); color:var(--ink-soft);}
-  .wf-radio-row{display:flex; gap:10px;}
-  .wf-radio-row .wf-option{flex:1; margin-bottom:0;}
-  .wf-option{display:flex; align-items:flex-start; gap:10px; background:#fff; border:1px solid var(--line-strong); border-radius:8px; padding:11px 13px; margin-bottom:8px; cursor:default;}
-  .wf-option.wf-sel{border:2px solid var(--ink); padding:10px 12px;}
-  .wf-radio{width:15px; height:15px; border-radius:50%; border:1.5px solid var(--ink-mute); flex-shrink:0; margin-top:2px; position:relative;}
-  .wf-sel .wf-radio{border-color:var(--ink);}
-  .wf-sel .wf-radio::after{content:""; position:absolute; inset:3px; border-radius:50%; background:var(--ink);}
-  .wf-label{font-weight:600; font-size:13px; color:var(--ink);}
-  .wf-hint{font-size:11.5px; color:var(--ink-mute); margin-top:2px;}
-  .wf-example{font-size:11.5px; color:var(--ink-soft); font-style:italic; margin-top:5px;}
-  .wf-ul{margin:8px 0 0; padding-left:18px;}
-  .wf-ul li{font-size:12px; color:var(--ink-soft); margin-bottom:3px;}
-  .wf-note{background:var(--panel); border-left:3px solid var(--ink-mute); border-radius:0 6px 6px 0; padding:9px 12px; font-size:12px; color:var(--ink-soft); margin-top:10px;}
-  .wf-review-row{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px;}
-  .wf-k{color:var(--ink-mute);}
-  .wf-v{font-weight:600; text-align:right; color:var(--ink);}
-  .wf-checklist-item{display:flex; align-items:center; gap:10px; background:var(--panel); border:1px solid var(--line); border-radius:7px; padding:9px 12px; margin-bottom:7px; font-size:12.5px;}
-  .wf-box{width:14px; height:14px; border:1.5px solid var(--ink-mute); border-radius:4px; flex-shrink:0; background:#fff;}
-  .wf-actions{display:flex; justify-content:space-between; align-items:center; margin-top:20px;}
-  .wf-btn{padding:9px 18px; border-radius:7px; font-size:13px; font-weight:600; border:1px solid var(--line-strong); cursor:default;}
-  .wf-btn-primary{background:var(--ink); color:#fff; border:1px solid var(--ink);}
-  .wf-btn-ghost{background:#fff; color:var(--ink); border:1px solid var(--line-strong);}
-  .wf-pill{background:var(--ink); color:#fff; font-weight:600; font-size:10px; text-transform:uppercase; letter-spacing:0.03em; padding:3px 8px; border-radius:20px;}
-  .wf-muted{color:var(--ink-mute); font-weight:400;}
+  .toggle-row{
+    display:flex; align-items:flex-start; gap:12px; background:#fff; border:1px solid var(--line-strong);
+    border-radius:8px; padding:12px 14px; margin-top:10px; cursor:pointer;
+  }
+  .toggle-row.disabled{opacity:0.45; cursor:not-allowed;}
+  .toggle-box{width:16px; height:16px; border:1.5px solid var(--ink-mute); border-radius:4px; flex-shrink:0; margin-top:1px; position:relative;}
+  .toggle-row.on .toggle-box{background:var(--ink); border-color:var(--ink);}
+  .toggle-row.on .toggle-box::after{content:"✓"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-size:10px;}
+  .toggle-row .label{font-weight:600; font-size:13.5px;}
+  .toggle-row .hint{font-size:11.5px; color:var(--ink-mute); margin-top:2px;}
+
+  .review-row{display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line); font-size:13px;}
+  .review-row .k{color:var(--ink-mute);}
+  .review-row .v{font-weight:600; text-align:right;}
+
+  .actions{display:flex; justify-content:space-between; align-items:center; margin-top:24px;}
+  .btn{
+    padding:10px 20px; border-radius:7px; font-size:13.5px; font-weight:600; cursor:pointer; border:1px solid var(--ink-strong);
+  }
+  .btn-primary{background:var(--ink); color:#fff; border:1px solid var(--ink);}
+  .btn-primary:disabled{background:var(--panel-dark); color:var(--ink-mute); border-color:var(--line-strong); cursor:not-allowed;}
+  .btn-ghost{background:#fff; color:var(--ink); border:1px solid var(--line-strong);}
+
+  .radio-row{display:flex; gap:10px;}
+  .radio-row .option{flex:1; margin-bottom:0;}
+  .option.disabled{opacity:0.4; cursor:not-allowed;}
+  .option.disabled:hover{border-color:var(--line-strong);}
+
+  .overlay{
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35);
+    align-items:center; justify-content:center; z-index:900;
+  }
+  .overlay.show{display:flex;}
+  .dialog{background:#fff; border-radius:12px; padding:28px 30px; max-width:380px; width:90%; text-align:center;}
+  .dialog .icon{width:48px; height:48px; border-radius:50%; background:var(--ink); color:#fff; display:flex; align-items:center; justify-content:center; font-size:22px; margin:0 auto 14px;}
+  .dialog h3{font-size:16px; margin:0 0 8px;}
+  .dialog p{font-size:13px; color:var(--ink-soft); margin:0 0 20px;}
 </style>
+</head>
+<body>
 
-<!-- ── Header ── -->
-<header class="page-header">
-  <div class="page-header-inner">
-    <div>
-      <div class="tag">Wireframe</div>
-      <div class="page-header-title">Redesign luồng xác thực Zalo OA</div>
-      <div class="page-header-sub">Wizard 3 bước · Single OA · Taxonomy tách trục độc lập</div>
+  <div class="annobar">
+    <div class="left">
+      <div class="toggle" onclick="toggleHighlight()">
+        <div class="switch"></div>
+        <span>Highlight interactive elements</span>
+      </div>
+      <div class="toggle" onclick="toggleDebug()">
+        <div class="switch" id="debugSwitch"></div>
+        <span>Mechanism debug</span>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--hl-btn)"></i>Button/CTA</span>
+        <span><i style="background:var(--hl-link)"></i>Link/Nav</span>
+        <span><i style="background:var(--hl-input)"></i>Input/Form field</span>
+        <span><i style="background:var(--hl-sort)"></i>Sortable column</span>
+      </div>
     </div>
-    <div class="page-header-meta">
-      v3 · 14/07/2026<br>
-      G3 — Phát
+    <div class="stepinfo" id="stepinfo">Bước 1/3</div>
+  </div>
+
+  <div class="layout debug-hidden" id="layout">
+    <div class="wrap">
+      <div class="steps-nav" id="stepsNav"></div>
+      <div class="card" id="cardContent"></div>
+    </div>
+    <div class="debug-panel" id="debugPanel"></div>
+  </div>
+
+  <div class="overlay" id="confirmOverlay">
+    <div class="dialog">
+      <div class="icon">✓</div>
+      <h3 id="dialogTitle">Đã gửi hồ sơ xác thực</h3>
+      <p id="dialogBody">Hồ sơ của bạn đã được ghi nhận. Bạn sẽ nhận thông báo khi có kết quả xét duyệt.</p>
+      <div class="btn btn-primary" data-hl="btn" style="width:100%;" onclick="closeDialog()">Đóng</div>
     </div>
   </div>
-</header>
 
-<!-- ── Main ── -->
-<main class="main">
+<script>
+const state = {
+  step: 1,
+  tenOA: 'Cửa hàng BéBiBo',
+  tenOAEditable: false,
+  namingEditable: false,
+  uploads: {},
+  relType: null,        // Trục 1: business | brand | product
+  loaiHinh: null,
+  chiNhanh: null,
+  vanBangVN: null,
+  subType: null,        // Trục 1 sub (chỉ nhánh product): phanphoi | spdv
+  phanPhoiType: null,
+  nganhNghe: 'thuong',  // Trục 2 (orthogonal): thuong | dieukien | tai_chinh | cam_do
+  giayToXacMinh: null,  // Trục 3: dkdn | congvan
+  checklist: {}
+};
 
-  <!-- Step 1 -->
-  <div class="step-wrap">
-    <div class="step-label">
-      <div class="step-num">1</div>
-      <div class="step-title">Điền thông tin OA</div>
-      <div class="step-note">Thu thập Trục 1 + Trục 2</div>
+const STEP_LABELS = ['Điền thông tin OA', 'Chọn loại giấy tờ xác minh', 'Xem & chuẩn bị giấy tờ'];
+
+function toggleHighlight(){
+  document.body.classList.toggle('hl-on');
+}
+
+function toggleDebug(){
+  document.getElementById('layout').classList.toggle('debug-hidden');
+  document.getElementById('debugSwitch').classList.toggle('on');
+}
+
+function renderStepsNav(){
+  const nav = document.getElementById('stepsNav');
+  let html = '';
+  STEP_LABELS.forEach((label, i) => {
+    const n = i + 1;
+    const cls = n < state.step ? 'done' : (n === state.step ? 'active' : '');
+    html += `<div class="dot"><div class="circle ${cls}">${n < state.step ? '✓' : n}</div>
+      <span class="label ${n === state.step ? 'active' : ''}">${label}</span></div>`;
+    if (n < STEP_LABELS.length) html += `<div class="bar"></div>`;
+  });
+  nav.innerHTML = html;
+  document.getElementById('stepinfo').textContent = `Bước ${state.step}/${STEP_LABELS.length}`;
+}
+
+function goStep(n){
+  state.step = n;
+  render();
+}
+
+function toggleNamingEdit(){ state.namingEditable = !state.namingEditable; render(); }
+function toggleTenOAEdit(){ state.tenOAEditable = !state.tenOAEditable; render(); }
+function selectRel(val){ state.relType = val; render(); }
+function selectLoaiHinh(val){
+  state.loaiHinh = val;
+  render();
+}
+function selectChiNhanh(val){ state.chiNhanh = val; render(); }
+function selectVanBang(val){ state.vanBangVN = val; render(); }
+function selectSubType(val){ state.subType = val; render(); }
+function selectPhanPhoi(val){ state.phanPhoiType = val; render(); }
+function selectNganh(val){ state.nganhNghe = val; render(); }
+function selectGiayTo(val){
+  state.giayToXacMinh = val;
+  render();
+}
+function toggleCheck(key){
+  state.checklist[key] = !state.checklist[key];
+  render();
+}
+function submitForm(){
+  document.getElementById('confirmOverlay').classList.add('show');
+}
+function closeDialog(){
+  document.getElementById('confirmOverlay').classList.remove('show');
+}
+
+function optionHtml(selected, onclick, label, hint, example){
+  return `<div class="option ${selected ? 'sel' : ''}" data-hl="input" onclick="${onclick}">
+    <div class="radio"></div>
+    <div><div class="label">${label}</div><div class="hint">${hint}</div>
+    ${example ? `<div class="example">Ví dụ: ${example}</div>` : ''}</div>
+  </div>`;
+}
+
+function checklistHtml(items){
+  return items.map(it => {
+    const checked = !!state.checklist[it.key];
+    return `<div class="checklist-item ${checked ? 'checked' : ''}" data-hl="input" onclick="toggleCheck('${it.key}')">
+      <div class="box"></div><span>${it.label}</span>
+    </div>`;
+  }).join('');
+}
+
+function dummyUpload(key){
+  state.uploads[key] = state.uploads[key] ? null : 'scan_' + key + '.pdf';
+  render();
+}
+
+function uploadListHtml(items){
+  return items.map(it => {
+    const file = state.uploads[it.key];
+    return `
+      <div class="checklist-item" style="cursor:default; justify-content:space-between;">
+        <span>${it.label}</span>
+        ${file
+          ? `<span data-hl="input" onclick="dummyUpload('${it.key}')" style="flex-shrink:0; display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink); cursor:pointer;">
+               <span style="width:16px; height:16px; border-radius:50%; background:var(--ink); color:#fff; display:flex; align-items:center; justify-content:center; font-size:10px;">✓</span>
+               ${file}
+             </span>`
+          : `<div class="btn btn-ghost" data-hl="btn" style="flex-shrink:0; padding:5px 12px; font-size:11.5px;" onclick="dummyUpload('${it.key}')">Tải lên</div>`
+        }
+      </div>
+    `;
+  }).join('');
+}
+
+function relLabel(){
+  if (state.relType==='business') return 'Cách 1 — Tên doanh nghiệp/cửa hàng';
+  if (state.relType==='brand') return 'Cách 2 — Thương hiệu có văn bằng';
+  if (state.relType==='product') return 'Cách 3 — Tên sản phẩm/dịch vụ';
+  return '—';
+}
+
+const NGANH_LABEL = {
+  thuong: 'Thông thường',
+  tai_chinh: 'Tài chính / Ngân hàng',
+  cam_do: 'Dịch vụ cầm đồ',
+  y_te: 'Y tế',
+  duoc: 'Dược',
+  giao_duc: 'Giáo dục',
+  bao_hiem: 'Bảo hiểm',
+  van_tai: 'Vận tải',
+  dieukien_khac: 'Ngành nghề đặc thù cần giấy phép khác'
+};
+function nganhLabel(){ return NGANH_LABEL[state.nganhNghe] || '—'; }
+
+function dkdnLabel(){
+  return state.loaiHinh === 'HKD' ? 'Giấy phép Đăng ký Hộ kinh doanh' : 'Giấy phép Đăng ký Doanh nghiệp';
+}
+
+const NGANH_GIAYTO = {
+  y_te: 'Giấy phép hoạt động khám bệnh, chữa bệnh (ngành Y tế)',
+  duoc: 'Giấy chứng nhận đủ điều kiện kinh doanh dược (ngành Dược)',
+  giao_duc: 'Giấy phép hoạt động giáo dục (ngành Giáo dục)',
+  bao_hiem: 'Giấy phép hoạt động kinh doanh bảo hiểm (ngành Bảo hiểm)',
+  van_tai: 'Giấy phép kinh doanh vận tải (ngành Vận tải)',
+  dieukien_khac: 'Giấy phép ngành nghề kinh doanh có điều kiện khác (theo danh mục)'
+};
+
+// Nguồn logic duy nhất: mỗi "reason" = 1 lựa chọn đã chọn -> kéo theo giấy tờ / việc cần kiểm tra trước khi nộp / việc cần làm sau khi nộp.
+// Debug panel và Bước 3 đều render từ đúng danh sách này để không bao giờ lệch nhau.
+function buildReasons(giayToOverride){
+  const giayTo = giayToOverride !== undefined ? giayToOverride : state.giayToXacMinh;
+  const relType = state.relType, nganh = state.nganhNghe;
+  const reasons = [];
+
+  // Trục 1 — quan hệ tên
+  if (relType === 'business'){
+    if (state.chiNhanh === 'yes'){
+      reasons.push({ key:'r1-chinhanh', because:`Vì bạn xác nhận OA là chi nhánh/địa điểm kinh doanh`, truoc:[`Đặt tên OA theo quy tắc: [Tên doanh nghiệp] + [Vị trí địa điểm]. Tên hiện tại: "${state.tenOA || '—'}"`] });
+    }
+  } else if (relType === 'brand'){
+    if (state.vanBangVN === 'no'){
+      reasons.push({ key:'r1-brand', because:`Vì bạn chọn Tên OA = Thương hiệu đã đăng ký bảo hộ, đăng ký ở nước ngoài (không phải VN)`, giayto:[`Văn bằng bảo hộ thương hiệu/nhãn hiệu (Cục SHTT) — kèm bản dịch công chứng tiếng Việt HOẶC bản gốc tiếng Anh`] });
+    } else {
+      reasons.push({ key:'r1-brand', because:`Vì bạn chọn Tên OA = Thương hiệu đã đăng ký bảo hộ`, giayto:[`Văn bằng bảo hộ thương hiệu/nhãn hiệu (Cục SHTT)`] });
+    }
+  } else if (relType === 'product'){
+    if (state.subType === 'phanphoi'){
+      reasons.push({ key:'r1-phanphoi', because:`Vì bạn chọn Tên OA = Tên sản phẩm/dịch vụ, nguồn gốc = phân phối/đại lý`, giayto:[`Hợp đồng phân phối/đại lý còn hiệu lực`] });
+      if (state.phanPhoiType){
+        reasons.push({ key:'r1-phanphoi-naming', because:`Vì bạn chọn hình thức phân phối = ${state.phanPhoiType}`, truoc:[`Đặt tên OA theo naming rule tương ứng (độc quyền/không độc quyền/đại lý). Tên hiện tại: "${state.tenOA || '—'}"`] });
+      }
+    } else if (state.subType === 'spdv'){
+      reasons.push({ key:'r1-spdv', because:`Vì bạn chọn Tên OA = Tên sản phẩm/dịch vụ, nguồn gốc = tự tạo`, giayto:[`1 giấy tờ xác minh sản phẩm/dịch vụ (còn hiệu lực, đủ nội dung)`] });
+    }
+  }
+
+  // Trục 2 — ngành nghề
+  if (nganh === 'tai_chinh'){
+    reasons.push({ key:'r2-taichinh', because:`Vì bạn chọn Ngành nghề = Tài chính / Ngân hàng`,
+      truoc:[`Chuẩn bị email xác minh từ hộp thư doanh nghiệp cấp, kèm họ tên + chức danh`],
+      sau:[`Gửi email xác minh đến oa@zalo.me`] });
+  } else if (nganh === 'cam_do'){
+    reasons.push({ key:'r2-camdo', because:`Vì bạn chọn Ngành nghề = Dịch vụ cầm đồ`,
+      giayto:[`Giấy chứng nhận đủ điều kiện an ninh, trật tự`],
+      truoc:[`Đặt tên/mô tả OA chứa từ khoá "Dịch vụ cầm đồ"`] });
+  } else if (NGANH_GIAYTO[nganh]){
+    reasons.push({ key:'r2-dacthu', because:`Vì bạn chọn Ngành nghề = ${nganhLabel()}`, giayto:[NGANH_GIAYTO[nganh]] });
+  }
+
+  // Loại hình pháp nhân — khung lựa chọn cho Trục 3 (chỉ để giải thích cơ chế, không tự phát sinh giấy tờ)
+  if (state.loaiHinh){
+    const boLabel = state.loaiHinh === 'HKD' ? 'Giấy phép HKD' : 'Giấy phép ĐKDN';
+    reasons.push({
+      key:'r-loaihinh', framing:true,
+      because:`Vì bạn chọn Loại hình = ${state.loaiHinh === 'HKD' ? 'Hộ kinh doanh' : 'Doanh nghiệp'}`,
+      info:[`Giấy tờ xác minh (Bước 2) sẽ là: ${boLabel} HOẶC Công văn xác thực`]
+    });
+  }
+
+  // Trục 3 — giấy tờ xác minh (lựa chọn thật ở Bước 2)
+  if (giayTo === 'dkdn'){
+    reasons.push({ key:'r3-dkdn', because:`Vì bạn chọn Giấy tờ xác minh = ${dkdnLabel()}`, giayto:[`${dkdnLabel()} (đủ trang, có mộc + chữ ký)`] });
+  } else if (giayTo === 'congvan'){
+    reasons.push({ key:'r3-congvan', because:`Vì bạn chọn Giấy tờ xác minh = Công văn xác thực`,
+      giayto:[`Công văn xác thực — ký tên + đóng mộc`],
+      truoc:[`Ký tên + đóng mộc văn bản, đính kèm file scan/chụp cùng hồ sơ khi nộp`] });
+  }
+
+  return reasons;
+}
+
+function aggregateOutput(reasons){
+  const papers = [], truoc = [], sau = [];
+  reasons.forEach(r => {
+    if (r.framing) return; // chỉ để giải thích, không tính vào output
+    (r.giayto || []).forEach(x => papers.push({ text:x, key:r.key, priority: r.key === 'r3-dkdn' ? 0 : 1 }));
+    (r.truoc || []).forEach(x => truoc.push({ text:x, key:r.key }));
+    (r.sau || []).forEach(x => sau.push({ text:x, key:r.key }));
+  });
+  // Ưu tiên hiện Giấy phép ĐKDN/HKD lên đầu danh sách "Hồ sơ cần nộp"
+  papers.sort((a, b) => a.priority - b.priority);
+  return { papers, truoc, sau };
+}
+
+function namingRuleNote(ruleText){
+  return `
+    <div class="note">
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-mute); margin-bottom:5px;">Quy tắc đặt tên</div>
+      <div>${ruleText}</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:9px; padding-top:9px; border-top:1px solid var(--line);">
+        <span style="font-size:12.5px;"><strong>Tên hiện tại:</strong> ${state.tenOA || '—'}</span>
+        <div class="btn btn-ghost" data-hl="btn" style="flex-shrink:0; padding:4px 10px; font-size:11.5px;" onclick="toggleNamingEdit()">${state.namingEditable ? 'Xong' : 'Điều chỉnh'}</div>
+      </div>
+      ${state.namingEditable ? `
+        <div style="margin-top:10px;">
+          <input type="text" data-hl="input" value="${state.tenOA}" oninput="state.tenOA=this.value" placeholder="Nhập tên OA theo quy tắc" style="width:100%;">
+        </div>
+      ` : ''}
     </div>
-    <div class="wf-card">
-      <div class="wf-steptag">Bước 1 / 3</div>
-      <div class="wf-field">
-        <label>Tên OA <span class="wf-muted">— lấy từ bước tạo OA, có thể chỉnh sửa</span></label>
-        <div style="display:flex; gap:8px;">
-          <input type="text" class="wf-input" readonly value="Cửa hàng BéBiBo" style="flex:1;">
-          <div class="wf-btn wf-btn-ghost">Sửa</div>
-        </div>
-      </div>
-      <div class="wf-field">
-        <label>Loại hình pháp nhân</label>
-        <div class="wf-radio-row">
-          <div class="wf-option wf-sel"><div class="wf-radio"></div><div><div class="wf-label">Doanh nghiệp</div><div class="wf-hint">Có GCN ĐKKD</div></div></div>
-          <div class="wf-option"><div class="wf-radio"></div><div><div class="wf-label">Hộ kinh doanh</div><div class="wf-hint">Có GCN Đăng ký hộ kinh doanh</div></div></div>
-        </div>
-      </div>
-      <div class="wf-field"><label>Ngành nghề đặc thù</label><select class="wf-input"><option>Ngành nghề thông thường</option></select></div>
-      <div class="wf-field"><label>Tên OA (Cửa hàng BéBiBo) liên quan thế nào tới doanh nghiệp?</label></div>
-      <div class="wf-option wf-sel"><div class="wf-radio"></div><div><div class="wf-label">Tên doanh nghiệp / cửa hàng của tôi</div><div class="wf-hint">Theo giấy phép kinh doanh</div><div class="wf-example">Ví dụ: "CTCP Nguyễn Trần Lê", "Cửa hàng BéBiBo"</div></div></div>
-      <div class="wf-option"><div class="wf-radio"></div><div><div class="wf-label">Tên thương hiệu đã đăng ký bảo hộ</div></div></div>
-      <div class="wf-option"><div class="wf-radio"></div><div><div class="wf-label">Tên sản phẩm/dịch vụ</div></div></div>
-      <div class="wf-field" style="margin-top:16px;">
+  `;
+}
+
+function renderBranchQuestions(){
+  if (state.relType === 'business'){
+    return `
+      <div class="field" style="margin-top:18px;">
         <label>OA có phải chi nhánh / địa điểm kinh doanh không?</label>
-        <div class="wf-radio-row">
-          <div class="wf-option wf-sel"><div class="wf-radio"></div><div><div class="wf-label">Có</div></div></div>
-          <div class="wf-option"><div class="wf-radio"></div><div><div class="wf-label">Không</div></div></div>
+        <div class="radio-row">
+          ${optionHtml(state.chiNhanh==='yes', "selectChiNhanh('yes')", 'Có', '')}
+          ${optionHtml(state.chiNhanh==='no', "selectChiNhanh('no')", 'Không', '')}
         </div>
       </div>
-      <div class="wf-note">Naming rule: [Tên doanh nghiệp] + [Vị trí địa điểm]. Ví dụ: "Công ty XYZ chi nhánh Quận 1".</div>
-      <div class="wf-actions"><span></span><div class="wf-btn wf-btn-primary">Tiếp tục →</div></div>
-    </div>
-  </div>
-
-  <div class="flow-connector">HKD → bỏ qua bước này, nhảy thẳng Bước 3</div>
-
-  <!-- Step 2 -->
-  <div class="step-wrap">
-    <div class="step-label">
-      <div class="step-num">2</div>
-      <div class="step-title">Chọn phương thức xác thực</div>
-      <div class="step-note">Thu thập Trục 3 · bỏ qua nếu HKD</div>
-    </div>
-    <div class="wf-card">
-      <div class="wf-steptag">Bước 2 / 3</div>
-      <p class="wf-question">Chọn phương thức xác thực</p>
-      <div class="wf-option wf-sel">
-        <div class="wf-radio"></div>
-        <div style="flex:1;">
-          <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-            <div class="wf-label">Phương thức 1: Giấy ĐKKD + Xác nhận Zalo</div>
-            <span class="wf-pill">Recommended</span>
-          </div>
-          <div class="wf-hint">Nhanh nhất, không cần văn bản. NĐDPL bấm xác nhận trực tiếp trên Zalo.</div>
-          <ul class="wf-ul"><li>Giấy CN Đăng ký kinh doanh / Hộ kinh doanh (đủ trang, có mộc + chữ ký)</li></ul>
+      ${state.chiNhanh==='yes' ? namingRuleNote('Gợi ý: [Tên doanh nghiệp] + [Vị trí địa điểm]. Ví dụ: "Công ty XYZ chi nhánh Quận 1".') : ''}
+    `;
+  }
+  if (state.relType === 'brand'){
+    return `
+      <div class="field" style="margin-top:18px;">
+        <label>Văn bằng bảo hộ thương hiệu có đăng ký tại Việt Nam không?</label>
+        <div class="radio-row">
+          ${optionHtml(state.vanBangVN==='yes', "selectVanBang('yes')", 'Có, đăng ký tại VN', '')}
+          ${optionHtml(state.vanBangVN==='no', "selectVanBang('no')", 'Không, đăng ký nước ngoài', '')}
         </div>
       </div>
-      <div class="wf-option">
-        <div class="wf-radio"></div>
-        <div style="flex:1;">
-          <div class="wf-label">Phương thức 2: Giấy ĐKKD + Công văn xác thực</div>
-          <div class="wf-hint">Dùng khi NĐDPL không có Zalo hoặc không thể xác nhận trực tiếp.</div>
-          <ul class="wf-ul">
-            <li>Giấy CN Đăng ký kinh doanh / Hộ kinh doanh (đủ trang, có mộc + chữ ký)</li>
-            <li>Công văn xác thực (CVXT) — ký tên + đóng mộc</li>
-          </ul>
-        </div>
+      ${state.vanBangVN==='no' ? `<div class="note warn">⚠ Cần nộp kèm bản dịch công chứng tiếng Việt (hoặc bản gốc tiếng Anh).</div>` : ''}
+    `;
+  }
+  if (state.relType === 'product'){
+    return `
+      <div class="field" style="margin-top:18px;">
+        <label>Nguồn gốc của sản phẩm / dịch vụ này đến từ đâu?</label>
+        ${optionHtml(state.subType==='phanphoi', "selectSubType('phanphoi')", 'Sản phẩm tôi phân phối / làm đại lý', 'Bạn bán hàng cho hãng khác', '"NPP Sữa ABC", "Đại lý Bảo hiểm XYZ"')}
+        ${optionHtml(state.subType==='spdv', "selectSubType('spdv')", 'Sản phẩm/dịch vụ do chính tôi tạo ra', 'Của doanh nghiệp bạn, không qua hãng nào khác', '"Máy lọc nước Koala"')}
       </div>
-      <div class="wf-actions"><div class="wf-btn wf-btn-ghost">← Quay lại</div><div class="wf-btn wf-btn-primary">Tiếp tục →</div></div>
-    </div>
-  </div>
 
-  <div class="flow-connector"></div>
+      ${state.subType==='phanphoi' ? `
+        <div class="field">
+          <label>Hình thức phân phối</label>
+          <select data-hl="input" onchange="selectPhanPhoi(this.value)">
+            <option value="">— Chọn —</option>
+            <option value="docquyen" ${state.phanPhoiType==='docquyen'?'selected':''}>Độc quyền</option>
+            <option value="khongdocquyen" ${state.phanPhoiType==='khongdocquyen'?'selected':''}>Không độc quyền</option>
+            <option value="daily" ${state.phanPhoiType==='daily'?'selected':''}>Đại lý / Tổng đại lý</option>
+          </select>
+        </div>
+        ${state.phanPhoiType ? namingRuleNote(
+          'Gợi ý: ' + (
+            state.phanPhoiType==='docquyen' ? 'Tên OA = Tên sản phẩm. Ví dụ: "Máy lọc nước Kangaroo".' :
+            state.phanPhoiType==='khongdocquyen' ? 'Tên OA = [NPP] + Tên sản phẩm + Tên doanh nghiệp. Ví dụ: "NPP Sữa ABC - Công ty TNHH Thương mại XYZ".' :
+            'Tên OA = [Đại lý/Tổng đại lý] + Tên sản phẩm + Tên doanh nghiệp. Ví dụ: "Đại lý Bảo hiểm Manulife - Công ty TNHH ABC".'
+          )
+        ) : ''}
+      ` : ''}
+    `;
+  }
+  return '';
+}
 
-  <!-- Step 3 -->
-  <div class="step-wrap">
-    <div class="step-label">
-      <div class="step-num">3</div>
-      <div class="step-title">Xem &amp; chuẩn bị giấy tờ</div>
-      <div class="step-note">Review + submit</div>
+function renderNganhNghe(){
+  return `
+    <div class="field" style="margin-top:18px;">
+      <label>Ngành nghề đặc thù</label>
+      <select data-hl="input" onchange="selectNganh(this.value)">
+        <option value="tai_chinh" ${state.nganhNghe==='tai_chinh'?'selected':''}>Tài chính / Ngân hàng</option>
+        <option value="cam_do" ${state.nganhNghe==='cam_do'?'selected':''}>Dịch vụ cầm đồ</option>
+        <option value="y_te" ${state.nganhNghe==='y_te'?'selected':''}>Y tế</option>
+        <option value="duoc" ${state.nganhNghe==='duoc'?'selected':''}>Dược</option>
+        <option value="giao_duc" ${state.nganhNghe==='giao_duc'?'selected':''}>Giáo dục</option>
+        <option value="bao_hiem" ${state.nganhNghe==='bao_hiem'?'selected':''}>Bảo hiểm</option>
+        <option value="van_tai" ${state.nganhNghe==='van_tai'?'selected':''}>Vận tải</option>
+        <option value="dieukien_khac" ${state.nganhNghe==='dieukien_khac'?'selected':''}>Ngành nghề đặc thù cần giấy phép khác</option>
+        <option value="thuong" ${state.nganhNghe==='thuong'?'selected':''}>Ngành nghề thông thường</option>
+      </select>
     </div>
-    <div class="wf-card">
-      <div class="wf-steptag">Bước 3 / 3</div>
-      <p class="wf-question">Xem lại thông tin trước khi gửi</p>
-      <div class="wf-review-row"><span class="wf-k">Tên OA</span><span class="wf-v">Cửa hàng BéBiBo</span></div>
-      <div class="wf-review-row"><span class="wf-k">Phân loại</span><span class="wf-v">Cách 1 — Tên doanh nghiệp/cửa hàng</span></div>
-      <div class="wf-review-row"><span class="wf-k">Ngành nghề</span><span class="wf-v">Thông thường</span></div>
-      <div class="wf-review-row"><span class="wf-k">Phương thức xác thực</span><span class="wf-v">Phương thức 1 — Xác nhận qua Zalo</span></div>
-      <div class="wf-note" style="margin-top:14px;">Sau khi gửi, Người đại diện pháp luật sẽ nhận yêu cầu xác nhận qua Zalo.</div>
-      <p class="wf-question" style="margin-top:20px;">Giấy tờ cần chuẩn bị</p>
-      <div class="wf-checklist-item"><div class="wf-box"></div><span>Giấy CN Đăng ký kinh doanh / Hộ kinh doanh (đủ trang, có mộc + chữ ký)</span></div>
-      <div class="wf-actions"><div class="wf-btn wf-btn-ghost">← Quay lại</div><div class="wf-btn wf-btn-primary">Gửi hồ sơ</div></div>
-    </div>
-  </div>
+    ${state.nganhNghe==='tai_chinh' ? `<div class="note warn">⚠ Bắt buộc: gửi email từ hộp thư doanh nghiệp cấp kèm họ tên, chức danh đến oa@zalo.me.</div>` : ''}
+    ${state.nganhNghe==='cam_do' ? `<div class="note warn">⚠ Bắt buộc: tên/mô tả OA phải chứa "Dịch vụ cầm đồ" + nộp kèm Giấy chứng nhận đủ điều kiện an ninh, trật tự.</div>` : ''}
+  `;
+}
 
-</main>
+function renderStep1(){
+  const canNext = !state.relType || !state.loaiHinh ? false :
+    state.relType === 'business' ? !!state.chiNhanh :
+    state.relType === 'brand' ? !!state.vanBangVN :
+    state.relType === 'product' ? (state.subType==='phanphoi' ? !!state.phanPhoiType : !!state.subType) : false;
+
+  return `
+    <div class="step-tag">Bước 1 / ${STEP_LABELS.length}</div>
+
+    <div class="field">
+      <label>Tên OA</label>
+      <div style="display:flex; gap:8px;">
+        <input type="text" data-hl="input" value="${state.tenOA}" ${state.tenOAEditable ? '' : 'readonly'}
+          oninput="state.tenOA=this.value"
+          style="flex:1; ${state.tenOAEditable ? '' : 'background:var(--panel); color:var(--ink-soft);'}">
+        <div class="btn btn-ghost" data-hl="btn" style="padding:9px 14px; white-space:nowrap;" onclick="toggleTenOAEdit()">${state.tenOAEditable ? 'Xong' : 'Sửa'}</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Loại hình pháp nhân</label>
+      <div class="radio-row">
+        ${optionHtml(state.loaiHinh==='DN', "selectLoaiHinh('DN')", 'Doanh nghiệp', 'Có GCN ĐKKD')}
+        ${optionHtml(state.loaiHinh==='HKD', "selectLoaiHinh('HKD')", 'Hộ kinh doanh', 'Có GCN Đăng ký hộ kinh doanh')}
+      </div>
+    </div>
+
+    ${renderNganhNghe()}
+
+    <div class="field" style="margin-top:18px;">
+      <label>Tên OA (${state.tenOA || '—'}) liên quan thế nào tới doanh nghiệp?</label>
+    </div>
+    ${optionHtml(state.relType==='business', "selectRel('business')", 'Tên doanh nghiệp / cửa hàng của tôi', 'Theo giấy phép kinh doanh', '"CTCP Nguyễn Trần Lê", "Cửa hàng BéBiBo", "ABC Mart Vũng Tàu"')}
+    ${optionHtml(state.relType==='brand', "selectRel('brand')", 'Tên thương hiệu đã đăng ký bảo hộ', 'Có văn bằng từ Cục SHTT', 'tên OA = tên nhãn hiệu trên Giấy chứng nhận nhãn hiệu')}
+    ${optionHtml(state.relType==='product', "selectRel('product')", 'Tên sản phẩm/dịch vụ', 'Tự sản xuất, phân phối, hoặc làm đại lý', '"Máy lọc nước Koala", "NPP Sữa ABC", "Đại lý Bảo hiểm XYZ"')}
+
+    ${renderBranchQuestions()}
+
+    <div class="actions">
+      <span></span>
+      <div class="btn btn-primary" data-hl="btn" ${!canNext ? 'style="pointer-events:none;opacity:.4;"' : `onclick="goStep(2)"`}>Tiếp tục →</div>
+    </div>
+  `;
+}
+
+function renderStep2(){
+  return `
+    <div class="step-tag">Bước 2 / ${STEP_LABELS.length}</div>
+    <p class="question">Chọn loại giấy tờ xác minh</p>
+
+    <div class="option ${state.giayToXacMinh==='dkdn' ? 'sel' : ''}" data-hl="input" onclick="selectGiayTo('dkdn')">
+      <span class="option-badge">Khuyến nghị</span>
+      <div class="radio"></div>
+      <div style="flex:1;">
+        <div class="label">${dkdnLabel()}</div>
+        <div class="hint">Do cơ quan có thẩm quyền cấp, còn hiệu lực.</div>
+      </div>
+    </div>
+
+    <div class="option ${state.giayToXacMinh==='congvan' ? 'sel' : ''}" data-hl="input" onclick="selectGiayTo('congvan')">
+      <div class="radio"></div>
+      <div style="flex:1;">
+        <div class="label">Công văn xác thực</div>
+        <div class="hint">Văn bản do doanh nghiệp phát hành, yêu cầu chính thức việc mở tài khoản OA — ký tên + đóng mộc.</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <div class="btn btn-ghost" data-hl="btn" onclick="goStep(1)">← Quay lại</div>
+      <div class="btn btn-primary" data-hl="btn" ${!state.giayToXacMinh ? 'style="pointer-events:none;opacity:.4;"' : 'onclick="goStep(3)"'}>Tiếp tục →</div>
+    </div>
+  `;
+}
+
+function renderStep3(){
+  const { papers, truoc, sau } = aggregateOutput(buildReasons());
+  return `
+    <div class="step-tag">Bước 3 / ${STEP_LABELS.length}</div>
+    <p class="question">Xem lại thông tin trước khi gửi</p>
+    <div class="review-row"><span class="k">Tên OA</span><span class="v">${state.tenOA || '—'}</span></div>
+    <div class="review-row"><span class="k">Phân loại</span><span class="v">${relLabel()}</span></div>
+    <div class="review-row"><span class="k">Loại hình pháp nhân</span><span class="v">${state.loaiHinh === 'HKD' ? 'Hộ kinh doanh' : 'Doanh nghiệp'}</span></div>
+    ${state.relType==='product' && state.subType ? `<div class="review-row"><span class="k">Nguồn gốc tên</span><span class="v">${
+      state.subType==='phanphoi' ? 'Phân phối/đại lý (' + (state.phanPhoiType||'chưa chọn') + ')' :
+      'SP-DV của chính DN'
+    }</span></div>` : ''}
+    <div class="review-row"><span class="k">Ngành nghề</span><span class="v">${nganhLabel()}</span></div>
+    <div class="review-row"><span class="k">Giấy tờ xác minh</span><span class="v">${state.giayToXacMinh === 'congvan' ? 'Công văn xác thực' : dkdnLabel()}</span></div>
+
+    <p class="question" style="margin-top:22px;">1. Hồ sơ cần nộp</p>
+    ${uploadListHtml(papers.map((p, i) => ({ key: 'paper-' + i, label: p.text })))}
+
+    ${truoc.length ? `
+      <p class="question" style="margin-top:22px;">2. Kiểm tra trước khi nộp</p>
+      ${checklistHtml(truoc.map((t, i) => ({ key: 'truoc-' + i, label: t.text })))}
+    ` : ''}
+
+    ${sau.length ? `
+      <p class="question" style="margin-top:22px;">${truoc.length ? 3 : 2}. Việc cần làm sau khi gửi</p>
+      ${sau.map(s => `
+        <div class="checklist-item" style="cursor:default;">
+          <div class="box" style="border-radius:50%;"></div><span>${s.text}</span>
+        </div>
+      `).join('')}
+    ` : ''}
+
+    <div class="actions">
+      <div class="btn btn-ghost" data-hl="btn" onclick="goStep(2)">← Quay lại</div>
+      <div class="btn btn-primary" data-hl="btn" onclick="submitForm()">Gửi hồ sơ</div>
+    </div>
+  `;
+}
+
+function renderDebugPanel(){
+  const reasons = buildReasons();
+  const framing = reasons.filter(r => r.framing);
+  const normal = reasons.filter(r => !r.framing);
+  const { papers, truoc, sau } = aggregateOutput(reasons);
+
+  let html = `<div class="dbg-title">Mechanism debug</div><div class="dbg-sub">Vì sao ra "Hồ sơ cần nộp" + các việc cần làm ở Bước 3 — chỉ hiện lựa chọn bạn đã chọn</div>`;
+
+  framing.forEach(r => {
+    html += `<div class="dbg-framing"><div class="dbg-because">${r.because}</div>${(r.info || []).map(i => `<div class="dbg-then">→ ${i}</div>`).join('')}</div>`;
+  });
+
+  if (!normal.length){
+    html += `<div class="dbg-empty">Chưa có lựa chọn nào phát sinh giấy tờ/việc cần làm — tiếp tục điền wizard bên trái.</div>`;
+  }
+
+  normal.forEach(r => {
+    let block = `<div class="dbg-reason"><div class="dbg-because">${r.because}</div>`;
+    (r.giayto || []).forEach(x => block += `<div class="dbg-then">→ <b>Giấy tờ:</b> ${x}</div>`);
+    (r.truoc || []).forEach(x => block += `<div class="dbg-then">→ <b>Kiểm tra trước khi nộp:</b> ${x}</div>`);
+    (r.sau || []).forEach(x => block += `<div class="dbg-then">→ <b>Sau khi nộp:</b> ${x}</div>`);
+    block += `</div>`;
+    html += block;
+  });
+
+  html += `<div class="dbg-output-title">Output hiện tại (hợp — union)</div>`;
+  html += `<div class="dbg-output-group"><div class="dbg-output-label">Hồ sơ cần nộp</div>`;
+  html += papers.length
+    ? papers.map(p => `<div class="dbg-output-item">• ${p.text}</div>`).join('')
+    : `<div class="dbg-output-item muted">(chưa xác định — cần hoàn tất lựa chọn ở Bước 1–2)</div>`;
+  html += `</div>`;
+  html += `<div class="dbg-output-group"><div class="dbg-output-label">Kiểm tra trước khi nộp</div>`;
+  html += truoc.length
+    ? truoc.map(p => `<div class="dbg-output-item">• ${p.text}</div>`).join('')
+    : `<div class="dbg-output-item muted">(không có)</div>`;
+  html += `</div>`;
+  html += `<div class="dbg-output-group"><div class="dbg-output-label">Sau khi nộp</div>`;
+  html += sau.map(p => `<div class="dbg-output-item">• ${p.text}</div>`).join('');
+  html += `</div>`;
+
+  document.getElementById('debugPanel').innerHTML = html;
+}
+
+function render(){
+  renderStepsNav();
+  const el = document.getElementById('cardContent');
+  if (state.step === 1) el.innerHTML = renderStep1();
+  else if (state.step === 2) el.innerHTML = renderStep2();
+  else el.innerHTML = renderStep3();
+  renderDebugPanel();
+}
+
+render();
+</script>
+</body>
+</html>
