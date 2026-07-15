@@ -1,0 +1,231 @@
+<title>Wireframe — Xác thực OA (3 bước)</title>
+<style>
+  :root{
+    --ink:#1c1c1a; --ink-soft:#54524b; --ink-mute:#8a8880;
+    --line:#dedad0; --line-strong:#c3beb0;
+    --paper:#faf9f6; --card:#ffffff; --panel:#f1efe8;
+    --accent:#3d5a80;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    line-height:1.65; font-size:15px;
+  }
+
+  /* ── Page header ── */
+  .page-header{
+    border-bottom:1px solid var(--line-strong);
+    padding:28px 0 24px;
+    margin-bottom:48px;
+  }
+  .page-header-inner{
+    max-width:680px; margin:0 auto; padding:0 32px;
+    display:flex; align-items:flex-start; justify-content:space-between; gap:24px;
+  }
+  .page-header-title{
+    font-size:18px; font-weight:600; letter-spacing:-0.015em; color:var(--ink);
+  }
+  .page-header-sub{
+    font-size:13px; color:var(--ink-mute); margin-top:4px;
+  }
+  .page-header-meta{
+    font-size:11.5px; color:var(--ink-mute); text-align:right; line-height:1.8; flex-shrink:0;
+  }
+  .tag{
+    display:inline-block; font-size:10px; text-transform:uppercase; letter-spacing:0.07em;
+    font-weight:600; padding:3px 9px; border-radius:4px;
+    background:var(--panel); color:var(--ink-mute); border:1px solid var(--line-strong);
+    margin-bottom:8px;
+  }
+
+  /* ── Main layout ── */
+  .main{max-width:680px; margin:0 auto; padding:0 32px 80px;}
+
+  /* ── Step block ── */
+  .step-wrap{ margin-bottom:52px; }
+  .step-label{
+    display:flex; align-items:center; gap:12px; margin-bottom:14px;
+  }
+  .step-num{
+    width:26px; height:26px; border-radius:50%;
+    background:var(--ink); color:#fff;
+    font-size:11.5px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .step-title{
+    font-size:14.5px; font-weight:600; color:var(--ink);
+  }
+  .step-note{
+    font-size:12px; color:var(--ink-mute); margin-left:auto;
+    font-style:italic;
+  }
+
+  /* ── Divider ── */
+  .flow-connector{
+    display:flex; align-items:center; gap:10px;
+    margin:-28px 0 28px 12px;
+    color:var(--ink-mute); font-size:11.5px;
+  }
+  .flow-connector::before{
+    content:"";
+    display:block; width:1px; height:28px;
+    background:var(--line-strong);
+    margin-left:0;
+  }
+
+  /* ── wf-card styles (kept from original) ── */
+  .wf-card{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:24px 26px; font-size:14px; box-shadow:0 1px 3px rgba(0,0,0,.04);}
+  .wf-steptag{font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-mute); margin-bottom:10px;}
+  .wf-question{font-size:15.5px; font-weight:600; margin:0 0 14px; color:var(--ink);}
+  .wf-field{margin-bottom:14px;}
+  .wf-field label{display:block; font-size:12.5px; color:var(--ink-soft); margin-bottom:6px;}
+  .wf-input{width:100%; padding:8px 10px; border:1px solid var(--line-strong); border-radius:7px; font-size:13.5px; background:#fff; color:var(--ink); appearance:none; -webkit-appearance:none;}
+  .wf-input[readonly]{background:var(--panel); color:var(--ink-soft);}
+  .wf-radio-row{display:flex; gap:10px;}
+  .wf-radio-row .wf-option{flex:1; margin-bottom:0;}
+  .wf-option{display:flex; align-items:flex-start; gap:10px; background:#fff; border:1px solid var(--line-strong); border-radius:8px; padding:11px 13px; margin-bottom:8px; cursor:default;}
+  .wf-option.wf-sel{border:2px solid var(--ink); padding:10px 12px;}
+  .wf-radio{width:15px; height:15px; border-radius:50%; border:1.5px solid var(--ink-mute); flex-shrink:0; margin-top:2px; position:relative;}
+  .wf-sel .wf-radio{border-color:var(--ink);}
+  .wf-sel .wf-radio::after{content:""; position:absolute; inset:3px; border-radius:50%; background:var(--ink);}
+  .wf-label{font-weight:600; font-size:13px; color:var(--ink);}
+  .wf-hint{font-size:11.5px; color:var(--ink-mute); margin-top:2px;}
+  .wf-example{font-size:11.5px; color:var(--ink-soft); font-style:italic; margin-top:5px;}
+  .wf-ul{margin:8px 0 0; padding-left:18px;}
+  .wf-ul li{font-size:12px; color:var(--ink-soft); margin-bottom:3px;}
+  .wf-note{background:var(--panel); border-left:3px solid var(--ink-mute); border-radius:0 6px 6px 0; padding:9px 12px; font-size:12px; color:var(--ink-soft); margin-top:10px;}
+  .wf-review-row{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px;}
+  .wf-k{color:var(--ink-mute);}
+  .wf-v{font-weight:600; text-align:right; color:var(--ink);}
+  .wf-checklist-item{display:flex; align-items:center; gap:10px; background:var(--panel); border:1px solid var(--line); border-radius:7px; padding:9px 12px; margin-bottom:7px; font-size:12.5px;}
+  .wf-box{width:14px; height:14px; border:1.5px solid var(--ink-mute); border-radius:4px; flex-shrink:0; background:#fff;}
+  .wf-actions{display:flex; justify-content:space-between; align-items:center; margin-top:20px;}
+  .wf-btn{padding:9px 18px; border-radius:7px; font-size:13px; font-weight:600; border:1px solid var(--line-strong); cursor:default;}
+  .wf-btn-primary{background:var(--ink); color:#fff; border:1px solid var(--ink);}
+  .wf-btn-ghost{background:#fff; color:var(--ink); border:1px solid var(--line-strong);}
+  .wf-pill{background:var(--ink); color:#fff; font-weight:600; font-size:10px; text-transform:uppercase; letter-spacing:0.03em; padding:3px 8px; border-radius:20px;}
+  .wf-muted{color:var(--ink-mute); font-weight:400;}
+</style>
+
+<!-- ── Header ── -->
+<header class="page-header">
+  <div class="page-header-inner">
+    <div>
+      <div class="tag">Wireframe</div>
+      <div class="page-header-title">Redesign luồng xác thực Zalo OA</div>
+      <div class="page-header-sub">Wizard 3 bước · Single OA · Taxonomy tách trục độc lập</div>
+    </div>
+    <div class="page-header-meta">
+      v3 · 14/07/2026<br>
+      G3 — Phát
+    </div>
+  </div>
+</header>
+
+<!-- ── Main ── -->
+<main class="main">
+
+  <!-- Step 1 -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num">1</div>
+      <div class="step-title">Điền thông tin OA</div>
+      <div class="step-note">Thu thập Trục 1 + Trục 2</div>
+    </div>
+    <div class="wf-card">
+      <div class="wf-steptag">Bước 1 / 3</div>
+      <div class="wf-field">
+        <label>Tên OA <span class="wf-muted">— lấy từ bước tạo OA, có thể chỉnh sửa</span></label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" class="wf-input" readonly value="Cửa hàng BéBiBo" style="flex:1;">
+          <div class="wf-btn wf-btn-ghost">Sửa</div>
+        </div>
+      </div>
+      <div class="wf-field">
+        <label>Loại hình pháp nhân</label>
+        <div class="wf-radio-row">
+          <div class="wf-option wf-sel"><div class="wf-radio"></div><div><div class="wf-label">Doanh nghiệp</div><div class="wf-hint">Có GCN ĐKKD</div></div></div>
+          <div class="wf-option"><div class="wf-radio"></div><div><div class="wf-label">Hộ kinh doanh</div><div class="wf-hint">Có GCN Đăng ký hộ kinh doanh</div></div></div>
+        </div>
+      </div>
+      <div class="wf-field"><label>Ngành nghề đặc thù</label><select class="wf-input"><option>Ngành nghề thông thường</option></select></div>
+      <div class="wf-field"><label>Tên OA (Cửa hàng BéBiBo) liên quan thế nào tới doanh nghiệp?</label></div>
+      <div class="wf-option wf-sel"><div class="wf-radio"></div><div><div class="wf-label">Tên doanh nghiệp / cửa hàng của tôi</div><div class="wf-hint">Theo giấy phép kinh doanh</div><div class="wf-example">Ví dụ: "CTCP Nguyễn Trần Lê", "Cửa hàng BéBiBo"</div></div></div>
+      <div class="wf-option"><div class="wf-radio"></div><div><div class="wf-label">Tên thương hiệu đã đăng ký bảo hộ</div></div></div>
+      <div class="wf-option"><div class="wf-radio"></div><div><div class="wf-label">Tên sản phẩm/dịch vụ</div></div></div>
+      <div class="wf-field" style="margin-top:16px;">
+        <label>OA có phải chi nhánh / địa điểm kinh doanh không?</label>
+        <div class="wf-radio-row">
+          <div class="wf-option wf-sel"><div class="wf-radio"></div><div><div class="wf-label">Có</div></div></div>
+          <div class="wf-option"><div class="wf-radio"></div><div><div class="wf-label">Không</div></div></div>
+        </div>
+      </div>
+      <div class="wf-note">Naming rule: [Tên doanh nghiệp] + [Vị trí địa điểm]. Ví dụ: "Công ty XYZ chi nhánh Quận 1".</div>
+      <div class="wf-actions"><span></span><div class="wf-btn wf-btn-primary">Tiếp tục →</div></div>
+    </div>
+  </div>
+
+  <div class="flow-connector">HKD → bỏ qua bước này, nhảy thẳng Bước 3</div>
+
+  <!-- Step 2 -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num">2</div>
+      <div class="step-title">Chọn phương thức xác thực</div>
+      <div class="step-note">Thu thập Trục 3 · bỏ qua nếu HKD</div>
+    </div>
+    <div class="wf-card">
+      <div class="wf-steptag">Bước 2 / 3</div>
+      <p class="wf-question">Chọn phương thức xác thực</p>
+      <div class="wf-option wf-sel">
+        <div class="wf-radio"></div>
+        <div style="flex:1;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+            <div class="wf-label">Phương thức 1: Giấy ĐKKD + Xác nhận Zalo</div>
+            <span class="wf-pill">Recommended</span>
+          </div>
+          <div class="wf-hint">Nhanh nhất, không cần văn bản. NĐDPL bấm xác nhận trực tiếp trên Zalo.</div>
+          <ul class="wf-ul"><li>Giấy CN Đăng ký kinh doanh / Hộ kinh doanh (đủ trang, có mộc + chữ ký)</li></ul>
+        </div>
+      </div>
+      <div class="wf-option">
+        <div class="wf-radio"></div>
+        <div style="flex:1;">
+          <div class="wf-label">Phương thức 2: Giấy ĐKKD + Công văn xác thực</div>
+          <div class="wf-hint">Dùng khi NĐDPL không có Zalo hoặc không thể xác nhận trực tiếp.</div>
+          <ul class="wf-ul">
+            <li>Giấy CN Đăng ký kinh doanh / Hộ kinh doanh (đủ trang, có mộc + chữ ký)</li>
+            <li>Công văn xác thực (CVXT) — ký tên + đóng mộc</li>
+          </ul>
+        </div>
+      </div>
+      <div class="wf-actions"><div class="wf-btn wf-btn-ghost">← Quay lại</div><div class="wf-btn wf-btn-primary">Tiếp tục →</div></div>
+    </div>
+  </div>
+
+  <div class="flow-connector"></div>
+
+  <!-- Step 3 -->
+  <div class="step-wrap">
+    <div class="step-label">
+      <div class="step-num">3</div>
+      <div class="step-title">Xem &amp; chuẩn bị giấy tờ</div>
+      <div class="step-note">Review + submit</div>
+    </div>
+    <div class="wf-card">
+      <div class="wf-steptag">Bước 3 / 3</div>
+      <p class="wf-question">Xem lại thông tin trước khi gửi</p>
+      <div class="wf-review-row"><span class="wf-k">Tên OA</span><span class="wf-v">Cửa hàng BéBiBo</span></div>
+      <div class="wf-review-row"><span class="wf-k">Phân loại</span><span class="wf-v">Cách 1 — Tên doanh nghiệp/cửa hàng</span></div>
+      <div class="wf-review-row"><span class="wf-k">Ngành nghề</span><span class="wf-v">Thông thường</span></div>
+      <div class="wf-review-row"><span class="wf-k">Phương thức xác thực</span><span class="wf-v">Phương thức 1 — Xác nhận qua Zalo</span></div>
+      <div class="wf-note" style="margin-top:14px;">Sau khi gửi, Người đại diện pháp luật sẽ nhận yêu cầu xác nhận qua Zalo.</div>
+      <p class="wf-question" style="margin-top:20px;">Giấy tờ cần chuẩn bị</p>
+      <div class="wf-checklist-item"><div class="wf-box"></div><span>Giấy CN Đăng ký kinh doanh / Hộ kinh doanh (đủ trang, có mộc + chữ ký)</span></div>
+      <div class="wf-actions"><div class="wf-btn wf-btn-ghost">← Quay lại</div><div class="wf-btn wf-btn-primary">Gửi hồ sơ</div></div>
+    </div>
+  </div>
+
+</main>
