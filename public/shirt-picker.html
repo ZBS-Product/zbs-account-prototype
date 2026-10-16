@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tủ Áo Tịm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Be+Vietnam+Pro:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: sticky toolbar → shortlist strip → catalog grid; selection tray docked at bottom; detail sheet as modal */
+:root{
+  --bg:#f3f5f4; --surface:#ffffff; --ink:#15201d; --muted:#5d6b67; --line:#dbe2df;
+  --accent:#0d7a66; --accent-ink:#ffffff; --accent-soft:#d8efe9; --tag:#ffe36e; --tag-ink:#2a2300; --danger:#b4362b;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Be Vietnam Pro",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1513; --surface:#18201d; --ink:#e7eeeb; --muted:#93a39e; --line:#2a3531;
+  --accent:#3fc2a6; --accent-ink:#06201a; --accent-soft:#1d3a33; --tag:#e9cf4f; --tag-ink:#231d00; --danger:#ef7a6e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1513; --surface:#18201d; --ink:#e7eeeb; --muted:#93a39e; --line:#2a3531;
+  --accent:#3fc2a6; --accent-ink:#06201a; --accent-soft:#1d3a33; --tag:#e9cf4f; --tag-ink:#231d00; --danger:#ef7a6e; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);padding-bottom:96px}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{padding-block:28px 12px}
+h1{font:800 clamp(28px,4vw,40px)/1.05 var(--f-display);margin:0;letter-spacing:-.02em;text-wrap:balance}
+.sub{color:var(--muted);margin:6px 0 0;max-width:65ch}
+.toolbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.toolbar .wrap{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding-block:10px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font:500 13px var(--f-body);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip b{font-family:var(--f-mono);font-weight:500;margin-left:4px;opacity:.75}
+input[type=search],select{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:7px 10px;font:14px var(--f-body)}
+input[type=search]{flex:1 1 200px;min-width:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h2{font:700 20px/1.2 var(--f-display);margin:26px 0 12px;display:flex;gap:10px;align-items:baseline}
+h2 small{font:500 13px var(--f-body);color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+.grid.big{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+.card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;transition:transform .15s,border-color .15s}
+.card:hover{transform:translateY(-2px);border-color:var(--muted)}
+.card.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.card .ph{aspect-ratio:1/1;background:var(--line);max-width:100%}
+.card .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.card .body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px;flex:1}
+.card .nm{font-weight:600;font-size:14px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.6em}
+.meta{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.price{font:500 13px var(--f-mono);background:var(--tag);color:var(--tag-ink);padding:2px 7px;border-radius:3px;clip-path:polygon(6px 0,100% 0,100% 100%,6px 100%,0 50%);padding-left:11px}
+.badge{position:absolute;top:8px;left:8px;background:var(--ink);color:var(--bg);font:600 11px var(--f-body);padding:3px 8px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase}
+.pick{margin-top:4px;width:100%;min-height:42px;border:2px solid var(--accent);background:var(--surface);color:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;gap:8px;font:700 15px var(--f-display);cursor:pointer;transition:background .12s,transform .08s}
+.pick:hover{background:var(--accent-soft)}
+.pick:active{transform:scale(.97)}
+.pick svg{width:18px;height:18px}
+.pick[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.cats{display:flex;flex-wrap:wrap;gap:6px;flex:1 1 100%;min-width:0}
+.cats .chip{white-space:nowrap}
+.gdesc{color:var(--muted);font-size:14px;margin:-6px 0 14px;max-width:70ch}
+@media (max-width:720px){.toolbar{position:static}}
+.cats .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.grp-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:26px 0 12px}
+.grp-head h2{margin:0}
+.linkbtn{background:none;border:none;color:var(--accent);font:600 14px var(--f-body);cursor:pointer;padding:4px 0;white-space:nowrap}
+.who{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:14px;color:var(--muted)}
+.who b{color:var(--ink);font:700 15px var(--f-mono);background:var(--accent-soft);padding:3px 10px;border-radius:999px}
+.who-dlg{padding:28px;max-width:440px}
+.who-dlg h3{font:800 26px/1.1 var(--f-display);margin:0 0 6px}
+.who-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.who-grid button{border:2px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:18px 10px;font:700 16px var(--f-mono);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px}
+.who-grid button span{font:500 12px var(--f-body);color:var(--muted)}
+.who-grid button:hover,.who-grid button.cur{border-color:var(--accent);background:var(--accent-soft)}
+#whoDlg{width:min(440px,calc(100vw - 24px))}
+.sel-info{font-size:12px;color:var(--accent);font-weight:600}
+.empty{color:var(--muted);padding:30px 0;text-align:center}
+.more{display:flex;justify-content:center;padding:20px 0}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:9px 14px;font:600 14px var(--f-body);cursor:pointer}
+.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+/* tray */
+.tray{position:fixed;left:0;right:0;bottom:0;z-index:8;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tray .wrap{display:flex;gap:12px;align-items:center;padding-block:10px;flex-wrap:wrap}
+.thumbs{display:flex;gap:6px;flex:1 1 200px;min-width:0;overflow-x:auto}
+.thumbs img{width:44px;height:44px;border-radius:6px;object-fit:cover;border:1px solid var(--line);cursor:pointer;flex:none}
+.tray .count{font:700 15px var(--f-display);white-space:nowrap}
+.tray .count span{font:500 12px var(--f-mono);color:var(--muted);display:block}
+/* modal */
+dialog{border:none;border-radius:14px;padding:0;background:var(--surface);color:var(--ink);width:min(980px,calc(100vw - 24px));max-height:calc(100vh - 24px)}
+dialog::backdrop{background:rgba(5,12,10,.55)}
+.dlg{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);max-height:calc(100vh - 24px)}
+.gal{background:var(--bg);padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.gal .main{aspect-ratio:1/1;width:100%;max-width:100%;border-radius:10px;overflow:hidden;background:var(--line)}
+.gal .main img{width:100%;height:100%;object-fit:contain;display:block}
+.gal .strip{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.gal .strip img{width:58px;height:58px;object-fit:cover;border-radius:6px;border:2px solid transparent;cursor:pointer;flex:none}
+.gal .strip img.on{border-color:var(--accent)}
+.info{padding:20px 22px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;min-width:0}
+.info h3{font:700 22px/1.2 var(--f-display);margin:0;text-wrap:balance;padding-right:30px}
+.info .full{font-size:13px;color:var(--muted);margin:0}
+.lbl{font:600 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.sw{display:flex;flex-wrap:wrap;gap:6px}
+.sw button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:4px 6px 4px 4px;font:500 12px var(--f-body);cursor:pointer;display:flex;align-items:center;gap:6px}
+.sw button img{width:28px;height:28px;border-radius:4px;object-fit:cover}
+.sw button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.sizes{display:flex;gap:6px;flex-wrap:wrap}
+.sizes button{min-width:46px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:6px 8px;font:500 13px var(--f-mono);cursor:pointer}
+.sizes button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+.row label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.row input{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:7px 10px;font:14px var(--f-body);width:80px}
+textarea{width:100%;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:8px 10px;font:14px var(--f-body);min-height:60px;resize:vertical}
+.close{position:absolute;top:10px;right:10px;width:34px;height:34px;border-radius:50%;border:none;background:var(--surface);color:var(--ink);font-size:20px;cursor:pointer;z-index:2;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.facts{display:flex;gap:16px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;flex-wrap:wrap}
+.facts b{color:var(--ink);font-family:var(--f-mono);font-weight:500}
+a{color:var(--accent)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+/* compare */
+.cmp{padding:20px;overflow:auto;max-height:calc(100vh - 24px)}
+.cmp h3{font:700 22px var(--f-display);margin:0 0 4px}
+.cmp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-top:14px}
+.cmp-item{border:1px solid var(--line);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.cmp-item img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}
+.cmp-item .b{padding:10px 12px;display:flex;flex-direction:column;gap:4px;font-size:13px}
+.cmp-item .rk{font:700 13px var(--f-mono);color:var(--accent)}
+.cmp-item .ctl{display:flex;gap:4px;margin-top:6px}
+.cmp-item .ctl button{flex:1;padding:5px;font-size:12px}
+pre.sum{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;font:12.5px/1.5 var(--f-mono);max-height:240px;overflow:auto}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:13px;z-index:20}
+@media (max-width:720px){.dlg{grid-template-columns:1fr;overflow-y:auto}.info{overflow:visible}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.grid.big{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top wrap">
+  <h1>Tủ Áo Tịm</h1>
+  <p class="sub">7 mẫu shortlist cùng toàn bộ áo của shop Tịm Áo Nè trên Shopee, gom theo nhóm nội dung. Bấm vào ảnh để xem chi tiết và đổi màu, bấm <strong>Chọn</strong> để thêm vào danh sách. Chọn xong thì mở So sánh &amp; chốt, xếp hạng rồi copy tóm tắt gửi team.</p>
+  <div class="who">Đang chọn: <b id="whoName">—</b><button class="linkbtn" id="whoBtn">Đổi người</button></div>
+</header>
+<div class="toolbar"><div class="wrap">
+  <div class="chips" role="group" aria-label="Lọc">
+    <button class="chip" data-f="short" aria-pressed="true">Shortlist<b id="nShort">7</b></button>
+    <button class="chip" data-f="all" aria-pressed="false">Cả shop<b id="nAll">0</b></button>
+    <button class="chip" data-f="sel" aria-pressed="false">Đã chọn<b id="nSel">0</b></button>
+  </div>
+  <input type="search" id="q" placeholder="Tìm câu in trên áo… (vd: deadline, capybara)">
+  <select id="sort" aria-label="Sắp xếp">
+    <option value="sold">Bán chạy nhất</option>
+    <option value="new">Mới nhất</option>
+    <option value="pa">Giá thấp → cao</option>
+    <option value="pd">Giá cao → thấp</option>
+    <option value="az">Tên A → Z</option>
+  </select>
+  <div class="cats" id="cats" role="group" aria-label="Nhóm nội dung"></div>
+</div></div>
+
+<main class="wrap">
+  <section id="shortSec">
+    <h2>Shortlist <small>7 link đã gửi</small></h2>
+    <div class="grid big" id="shortGrid"></div>
+  </section>
+  <section id="allSec">
+    <h2 id="allTitle">Cả shop <small id="allSub"></small></h2>
+    <p class="gdesc" id="catDesc" hidden></p>
+    <div id="groups"></div>
+    <div class="grid" id="allGrid"></div>
+    <div class="more"><button class="btn" id="moreBtn">Xem thêm</button></div>
+  </section>
+</main>
+
+<div class="tray"><div class="wrap">
+  <div class="count" id="trayCount">Chưa chọn áo nào<span>bấm Chọn dưới ảnh</span></div>
+  <div class="thumbs" id="trayThumbs"></div>
+  <button class="btn ghost" id="clearBtn">Bỏ chọn hết</button>
+  <button class="btn pri" id="cmpBtn" disabled>So sánh &amp; chốt</button>
+</div></div>
+
+<dialog id="dlg"><button class="close" data-close aria-label="Đóng">×</button><div class="dlg" id="dlgBody"></div></dialog>
+<dialog id="whoDlg"><div class="who-dlg"><h3>Bạn là ai?</h3><p class="sub" style="margin:0">Mỗi người có danh sách chọn riêng. Tên của bạn sẽ đứng đầu bản tóm tắt gửi team.</p><div class="who-grid" id="whoGrid"></div></div></dialog>
+<dialog id="cmpDlg"><button class="close" data-close aria-label="Đóng">×</button><div class="cmp" id="cmpBody"></div></dialog>
+
+<script>
+const DATA={"picks":[{"id":"26359869015","name":"Sống Nay Stress Mai","full":"Áo Thun Sống Nay Stress Mai, Công Sở Văn Phòng Câu Nói Hài Hước Meme Độc Đáo. 100% Cotton Cho Nam Nữ","price":206,"max":251,"sold":1000,"rating":4.9,"imgs":["7ras8-mbaj1jwc0s0n40","7ras8-mbaj164i7ro760","820l4-mfmtipqowkju4b","7ras8-mbaj164i7rvc3a","7ras8-mbaj164i96fs76","7r98o-lznldt6eh9y9ee","7ras8-mbaj1jwc26l3cc","7ra0g-magkev4idnmgb7","7r98o-lznldt6eegtd6b"],"colors":[["Đen Chữ Retro","7ras8-mbaj1jwc0s0n40"],["Đen Chữ Retro Star","7ras8-m1prlnltsytv99"],["Đen chữ Vintage","7ras8-mbaj164i7ro760"],["Đen Vịt Cute","7ras8-mbaj164i7rvc3a"],["Đen Chữ Trắng","7r98o-lznlg1xo80wx41"],["Màu Be","820l4-mfmtipqowkju4b"],["Đen Chữ Hồng","7r98o-lznlgnjelwo17f"],["Đen Chữ Xanh","7r98o-lznlgvqmlvvlfa"],["Trắng","7r98o-lznlgze59f0tc2"],["Đen Chữ Hồng Pastel","7r98o-lznlh64nejs16c"],["Đen Chữ Dreamy","7r98o-lznlh9mma7j596"],["Đen Chữ Rainbow","7ras8-mbaj1jwc26l3cc"]]},{"id":"43619771558","name":"Thiếu Tất Cả Nhưng Thừa Cân","full":"Áo Thun Thiếu Tất Cả Nhưng Thừa Cân Câu Nói Hài Hước Vui Nhộn Cho Nam, Nữ. Form Oversize 100% Cotton","price":206,"max":251,"sold":66,"rating":5,"imgs":["81ztc-mr5z4gnv3w1s0e","7ra0g-mah4id1fc3pd6e","820l4-mesum4rtdn9e4b","820l4-mesum4rwxgxw34","820l4-mesum4xs3ifab0","820l4-mesum4y0n4sh9a","820l4-mesum4tm6sjq4e","820l4-mesum4uoxmh019","820l4-mesum4ry6f4650"],"colors":[["Đen Cartoon","820l4-mesuoksb2nsy43"],["Đen Chữ Retro","820l4-mesum4rwxgxw34"],["Trắng Cartoon","820l4-mesum4xs3ifab0"],["Đen Chữ Xanh","820l4-mesum4tm6sjq4e"],["Đen Chữ Pink Pastel","820l4-mesum4uoxmh019"],["Đen Chữ Dreamy","820l4-mesupoqmhx5088"],["Đen Chữ Vintage","820l4-mesum4rt2eps06"],["Đen Chữ Rainbow","820l4-mesuq323o2yv94"],["Trắng","820l4-mesuqa1rim84b3"]]},{"id":"42515043027","name":"Ủa","full":"Áo Thun Ủa In Chữ Câu Nói Hài Hước Vui Nhộn Tặng Bạn Bè Cho Nam, Nữ Form Oversize 100% Cotton 230GSM","price":206,"max":251,"sold":33,"rating":5,"imgs":["7ras8-mdull3b07r4l61","7ras8-mdull3ba8rle1a","7ras8-mdulniowdkt9ef","7ras8-mdull3b095p180","7ras8-mdull3b0ak9h7a","7ras8-mdull3ba7d0ycf","7ras8-mdull3ba7cidd8","7ras8-mdull3c464npb2","7ra0g-mah4id1fc3pd6e"],"colors":[["Đen Chữ Retro","7ras8-mdulniowdkt9ef"],["Trắng Chữ Xanh","7ras8-mdull3ba8rle1a"],["Trắng Chữ Hot Pink","7ras8-mdull3b0ak9h7a"],["Đen Chữ Blue Pastel","7ras8-mdull3ba7d0ycf"],["Đen Chữ Hồng Pastel","7ras8-mdull3cy4wt171"],["Đen Chữ Hot Pink","7ras8-mdull3c464npb2"]]},{"id":"28953562153","name":"Là Sao Nữa","full":"Áo Thun Là Sao Nữa, Câu Nói Hài Hước Công Sở, Văn Phòng Độc Đáo Meme 100% Cotton Oversize Cho Nam Nữ","price":206,"max":251,"sold":1000,"rating":5,"imgs":["7ra0g-ma0m6r6x0d4y76","7ras8-m0hi319rhhu790","7r98o-lzq9tlcp72qp3c","7r98o-lzq9tvubugctd8","7ra0g-magkev4idnmgb7","820l4-mfmtbvcxp5amb3","7r98o-lwvmqleba9jve7","7r98o-lyf71ewawfxd88","7r98o-lzq9tlcp8h1p73"],"colors":[["Màu Đen","7r98o-lwvmvipdnsuxe3"],["Vịt Cute","7ras8-m0hi3d0waahb61"],["Vịt Cute Retro","7ras8-m0hhjxew2ykvbd"],["Màu Trắng","7r98o-lzq9vpslc09963"],["Màu Chữ Retro","7r98o-lzq9vmn3y2zl6f"],["Màu Chữ Hồng","7r98o-lwvmvipds0k9be"],["Màu Chữ Xanh","7r98o-lwvmvipdtf4pa2"],["Màu Chữ Dreamy","7r98o-lzq9vsaro1whb7"],["Màu Chữ Hồng Pastel","7r98o-lzqa312s1u3l89"],["Áo Be","820l4-mfmtbvcxp5amb3"],["Màu Trắng Retro","820l4-mg85j3s56zv0ff"]]},{"id":"24913512045","name":"Người Giàu Tình Cảm","full":"Áo Thun Người Giàu, Tình Cảm. Áo Hài Hước Châm Biến Độc Đáo Cho Nam và Nữ. 100% Cotton, Co giãn 2 Chiều 220GSM","price":206,"max":251,"sold":3000,"rating":4.9,"imgs":["7r98o-lzqau0bqqu6lcc","7ra0g-magkev4idnmgb7","7ras8-mbfiq82xs21080","820l4-mfmtdi7g9xxr14","7r98o-lxicwmlm8wrf0b","7r98o-lur6h21t125h1b","7ras8-md1v6174wxuk0b","7r98o-lxicwi26unyx81","7r98o-lrq0n8z42jt0ce"],"colors":[["Đen Chữ Retro","7r98o-lzqatiuqbbkd76"],["Đen Chữ Hồng","7r98o-lrq0n8z3lozo41"],["Cartoon","7ras8-mbfiq82xs21080"],["Đen","7r98o-lrq0n8z3kaf8d4"],["Màu Be Cartoon","820l4-mfmtdi7g9xxr14"],["Màu Be","820l4-mfmteacpkbgs4a"],["Đen Chữ Xanh","7r98o-lrq0n8z3pwp0be"],["Trắng","7r98o-lxicx14cyjfdf4"],["Đen Chữ Hồng Pastel","7r98o-lrq0n8z3rb89e1"],["Đen Chữ Dreamy","7r98o-lrq0n8z3spsp80"],["Vịt Trắng","7ras8-md1v6174wxuk0b"],["Trắng Retro","7ras8-md1vejbqxlf141"]]},{"id":"42414206585","name":"Người Hướng Nội Hội Nào Cũng Chơi","full":"Áo Thun Người Hướng Nội Hội Nào Cũng Chơi Câu Nói Hài Hước Vui Nhộn, Tặng Bạn Bè Nam, Nữ Oversize","price":206,"max":251,"sold":154,"rating":5,"imgs":["7ras8-mdni3w71o4at10","7ras8-mdni3wejd5mt17","7ras8-mdni3wi57vlx1b","7ra0g-mah4id1fc3pd6e","7ras8-mdni3w7bnq2408","7ras8-mdni3w7lnbfwbb","7ras8-mdni3wdpedhhde","7ras8-mdni3w85mi7g7c","7ras8-mdni3wadj8w57d"],"colors":[["Đen Chữ Retro","7ras8-mdni3w71o4at10"],["Đen Chữ Vintage","7ras8-mdni3wi57vlx1b"],["Đen Chữ Blue Pastel","7ras8-mdni3w7bnq2408"],["Đen Chữ Dreamy","7ras8-mdni3w7lnbfwbb"],["Đen Chữ Rainbow","7ras8-mdni62er92o5b6"],["Trắng","7ras8-mdni3wejd5mt17"],["Đen Chữ Hồng","7ras8-mdni3wdpedhhde"]]},{"id":"25097024316","name":"Đau Cột Sống","full":"Áo Thun Đau Cột Sống Câu Nói Hài Hước Công Sở, Văn Phòng Cho Nam, Nữ. 100% Cotton Form Oversize","price":206,"max":251,"sold":39,"rating":5,"imgs":["820l4-mestm2iqyeio8d","820l4-mestm2ionj0he8","7ra0g-mah4id1fc3pd6e","820l4-mestm2iyoiyp08","820l4-mestm2iom4g187","820l4-mestm2jp3hfmae","820l4-mestm2jp4w0253","820l4-mestm2m0mvb89d","820l4-mestm2pxhpfn9f"],"colors":[["Đen Cartoon","820l4-mestm2iqyeio8d"],["Đen Chữ Retro","820l4-mestqvhv1p1i20"],["Trắng Cartoon","820l4-mestm2jp3hfmae"],["Đen Chữ Xanh","820l4-mestm2jp4w0253"],["Đen Chữ Pink Pastel","820l4-mestm2m0mvb89d"],["Đen Chữ Dreamy","820l4-mestrci7uc5f1b"],["Đen Chữ Vintage","820l4-mestm2rbwj5z01"],["Đen Chữ Rainbow","820l4-mestrkszz8ch3e"],["Trắng","820l4-mestrtt7lr7qab"]]}],
+"rows":[["24603835320","In Áo Theo Yêu Cầu","81ztc-mp159crtsqv6f0",199,4000,4.9],["43965042632","In Theo Yêu Cầu Chữ","7ras8-mdukdt22iu9efe",206,72,5],["42161516835","Mình Không Hơn Thua","7ras8-md0mtjx83djw4a",206,57,4.9],["42234262467","Chê Nữa Thì Vào Mà Làm","81ztc-mtkk9eueb2mg82",215,7,5],["41753221758","Lúc Hài Lúc Haizzz","7ras8-mangvwwyll8h97",206,89,4.9],["29975623044","Designer","7ras8-m61a479n63pzbc",206,102,5],["24819472390","Đi làm Thật Tuyệt Vọng","7ra0g-mah8yr3tossh06",206,215,5],["44257528749","Trình Độ Không Bằng Trời Độ","7ras8-mbustirfnslq08",206,34,5],["25829933655","Ở Hiền Gặp Phiền","7ras8-mc6jqwrd5nqq19",206,585,5],["42404085400","Coder Code Đơ","7ras8-maulkbugba9t97",206,65,5],["24652478534","Mỏ Hỗn Full Time","7ras8-mbd5qryoi8d41d",206,432,4.9],["29188326615","Tăng High Tăng Bar Không Tăng Ca","7ras8-mbrfli2ncj9qca",206,159,5],["42406961723","Cuộc Sống Hối Hả","81ztc-moqyj8fsbzez65",206,670,5],["21283894576","Nếu người khác làm được","7r98o-lwavbj2zkrfd7e",206,228,5],["27840228856","Làm Thì Ít Chữ Lành Thì Nhiều Capybara","7ras8-mdnhw7jqibw110",206,36,5],["43057519863","Ham Sống Sợ Stress","7ras8-mbuqm2umslhx97",206,84,5],["40077112083","Không Có Việc Gì Khó Chỉ Cần Mình Không Làm","820l4-mi0f0l4szvus4d",206,74,5],["28833275764","Độc Lập Tự Do Hạnh Phúc Và Cờ Việt Nam","7ra0g-m8jaompybm9u9b",206,238,4.9],["28828087356","Gamer Người Chơi Game","7ra0g-m6vba5gj1g9t69",206,67,5],["43961516744","Tôi Tài Giỏi Bạn Cũng Tạm","7ras8-md0n0htqe27h68",206,106,4.9],["42215191962","Rượu Mời Không Uống Muốn Uống Trà Sữa","820l4-mdvzj3v9g9afd7",206,84,5],["26333275877","Chăm Sóc Khách Hàng","7ra0g-m8jb32rvabfy1d",152,37,5],["42855894684","Luôn Luôn Lắng Nghe Lâu Lâu Mới Hiểu","7ras8-mbe2rkgn0gk818",206,397,4.9],["43152087323","Tôi Xinh Lỗi Bạn","7ra0g-ma5nmzegk48hb6",206,145,4.9],["27288308998","Hả","7ras8-mbqxr44jbz6dfa",206,91,4.8],["28278084801","Leader Lào Gì Cũng Tôn","7ra0g-m6vblccfdvmg32",206,82,5],["27300567050","Người Hài Hước Tim Đầy Vết Xước","7ras8-mb9jowskwzw3eb",206,64,5],["26489602627","Người Giàu Tình Cảm Vịt Cute Retro","7ras8-md4wwjldijbwb2",206,30,5],["24560957606","Nghề Chọn Người Chứ Người Chọn Tiền","7ra0g-m936ofvmbt5075",206,645,4.9],["40205894511","Nếu Người Khác Làm Được Thì Bạn Làm Chi Nữa","7ras8-mbe2l4dcx8t4c5",206,55,5],["40903375533","Sales Người Bán Hàng","7ras8-man1me26amyp73",206,26,5],["44111520428","Gần Mực Thì Bia","7ras8-md0maf4s20f081",206,51,5],["41561342475","Uhm Lười Giải Thích","7ras8-mcydut6dm2e498",206,16,5],["27029754603","Đã Làm Gì Đâu Đã Chạm Vào Đâu","7ra0g-m7dwum74bfgc4a",206,73,5],["28673605877","Content Creator Nhà Chán Tạo Nội Dung","7ras8-m51ou9lz3jco14",206,154,5],["28489491750","Làm Vì Đam Mê Tiền","7ras8-md0mnmb0p3mk20",206,50,5],["28175623258","Người Lào, Lào Gì Cũng Tôn","7ras8-m61a80sfvsqed2",206,1000,4.9],["29339682995","Bước Qua Tuổi Thiếu Nhi Tới Độ Tuổi Thiếu Tiền","7ras8-md93g8d9ize507",206,11,5],["41464210350","Hơi Trầm Ai Chính Capybara","7ras8-mdnh0z7hvuf948",206,44,4],["24542110692","Intern Thực Tập Xinh","7ra0g-m6vbim0jbhi0d7",206,56,5],["43111307254","Hướng Ngoại Tệ","7ras8-mcxs8ct5u998d1",206,15,5],["56011252298","Mong Manh Dễ Cọc","81ztc-mor36dbu2hoi88",206,16,5],["42561316294","Muốn Có Bồ Nhưng Vợ Không Cho","7ras8-mcxt3w8o9w7w7c",206,15,0],["41455318501","Trà Sữa Gì Chưa Người Đẹp","7ras8-mb86sietm0mr1a",206,15,5],["27335170807","Đã Có Vợ","7ra0g-m9fvkgihrsry88",206,541,5],["25077240249","Người Hướng Nội Introvert","7ra0g-maipds262sbb2d",206,174,4.9],["44506120831","In Áo Theo Yêu Cầu Baby Tee","81ztc-mkl6enqxq77q24",199,38,5],["44156961795","Đã Có Chồng Rất Nice","7ras8-mbokt91imsmq2f",206,129,4.9],["41612199954","Tuổi Trẻ Tài Cao Gì Cũng Tặc","7ras8-md93p16fu4andc",206,8,5],["41410136132","Đại Đại Đi","7ras8-mckvsbhctd7m98",206,52,4.9],["28352253691","Quá Lười Để Đi Làm","7r98o-lwbalcwlr3yz21",206,109,5],["42462204481","Người Vùng Cao Gì Cũng Tặc","7ras8-md92woj7jmak9b",206,34,5],["25927235877","Ngại","7r98o-luobrrnn3bxhc6",206,38,5],["41200531380","Sếp Iu Nói Gì Cũng Đúng","7ra0g-m9n7mqcbppvo13",206,72,5],["28636775666","Developer Lập Trình Viên","7ra0g-m9zyjx0wjt50cd",206,172,5],["44311398712","Bận","7ras8-mcz7gp9um7cd17",206,13,5],["52616270540","Nhóm Nhạc Cor.tis","81ztc-ms47yxskfcaoc1",199,340,5],["24896214995","Hướng Nội Mỗi Tội Hay Cười","7ras8-mcydhzahhjy739",206,96,5],["25304514153","Em Bình Thường","7ra0g-m9epcdrlvvqmad",195,162,5],["27659868986","Người Hướng Nội","7r98o-lznlj4zxt9al27",206,34,5],["42310697401","Human Resources Hành Chính Nhân Sự","7ras8-mcr41a69x8kc50",206,86,5],["28741966693","Nghề Chọn Người Người Chọn Đi Chơi","820l4-meyjxukvq2vbdd",206,160,4.8],["43265200085","Nem Chua","820l4-mdw1439rz7k362",206,22,0],["29941723895","Hay Quên Thông Cảm","820l4-mestv7yv50clf4",206,15,5],["41761899299","Nhà Tui 3 Đời Cận Nghèo Tới Tui Nghèo Hẳn","7ras8-md4vpcuyofxp28",206,0,0],["40411320057","Marketing Có Công Chạy Ads","7ras8-mcxso5anw3vg4c",206,11,0],["41470424465","Em Ổn","820l4-mewuffd5rv9f4d",206,49,5],["41601456564","Gần Thiên Nhiên Thì Thư Giãn","7ra0g-m9yolr5gkuiq27",206,66,4.9],["28628091010","Editor Biên Tập Viên","7ras8-mat6bh00cwqp8f",206,39,5],["43919758579","Muốn Nghỉ Hưu","820l4-mesufxzrdqtebb",206,17,0],["40657540163","Người Chịu Khó Thường Hay Khó Chịu","7ras8-mburxroyd2zu1f",206,30,5],["43568261536","Lao Động Là Vinh Quang","820l4-meg0p6nz3oxua8",206,39,4.9],["42318088973","Ủa Em","820l4-meem6rjgdgcjcb",206,50,5],["49463090244","Bật Khách Chứ Không Bật Khách","81ztc-mq25w2jmups207",206,3,0],["20687296996","Làm Vì Đam Mê","7ra0g-m9375cae5dvm96",206,411,4.9],["43561905982","Đang Làm Chủ Nhật","7ras8-md4vyo1w5y9941",206,64,5],["27438312240","Gì","7ras8-mbqxjez6wmfif2",206,10,0],["28258205000","Capybara Cờ Việt Nam","7r98o-lz3iigu8sg99e4",206,2,0],["24444483746","KPI Cây Bi Ai","7ra0g-m8y3itz0haiq7e",152,6,5],["40350907261","1 Điều Nhịn 9 Người Ngồi Lên Đầu","7ra0g-m9riylraoscied",206,189,4.9],["43358493673","Kế Toán","7ras8-mc6nkh5tx08i56",206,30,5],["25307854681","Đã Có Chồng Chất Deadline","7ras8-mbph5a6phn5e61",206,194,4.8],["44361634876","Ngày Bình Thường Có Người Mình Thương","7ras8-md22q56joh8ffd",206,60,5],["26628087619","Nín","7ra0g-m6vbq8p3bf53e2",206,20,5],["43572444270","Sống Như Cô Tấm","820l4-mf9og6sxclc91f",206,29,5],["41004080437","Photographer Nhiếp Ảnh Da","7ras8-maulrh8dnq8c4c",206,62,4.9],["40423407292","Méow Gì Cũng Tao","820l4-mfms4re0brinb5",206,9,5],["44018096089","Không Được Đánh Khách Hàng","820l4-meelpym0u8sh45",206,86,5],["41157199904","Ủa Alo","7ras8-mbqxwqih8p1x1e",206,51,5],["28687162449","Đẹp Chứ Không Giàu","7ra0g-maioa4a5hwbcd6",206,10,5],["26504741301","Lương Thấp Hay Cười","7r98o-lxfmh1eabuu146",224,338,4.9],["43353385327","Biker Người Bị Xe Chơi","7ras8-man0ssn5hfivaa",206,14,5],["40476484350","Cái Gì Không Làm Được Thì Mình Có Thể Vừa Khóc Vừa Làm","820l4-mh6g05iw9vkf4c",206,102,5],["44461398825","Việt Nam Tôi Yêu Tổ Quốc","7ras8-mcz7uig923pbcc",206,3,0],["28889117862","Cũng Cũng Đi","7ras8-mckvm4o4u08dd5",206,8,0],["28763368022","Mập Rõ Chứ Không Mập Mờ","7ra0g-m6e49d4m284hfc",206,818,5],["24608791516","Đánh Bài Tết 3 Bích Xuân 2026","7r98o-lwbalcx5ggrf15",206,99,4.9],["24069477972","Vô Tri Vịt Đáng Yêu","7r98o-lwv1rtbo38ijc8",199,518,4.8],["41961910686","Lo Làm Chứ Đừng Lo Ve Love","7ras8-md4w4jw063pb1a",206,4,0],["21195493125","Ê giỡn mặt hả","7ras8-m1mrjzqlmri714",206,39,5],["26763372816","Giang Sơn Dễ Đổi","7ras8-m11dbr4ssnfj6f",206,304,4.9],["28582923558","Tôi Tài Giỏi Bạn Tài Lanh","7ra0g-m8f0lf1snbsyc4",206,318,5],["29263377528","ê","7ras8-m11culp4ez6nc4",206,42,5],["28069361093","Bánh Mì Chấm Sữa","7ras8-m38vcbxhn75893",206,73,4.9],["28208198336","Ai Sợ Thì Đi Về","7ras8-m1m15rzylfmb4d",227,822,4.9],["24396825712","Ơ Quá Nhiều Iu Quá Nhờ","820l4-me8ujlp9o8w4e0",206,16,5],["44364198532","Người Bình Thường Muốn Trao Đi Yêu Thương","7ras8-mdnh9y31flqde1",206,3,0],["40664901480","Là Sao Nữa Sao Không Nói Vậy Đi","7ras8-mdsutps3ya3w20",206,45,5],["52463723742","I Love My Wife","81ztc-mqgxj48rdwcr72",229,10,0],["18987452277","Có Hiếu Với Trai","7r98o-lsz6v4bkhdxg84",239,17,5],["29506463125","Ủa Em (bản cũ)","7r98o-ly9jjbh5ltpdfa",206,87,5],["24946228571","Độc Lập Tự Do Hạnh Phúc Tổ Quốc Tôi Yêu","7ras8-mcz7o34plutb4c",206,25,5],["55161548285","Nice Day Mai Đó","81ztc-mozngz4de5fl72",206,6,5],["29022307520","Chill Girl, Chill Guy","7ras8-m4h1nuvpb07jed",206,184,4.9],["41911405642","Tự Hào Việt Nam","7ras8-mcz88codyp4d07",206,4,0],["25547099693","Ngang Như Cua Chống Công Chúa","820l4-mewuppa0ds78a8",206,25,5],["41179443720","Sao Cũng Được Miễn Vui Là Được","81ztc-mm6brzx5t88wa2",206,6,0],["43960689264","Anh Em Mình Cứ Thế Thôi Hẹ Hẹ Hẹ","7ras8-mcr3p022v7al58",206,41,5],["24284651897","Khó Chịu Vô Cùng","7r98o-lytl9t9d70wdf6",206,194,5],["29158199099","Độc Lập Tự Do Hạnh Phúc Cờ Việt Nam","7ra0g-m8j2h7mzikjr9d",249,15,5],["28404741542","I Have No Idea Capybara","7r98o-lxfmm7ppmy1lff",206,114,5],["26670411318","Còn Thở Còn Gỡ","7ras8-m3ns441j1odx0e",206,15,5],["42523244029","Đừng Đánh Thức Con Hổ Trong Tôi","820l4-mflfmaghp6vead",206,27,5],["52952462487","Nhà Còn Bao Việc","820l4-mhrt5bxsmww5a6",229,8,5],["25854514124","Đang Mệt Đừng Có Hỏi","7r98o-lrq0n8z391voe0",229,207,5],["27322302873","Đánh Bài Tết 21 Lụm","7ras8-m4h1u35d1cwwef",206,31,0],["27759859924","Phở Bò","7r98o-lznlmo2hqqoxb5",206,39,5],["22663135424","Em Bé","7r98o-lxdui9q1yn6hbb",194,157,4.9],["41065192419","Bánh Bột Lọc","820l4-mdw01zl0v3lw42",206,6,0],["41956952629","Đang Bị Cảm Thấy Đáng Yêu","7ras8-mbokkqdrcqk26d",206,13,5],["43256932802","Việc Nhẹ Lương Cao Huyết Áp","7ras8-mbo4vlz6ytfya5",206,43,5],["28991975465","Chửi Xỉn 123 Zô Friday","820l4-meyjsgarlz45d4",206,20,5],["42311316395","Vật Lý Trị Liệu Physical Therapy","7ras8-mcxta917fcjj5b",206,2,0],["25539464603","Chill Guy","7ras8-m3tb16tfu118ec",206,38,5],["26285166915","Kiến Trúc Sư","7ra0g-m937wmoud8hw60",206,11,5],["25345436184","Người Nghèo Cảm Xúc","7ra0g-makm8bcuozx333",206,14,5],["41710129258","Quay Đầu Là Gối","7ras8-mckw61xjbs7w0c",206,14,5],["41927924920","Tết Hoan Hỉ Số Dư Tiền Tỉ","820l4-mjcxq28f9kowd3",215,11,5],["41282523142","Đủ Nắng Hoa Sẽ Nở, Đủ Rồi Nghỉ Việc","81ztc-mqknxb9horv1b5",206,11,4],["25869468673","Cà Hẩy","7r98o-lsz6v4bky8pl15",206,22,5],["24021844027","Xinh Xắn Lúc Nào Cũng Xinh","7r98o-ltjoy6x44vt901",206,46,5],["40314210727","Ngủ Giờ Hành Chính","7ras8-mdnhe2szpvsfc5",206,1,5],["43970424098","Dạ Sếp","820l4-mewu3ovez8jl94",206,17,5],["42914896675","Hào Kiệt Gì Cũng Bắt","7ras8-mdsuhd4wimk159",206,15,5],["53550815690","Trầm Tính Ít Nói","820l4-mgnuqw50twy306",206,21,5],["48307398882","Sống Vô Tri Hưởng Thái Bình Vịt","81ztc-mlz5ez432m80ad",206,6,0],["40753374583","Freelancẻ Freelancer","7ras8-mangjpv70lu4dc",206,25,4.5],["27645585485","Ước Gì Loài Người Biết Kệ Nhau Mà Sống","81ztc-ms02c4cyugatc6",249,1,0],["50954043560","Tết Là Bánh Chưng Bánh Tét","820l4-mj0lqe9rjhtz78",215,47,5],["40523243630","AAAA Than Thở","820l4-mflfa9zmnh1pcf",206,2,5],["42364905276","Độc Lập Tự Do Hạnh Phúc Cho Hội Bạn Bè","7ras8-mdswz8ohrne767",206,1,0],["48614688998","Tôi Bị Ngu Xin Đừng Bắt Tôi Làm Gì","81ztc-mr0eibig35s049",206,2,0],["24447385782","Thôi","820l4-mfmsgqa2dn2j06",206,8,5],["43400545726","Đứa Trẻ Vô Tư Ngày Ấy Giờ Vô Dụng","7ra0g-m9n7bcx4xjr842",206,24,5],["40082523639","Đủ Nắng Hoa Sẽ Nở, Đủ Rồi Để Tao Yên","81ztc-mqknmcz3lou822",206,6,5],["42108505228","Video Editor","7ras8-mc6nph2ooded99",206,35,0],["27678084722","Cơm Nước Gì Chưa Người Đẹp Vịt Cute","7ra0g-m6vb0fjn0ntt6e",206,60,5],["42875201880","Sống Trong Đời Sống Cần Có 1 Đống Tiền","820l4-mg2hh9tgrgg88c",206,5,5],["26578087273","Artist Nghệ Sĩ","7ra0g-m6varqd5a1q07c",206,116,5],["26488872337","Áo Trơn","820l4-mg3tgrr76ivh96",179,112,5],["42256512484","Khổ Nhất Thế Giới","7ras8-mbjd80nu0lx04e",206,13,5],["52161190539","Kệ","81ztc-mopow6zmk83mc2",206,5,5],["41751722613","Interpreter Thông Dịch Viên","7ra0g-ma1jrlgva49m94",206,5,0],["42268261215","Chứng Nhận Bạn Đẹp","820l4-meg086tiuk91de",206,6,5],["53806468762","In Áo Theo Yêu Cầu Trẻ Em","81ztc-mlp3ve6zetj963",188,185,5],["27704738284","Vô Tri Capybara","7r98o-lxfn12syliaj5e",224,53,5],["40558493638","Content","7ras8-mc6ncr90nb0u08",206,7,5],["43268731259","Hết Tiền","820l4-mekai752ylmufd",206,10,5],["24152407157","Mỏ Hỗn","7r98o-lsfpijz82m55c7",239,18,5],["29654738198","Capybara Nôn Về Thinking","7r98o-lxfmt8itokbf88",224,21,5],["53950870960","Ước Gì Deadline Ít Đi Một Chút","820l4-mgp82gx55x59d7",206,4,5],["57808748159","Buyến Mèo","81ztc-mn08t5mhasjs5a",206,2,0],["43726381397","Chết Mê Christmas","820l4-mh0qk6u3g83s27",206,5,5],["44411410439","Hết Tiền Xin Đừng Làm Phiền","7ras8-mcz83186610t81",206,13,5],["44464203331","Thao Túng Gặp Tao Cứng","7ras8-mdnhkxk0mnxt89",206,1,0],["41161634862","Việt Nam Trong Tim","7ras8-md22k94xzcf08f",206,1,0],["41567502479","Muốn Nghỉ Làm Nhưng Nghèo","820l4-me8u6age2k1v81",206,5,0],["24075776220","Overthinking","7r98o-lumcl8qia7te4b",206,17,5],["29490500171","Tester","820l4-mdwhwuxz6zgg02",206,2,0],["42462927585","Nhậu Hông","7ras8-mdew67u0dttb87",206,11,5],["40059674605","Tester Sống Nay Test Mai","7ras8-mcj75kb3x3u5c0",206,8,5],["41012204470","Tai Qua Nạn Tới Vịt Cute","7ras8-md939moj9woddb",206,1,0],["49301360779","Merry Christmas Mèo Cute","820l4-mh0qgb4ksdmz95",206,2,5],["42355414126","Thể Thao Là Không Ngừng Bỏ Cuộc","7ras8-mb9k9lgn6n5f2c",206,55,5],["24019300980","Vô Dụng Như Nhau","7r98o-lswy42ch23t07b",206,42,5],["40673252541","Méo Gì Thế Con Mèo","820l4-mflfwa7anbim82",206,1,0],["43822339112","Sai Đẹp Gíu Siêu Đẹp Gái","820l4-mf90uftx4jda0b",206,5,0],["42853384264","Teacher Thợ Giữ Trẻ","7ras8-mangqs6ot8ld78",206,80,5],["40217502411","Thừa Kế Tài Sản","820l4-me8tzvqco2rm9e",206,2,5],["27440505177","Sự Nuông Chiều Tạo Ra Kẻ Yêu Anh Hơn","820l4-mdvzu1kz52pxfd",206,3,5],["41514901317","Đói Cho Sạch Jack Cho Thơm","7ras8-mdsumyag8cede4",206,4,0],["25060766671","Sao Cũng Được","7r98o-lsedeaj6jkih3c",206,24,5],["24403233789","Người Đeo Kính","7r98o-lp4vcztra6vvc4",206,22,5],["28853565730","Mệt","7ra0g-mah61jdkkna003",206,77,5],["41825210398","Buồn Ngủ All Time","820l4-mg2ha2lqyih838",206,2,0],["22461918076","Muốn Nghỉ Làm","7r98o-loqf4u7hb5zf7f",249,66,4.2],["44315192572","Bánh Xèo","820l4-mdw0vx3qtf5wee",206,21,4.7],["25877236096","Đẹp Gái Làm Ơn Đừng Buồn","7r98o-luobrrnm70v982",206,27,5],["41968721881","Quẳng Deadline Đi Mà Sống","820l4-mekaa3do5ibm36",206,2,5],["43876132971","Ăn Ngon Ngủ Sướng","820l4-mgnw1d2d0ob0eb",206,2,0],["26715111856","Vô Tư","7ras8-m1pso2r1uu9r54",206,55,5],["24910761829","Mỏ Hỗn (bản 2)","7r98o-lsecj9263p95b1",206,13,5],["40408497059","Ăn Dép Hông","7ras8-mc6mn9hdncky91",206,12,0],["28669349160","Lỗi Đổ Lên Đầu Tôi","7ra0g-m937fnpoj9mvf9",206,59,5],["40677629740","Tết 2026 Còn Thở Còn Gỡ","820l4-mj5s5nswo8at09",215,11,5],["26553562179","Ủa Em (bản 3)","7r98o-lwvn1oo2rkd73b",239,40,4.8],["44223239149","Tẻn Tẻn","820l4-mflg0uv2l2x490",206,4,5],["43018431587","Làm Dâu Trăm Họ","820l4-mehgvjjplcli5a",206,5,5],["27013367608","Đứa Nào Làm Anh Buồn","7ras8-m11cmyh51w2n7e",206,9,0],["29407634246","Cô Nàng Chill Chill","7ras8-m5faq5jrjribd9",206,14,5],["49763084435","Những Con Cá Sẽ Phải Trả Giá","81ztc-mq261br8rriae9",206,0,0],["40226244046","Có Tiền Mới Làm Phiền Được Em","820l4-mguzl19gnq4pef",206,1,0],["40665188166","Bánh Khọt","820l4-mdw0rvnntnnl38",206,2,5],["28489428588","Đồng Nghiệp Cùng Nhau Tạo Nghiệp","7ras8-mcxrx6pu95xb1c",206,29,5],["43522439156","Vô Tri Đời Bớt Suy","820l4-mf9o83aq4c262c",206,6,5],["51150880812","Ước Gì Tao Bớt Đẳng Cấp Đi Một Chút","820l4-mgp8k4t1c00da6",206,97,5],["43618730609","Áp Dụng Công Thức Là Ra Nước Mắt","820l4-mek9tv3qrhmu6f",206,6,5],["43672343790","Makeup Artist Thợ Xây Mặt","820l4-mf90keqrx1cf9e",206,3,0],["41422325275","Cái Gì","820l4-mf8jrvtgaryiaa",206,9,5],["24306964419","Lana Del Rey","7r98o-lq5zu405if5j91",206,11,4.7],["51707968624","Cho Em Đầy Bình Đổ Xăng","81ztc-mmgakwreusxv23",206,55,0],["40569771874","Trộm Vía Capybara","820l4-mesusju39f5x91",206,22,5],["54057964424","Đi Yêu Nghề Về Yêu Vợ","81ztc-mmgapq70hr7l37",206,1,5],["26791322733","Chứng Nhận Bạn Giỏi","820l4-meg0lir4i1hc00",206,7,5],["25938980106","Ủa Gì Dợ","7ras8-m38vpg6kfyloc9",206,5,0],["24502897375","Anh Bình Thường","7ra0g-mah6nnkrfhjgb5",206,43,4.8],["48255512633","Tết Hông Lì Xì Cắn Á","81ztc-mk181decra4kb7",215,0,0],["47567474961","Chúng Tôi Vô Dụng Như Nhau","81ztc-mssl85n3mkg204",249,0,0],["41820424550","Xong Task Này Là Ói Luôn","820l4-mewuzb9sms5cb9",206,18,5],["24019471995","I Wish I Were A Cat","7r98o-lsz6v4bljb8909",206,22,5],["54157580660","Mình Là Cá Việc Của Mình Là Bơi","81ztc-mm6bipqpc2dr1c",206,1,0],["46450771065","Cầu Cho Về Số Để Về Sớm","820l4-mgmg39g3anezf2",206,1,0],["25407858614","Chưa Xỉn","7r98o-lur6h21swug5c9",206,223,4.8],["40567498105","Mét 5 Mà Cái Tôi 5 Mét 1","820l4-me8t11z6okjp26",206,3,5],["45852798643","Dữ Vậy Sao","820l4-mi0e1jls23ur76",206,10,0],["26775618560","Thắng Đời 1 - 0","7ras8-m61anz8pa6mb4e",206,16,5],["44067905141","Mỏ Không Hỗn","820l4-mecl7175vqbq28",206,11,5],["42923411014","Another F","820l4-mfmrypgpqolm99",206,5,5],["44850785833","Lương Cao Thế","820l4-mgmgaql9rrbg2c",206,0,0],["25708787671","Chưa Có Bồ Yêu Là Đủ","7ras8-mc6mygsthboq53",206,41,5],["25559927915","Bún Bò Huế","7r98o-lqsvn836icl3ff",206,43,5],["55161243660","Cây Quạt Nóng Quá Mùa Hè","81ztc-mor3g73npkpb35",206,2,5],["23582098719","Ê Nha","7ra0g-mahavcbear2k5c",206,59,4.9],["52351552036","Đừng Jingle Bells Hãy Zing Em Đi","820l4-mh6dic5xktn235",206,1,5],["40465200247","Gỏi Cuốn","820l4-mdw0zmr4qtj769",206,0,0],["40018752203","Một Miếng Ăn Là Một Miếng Mập","820l4-mekaqfmccj5w69",206,0,0],["45808212262","Beer Belly Người Bụng Bia","81ztc-mmm0mnp284qr9f",206,1,0],["40473239363","Over Thinking Vịt","820l4-mflfrz1ofyfi5c",206,3,5],["22987996126","Muốn Tăng Lương","7r98o-lq33mmxfc0k2eb",249,43,5],["25459929305","Bún Riêu Cua","7r98o-lqsvn8373f3r7d",206,12,0],["26470411736","Thà Quắc Chứ Không Dằn Dơ","820l4-mjoebxhvm8li44",206,32,5],["24609221694","Hiếu Thứ Hai Retro","7r98o-lqmw2vgy1b6ada",206,41,5],["26642925177","Chả Hiểu Kiểu Gì","820l4-mfty0k9a81l769",206,1,0],["25421846719","Mệt Mỏi Vì Xinh Gái","7r98o-ltjoy6x38kju5a",259,20,5],["40173035897","Baby Tee Người Giàu Tình Cảm","820l4-mfifex0til1o57",206,2,0],["42822338757","Đàn Ông Thanh Toán Đàn Bà Thank You","820l4-mf90brxizax799",206,2,5],["41365192582","Bánh Cuốn","820l4-mdw0iye4b4lc94",206,0,0],["49954567217","Đếck Quan Tâm","820l4-mjee6u9eic5e23",215,1,0],["57113062270","Sống Là Không Ngừng Sân Si","81ztc-mq264yxcxz4c9d",206,0,0],["42481365658","Đã Có Vợ Rất Ngon","81ztc-moy7mmc3n8y47f",206,7,0],["25346235256","Marketing Mệt","7ras8-mcxsvkws9p3w80",206,0,0],["40867900883","Em Bình Thường Thường Hay Dỗi","820l4-meckumi8yi2sd2",206,56,5],["43964897172","Nghèo Cho Sạch Rách Cho Sexy","7ras8-mdsvic4svq9db3",206,0,0],["57758084757","Pretty Girl Fall In Love","81ztc-mmjndbgu8e8684",197,54,0],["25803234464","Kìn Chá Nà","7r98o-lpubgxcyf9oy6b",229,92,5],["15798486667","Đúng Là Oải Cả Chưởng","7r98o-lpqkq7hdwb0y33",206,16,5],["43464894453","Chưa Đủ Wao","7ras8-mdsu9get7uek66",206,6,5],["29563372742","Ê Giỡn Mặt Hả (bản 2)","7ras8-m11d01wj6bkr21",206,18,5],["44174144319","Một Khi Đã Quyết Chỉ Có Nản Mới Cản Được Tôi","820l4-mftyekgt9jig35",206,2,0],["40218426636","Không Phận Sự Miễn Góp Ý","820l4-mehgri6wwkjkc9",206,2,0],["50200255538","I Love Cơm Nhà","820l4-mgcgasqdckjz36",206,15,5],["44367501968","Bồn Chồn","820l4-me8tagpiv4sh49",206,1,0],["24152478215","CM Punk Đô Vật Mỹ","!vn-11134201-7r98o-lp59k1r7sg26f7",239,63,5],["25371844527","Mệt Mỏi Vì Đẹp Trai","7r98o-ltjoy6x3mmfhab",249,26,4.3],["53500255519","I Love Cơm Vợ Nấu","820l4-mgcgg1k5i8eic9",206,1,0],["53104547069","Cứ Phải Để Nói","820l4-mjee078ltv5u03",215,0,0],["42017498491","Gần Bestfriend Thì Hay Khẩu Nghiệp","820l4-me8thak49lae59",206,1,5],["26292623566","Baby Tee Mập Rõ Chứ Không Mập Mờ","820l4-mfif6l35v47g00",206,4,0],["51308146641","Độc Lập Tự Do Hạnh Phúc Việt Nam","81ztc-mmkkurmaenew0d",206,1,0],["50712625706","Không Phải Giấy Nên Đừng Có Gấp","81ztc-mps5wl9xfoqz95",229,0,0],["43375198025","Mệt Quá Thì Nghỉ Một Chút","820l4-mg2hp64m2ryj20",206,2,0],["43562308905","Tuổi Trẻ Tài Xỉu","7ras8-mdakavl6zna416",206,2,5],["46804950032","Tết Xì Dách Xuân 2026","820l4-mjof240amgozc6",215,8,5],["41511341997","Rất Ê Nha","7ras8-mcydozwnuox9c9",206,5,0],["41970617930","Tình Yêu Dành Cho Couple","820l4-meyk3pbwzu9v44",206,1,0],["55152649286","Ham Sống Sợ OT","820l4-mhw5f4b7979e26",206,0,0],["42267506890","Cầu Trời Khách Mãi Sang Giàu","820l4-me8tr8oi4c1vbb",206,0,0],["53200755746","Àn Nhoong Xin Chào Hàn Quốc","820l4-mgmfifuwikgba4",206,6,5],["25030907305","Taylor Swift TTPD","7r98o-lwbalcx5nhln66",239,15,4.7],["27892628185","Baby Tee Là Sao Nữa","820l4-mfiedufx3j0ub4",206,1,0],["40518261317","Chứng Nhận Bạn Chăm","820l4-meg0eowtfv2b98",206,1,0],["29204738157","Capybara Chữa Lành Cute","7r98o-lxfm77tw4dln28",224,7,5],["25606964643","Lana Del Rey Ultraviolence","7r98o-lq6cq6idn2nrec",196,54,5],["40973022462","Baby Tee Người Lào Gì Cũng Tôn","820l4-mfifpx1kix3j9a",206,0,0],["42662317433","Xinh Mà Bị Khùng","7ras8-mdakgzyqhtbhe7",206,3,0],["42758505050","Bánh Tráng Trộn","7ras8-mc6mshuc33rp7d",206,49,5],["43014894641","Mình Chỉ Là Người Bình Thường","7ras8-mdsv5wjvs7jjc6",206,1,0],["22256390316","Quá Là Sến 2 Mặt","7r98o-lpd3da6wea8ea2",236,58,5],["24408460476","Cơm Tấm Sườn Bì Chả","7r98o-lqhgb210ss0i69",206,99,5],["25361604007","Gấu Hải Ly","7r98o-lr4o5fz80ibo13",206,12,5],["24277239769","Chữa Lành","7r98o-luobrrnmwb39d2",259,18,5],["25027167302","Chữa Lành (bản 2)","7r98o-lunjky9guzad7d",152,5,5],["45455512729","QR Code Chuyển Khoản Đi Ạ Tết 2026","81ztc-mk17q5g0grno12",215,1,5],["50404057270","Tết Thích Lì Xì","820l4-mj0lv5jyn0g32b",215,15,0],["41873018014","Baby Tee Sống Nay Stress Mai","820l4-mfifymsnggspf2",206,0,0],["43320617327","Có Không Giữ Mất Hỏi Mẹ","820l4-meyjjxyy4ah2b6",206,3,5],["57304461746","Xuân Về Phơi Phới Deadline Dí Tới","820l4-mjcxjy3fvzered",215,0,0],["52155600286","Tết 16 Là Dằn Chứ Không Để Quắc","81ztc-mk2mxnqvbgncd7",215,13,0],["55455366116","Đánh Bài Tết Cầu Dừa Đủ Dằn","820l4-mjyat6lsmyh2dd",215,8,0],["42425206366","Quay Đầu Là Bờ Lốc","820l4-mg2hxn213f2n78",206,1,5],["57202023716","Đang Mệt Đừng Có Hỏi (bản 2)","820l4-mhgebablekg052",206,8,5],["53260375470","Điệu Đà","81ztc-mo5n2f1qucci12",206,4,0],["52005357845","Dằn Đánh Bài Tết 2026","820l4-mjyb9gskv9xi37",215,5,0],["28243206669","Em Iu Nói Gì Cũng Đúng","820l4-mg2hjrd4t3pkf3",206,58,0],["53804552060","Muốn Nghỉ Làm Phiền Mọi Người","820l4-mjeebovqomx3ab",215,2,0],["48154950011","Tết Dằn Dơ","820l4-mjoey3ez4q2u8d",215,4,0],["40519767687","Tester Vừa Test Vừa Ẻ","820l4-mesv0v4f2y2t65",206,5,0],["42468270656","Điều Đáng Ô Đồ Đáng Yêu","820l4-mefzqvvso1zb76",206,3,0],["43372325340","Chê Người Tốt Chốt Người Tồi","820l4-mf8k1khog6bw79",206,3,0],["54307081380","Trẻ Em Độc Lập Tự Do Hạnh Phúc","81ztc-mlp4uhlwb1fkc4",188,0,0],["46251355772","Merry Christmas Chuột","820l4-mh0q5nidsxzjbd",206,0,0],["56350755809","Tuy Không Xinh Nhưng Tiền Cũng Thiếu","820l4-mgmgh5nf8t1rda",152,3,0],["42976115124","Thật Thà Thì Thiệt Thòi","820l4-mgmguniqqzgs92",206,2,0],["42219758488","Mình Hay Xin Lỗi Cho Xong Chuyện","820l4-mesu70gg6z9ibf",206,1,0],["41317900536","Bạn Khỏi Chỉ Tui Chỉnh Bạn Luôn","820l4-meckj6es62va80",206,2,0],["46103249487","Tết 2026 Ăn Tết Văn Minh","820l4-mid9voik3r44b2",206,0,0],["44372316314","Em Đói Rồi","820l4-mf8ja6v08sum63",206,2,0],["27241291245","Đã Nghèo Còn Hay Đói","820l4-meelzoxqeepv3b",206,1,0],["43119761140","Chưa Thấy Lúc Giàu","820l4-mestgb2hvdola2",206,1,0],["23085417421","Taylor Swift The Eras Tour","7r98o-lrqorwgdcedgc6",239,94,5],["25058788478","Đã Có Bồ Yêu Là Đủ","7ras8-mc6n3z3zfp1q67",206,21,5],["42469765374","Bận Ơi Bận","820l4-mest9ukxpptx1b",206,0,0],["25351167832","Taylor Swift 1989","7r98o-lqmw2vgxoo2a7a",239,20,5],["27893517378","Tất Cả Mọi Thứ Đều Tại Tao","820l4-mgp8x36lltzgca",206,0,0],["41774153059","Muốn Có Bồ Siêu Đẹp Trai","820l4-mfty6a6z2u4of1",206,0,0],["25558460658","Bún Đậu Mắm Tôm","7r98o-lqhgb210okb631",206,19,5],["45407089955","Trẻ Em Vô Tri","81ztc-mlp4kl5lwp35eb",188,1,0],["25008460483","Làm Liều","7r98o-lt11mkw1whaxab",239,25,5],["24269492960","Phụ Nữ Là Để Yêu Đôi Lúc Nói Hơi Nhiều","7r98o-lsz6v4bkllms6b",239,19,5]]};
+
+</script>
+<script>
+const SHOP='105770852';
+const IMG=(id,tn)=>'https://down-vn.img.susercontent.com/file/'+(id[0]==='!'?id.slice(1):'vn-11134207-'+id)+(tn?'_tn':'');
+const LINK=id=>`https://shopee.vn/product/${SHOP}/${id}`;
+const fmt=k=>k+'k';
+const soldTxt=n=>n>=1000?(n/1000).toFixed(n%1000?1:0)+'k':String(n);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const HEART='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.5-9.2C1 8.3 3.2 5 6.6 5c2 0 3.4 1.1 4.2 2.3h2.4C14 6.1 15.4 5 17.4 5 20.8 5 23 8.3 21.5 11.8 19.5 16.4 12 21 12 21z"/></svg>';
+
+// Build item index
+const items=new Map();
+DATA.picks.forEach((p,i)=>items.set(p.id,{id:p.id,name:p.name,full:p.full,price:p.price,max:p.max,sold:p.sold,rating:p.rating,img:p.imgs[0],imgs:p.imgs,colors:p.colors,short:true,order:i}));
+DATA.rows.forEach((r,i)=>{if(!items.has(r[0]))items.set(r[0],{id:r[0],name:r[1],price:r[3],sold:r[4],rating:r[5],img:r[2],imgs:[r[2]],colors:[],short:false,order:100+i})});
+const ALL=[...items.values()];
+const CATS=[
+ ['fan','Fan & Idol','taylor|lana|cor tis|hiếu thứ hai|cm punk|hàn quốc','Áo in hình ca sĩ, nhóm nhạc, idol: Taylor Swift, Lana Del Rey, Cor.tis, HIEUTHUHAI…'],
+ ['custom','In theo yêu cầu & Baby tee','theo yêu cầu|baby tee|trẻ em|áo trơn','Tự in chữ, tên, hình theo ý mình. Có cả form Baby tee ôm nữ và size trẻ em.'],
+ ['tet','Tết & Lễ','tết|xuân|đánh bài|christmas|lì xì|dằn|quắc|jingle|còn thở còn gỡ|thank you','Mùa Tết và Giáng sinh: đánh bài, lì xì, “dằn”, Merry Christmas.'],
+ ['vn','Việt Nam','độc lập|tổ quốc|việt nam','Độc Lập – Tự Do – Hạnh Phúc, cờ đỏ sao vàng, tự hào Việt Nam. Hợp dịp lễ 2/9.'],
+ ['job','Nghề nghiệp','coder|developer|tester|designer|marketing|sales|human resources|kế toán|editor|intern|leader|content|content creator|photographer|teacher|kiến trúc sư|freelancer|freelancẻ|interpreter|makeup|chăm sóc khách hàng|vật lý trị liệu|artist|gamer|biker|khách hàng|bật khách|khách','Gọi đúng tên nghề: Coder, Tester, Designer, Marketing, Sales, HR, Kế toán… Hợp làm áo team theo vai trò.'],
+ ['food','Ăn nhậu & Ẩm thực','bia|nhậu|xỉn|zô|phở|bánh|bún|cơm|nem chua|gỏi cuốn|trà sữa|đói|ăn|miếng ăn|ai sợ thì đi về|rượu|mực|bụng bia|xăng','Món Việt (phở, bún bò, bánh xèo, cơm tấm) và hội bia rượu, trà sữa.'],
+ ['love','Tình yêu & Cặp đôi','vợ|chồng|bồ|couple|hiếu với trai|thương|yêu anh|công chúa|người đẹp|làm phiền được em|em bình thường|anh bình thường|em ổn|em iu|ve love|iu|đáng yêu|mình thương|yêu là đủ','Có vợ, có chồng, có bồ, chưa có bồ. Hợp áo đôi hoặc tặng người yêu.'],
+ ['money','Tiền & Nghèo giàu','tiền|nghèo|giàu|tăng lương|lương cao|thừa kế|lương','Than nghèo, mơ giàu, chuyện lương thưởng.'],
+ ['office','Công sở & Đi làm','deadline|sếp|kpi|task|ot|đi làm|nghỉ làm|nghỉ việc|nghỉ hưu|tăng ca|stress|đam mê|lao động|chủ nhật|giờ hành chính|đồng nghiệp|việc|nghề chọn người|cột sống|làm dâu|lỗi đổ|về sớm|là sao nữa|người khác làm được|sân si|chê nữa','Đời công sở: deadline, KPI, sếp, OT, muốn nghỉ việc. Dân văn phòng đọc là hiểu.'],
+ ['slang','Ủa, Ê, Hả, Gì','ủa|ê|hả|gì|alo|dợ','Câu cảm thán một-hai chữ kiểu Ủa, Ê, Hả, Gì. Ngắn, dễ nhận ra, chữ in to.'],
+ ['mood','Tính cách & Tâm trạng','hướng nội|hướng ngoại|introvert|overthinking|over thinking|trầm|mệt|cọc|khó chịu|bận|lười|quên|ngại|buồn|chill|vô tri|vô dụng|vô tư|chữa lành|hơn thua|tài giỏi|bồn chồn|thao túng|khùng|điệu đà|xinh|đẹp gái|đẹp trai|tẻn|khổ nhất|nín|chứng nhận|cái tôi|mỏ hỗn|mỏ không hỗn|tài xỉu|kệ','Hướng nội, mệt, lười, chill, overthinking, chữa lành. Nói hộ trạng thái của người mặc.'],
+ ['cute','Thú cute','vịt|capybara|méow|mèo|chó|gấu|cua|cá|hổ|chuột','Capybara, vịt, mèo, gấu: hình thú dễ thương đi kèm câu hài.'],
+ ['meme','Meme & Câu cửa miệng','','Câu hài, chơi chữ, châm biếm khó xếp vào nhóm nào ở trên.']
+].map(c=>[c[0],c[1],c[2]?c[2].split('|').map(w=>' '+w+' '):[],c[3]]);
+const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase();
+const words=s=>' '+s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim()+' ';
+ALL.forEach(it=>{const t=words(it.name);it.cat=(CATS.find(c=>c[2].some(w=>t.includes(w)))||CATS[CATS.length-1])[0]});
+const DROP=['custom','tet','vn','fan'];
+for(let i=ALL.length-1;i>=0;i--)if(DROP.includes(ALL[i].cat)&&!ALL[i].short){items.delete(ALL[i].id);ALL.splice(i,1)}
+for(let i=CATS.length-1;i>=0;i--)if(DROP.includes(CATS[i][0]))CATS.splice(i,1);
+const CATNAME=Object.fromEntries(CATS.map(c=>[c[0],c[1]]));const CATDESC=Object.fromEntries(CATS.map(c=>[c[0],c[3]]));
+const USERS=[['PhatNT11','Phát'],['ChungLT2','Chung'],['QuocLM','Quốc'],['ThinhTH3','Thịnh']];
+let user=null;try{user=localStorage.getItem('tuaotim_user')}catch(e){}
+if(!USERS.some(u=>u[0]===user))user=null;
+let cat='';
+
+// State
+let state={sel:{},rank:[]};
+function load(){state={sel:{},rank:[]};if(!user)return;try{const s=JSON.parse(localStorage.getItem('tuaotim_'+user)||'null');if(s&&s.sel)state=s}catch(e){}state.rank=state.rank.filter(id=>items.has(id));Object.keys(state.sel).forEach(id=>{if(!items.has(id))delete state.sel[id]})}
+load();
+const save=()=>{if(!user)return;try{localStorage.setItem('tuaotim_'+user,JSON.stringify(state))}catch(e){}};
+let filter='short',limit=48;
+
+function toggle(id,force){
+  const on=force!==undefined?force:!state.sel[id];
+  if(on){const it=items.get(id);state.sel[id]=state.sel[id]||{color:it.colors[0]?.[0]||'',note:''};if(!state.rank.includes(id))state.rank.push(id)}
+  else{delete state.sel[id];state.rank=state.rank.filter(x=>x!==id)}
+  save();render();
+}
+
+function card(it){
+  const s=state.sel[it.id];
+  return `<article class="card${s?' sel':''}" data-id="${it.id}" tabindex="0">
+    <div class="ph"><img loading="lazy" src="${IMG(it.img,true)}" alt="${esc(it.name)}"></div>
+    ${it.short?'<span class="badge">Shortlist</span>':''}
+    <div class="body">
+      <div class="nm">${esc(it.name)}</div>
+      ${s?`<div class="sel-info">${esc([s.color].filter(Boolean).join(' · '))}</div>`:''}
+      <div class="meta"><span class="price">${fmt(it.price)}</span><span>★ ${it.rating||'–'} · đã bán ${soldTxt(it.sold)}</span></div>
+      <button class="pick" data-pick="${it.id}" aria-pressed="${!!s}">${s?'✓ Đã chọn':HEART+' Chọn'}</button>
+    </div></article>`;
+}
+
+function sorted(list){
+  const v=document.getElementById('sort').value;
+  const f={sold:(a,b)=>b.sold-a.sold,new:(a,b)=>b.id.localeCompare(a.id),pa:(a,b)=>a.price-b.price,pd:(a,b)=>b.price-a.price,az:(a,b)=>a.name.localeCompare(b.name,'vi')}[v];
+  return list.slice().sort(f);
+}
+function render(){
+  const q=norm(document.getElementById('q').value.trim());
+  const match=it=>(!q||norm(it.name+' '+(it.full||'')).includes(q))&&(!cat||it.cat===cat);
+  document.getElementById('whoName').textContent=user||'—';
+  // category chips (counts follow search + current view)
+  const base=ALL.filter(it=>(!q||norm(it.name+' '+(it.full||'')).includes(q))&&(filter!=='sel'||state.sel[it.id]));
+  document.getElementById('cats').innerHTML=`<button class="chip" data-cat="" aria-pressed="${!cat}">Mọi nhóm<b>${base.length}</b></button>`+CATS.map(c=>{const n=base.filter(i=>i.cat===c[0]).length;return n?`<button class="chip" data-cat="${c[0]}" title="${esc(c[3])}" aria-pressed="${cat===c[0]}">${c[1]}<b>${n}</b></button>`:''}).join('');
+  const shorts=ALL.filter(i=>i.short&&match(i));
+  document.getElementById('nAll').textContent=ALL.length;
+  document.getElementById('nSel').textContent=state.rank.length;
+  const shortSec=document.getElementById('shortSec'),allSec=document.getElementById('allSec');
+  let list;
+  if(filter==='short'){shortSec.hidden=false;document.getElementById('shortGrid').innerHTML=shorts.map(card).join('')||'<p class="empty">Không có mẫu nào khớp.</p>';list=ALL.filter(i=>!i.short&&match(i));document.getElementById('allTitle').firstChild.textContent='Các mẫu khác trong shop ';}
+  else if(filter==='all'){shortSec.hidden=true;list=ALL.filter(match);document.getElementById('allTitle').firstChild.textContent='Cả shop ';}
+  else{shortSec.hidden=true;list=state.rank.map(id=>items.get(id)).filter(match);document.getElementById('allTitle').firstChild.textContent='Đã chọn ';}
+  if(filter!=='sel')list=sorted(list);
+  document.getElementById('allSub').textContent=list.length+' mẫu';
+  const groupsEl=document.getElementById('groups'),gridEl=document.getElementById('allGrid'),more=document.getElementById('moreBtn');
+  if(!cat&&filter!=='sel'&&list.length){
+    gridEl.innerHTML='';more.hidden=true;
+    document.getElementById('catDesc').hidden=true;
+    groupsEl.innerHTML=CATS.map(c=>{const g=list.filter(i=>i.cat===c[0]);if(!g.length)return'';return `<section><div class="grp-head"><h2>${c[1]} <small>${g.length} mẫu</small></h2>${g.length>8?`<button class="linkbtn" data-cat="${c[0]}">Xem hết ${g.length} →</button>`:''}</div><p class="gdesc">${esc(c[3])}</p><div class="grid">${g.slice(0,8).map(card).join('')}</div></section>`}).join('');
+    document.getElementById('allTitle').hidden=true;
+  }else{
+    groupsEl.innerHTML='';document.getElementById('allTitle').hidden=false;
+    if(cat)document.getElementById('allTitle').firstChild.textContent=CATNAME[cat]+' ';
+    const cd=document.getElementById('catDesc');cd.hidden=!cat;cd.textContent=cat?CATDESC[cat]:'';
+    const shown=list.slice(0,limit);
+    gridEl.innerHTML=shown.map(card).join('')||`<p class="empty">${filter==='sel'?'Chưa chọn áo nào. Bấm Chọn dưới ảnh để thêm.':'Không có mẫu nào khớp.'}</p>`;
+    more.hidden=list.length<=limit;more.textContent=`Xem thêm (${list.length-limit} mẫu)`;
+  }
+  // tray
+  const n=state.rank.length;
+  document.getElementById('trayCount').innerHTML=n?`Đã chọn ${n} mẫu<span>bấm ảnh nhỏ để xem lại</span>`:'Chưa chọn áo nào<span>bấm Chọn dưới ảnh</span>';
+  document.getElementById('trayThumbs').innerHTML=state.rank.map(id=>`<img src="${IMG(imgFor(id),true)}" data-id="${id}" alt="${esc(items.get(id).name)}" title="${esc(items.get(id).name)}">`).join('');
+  document.getElementById('cmpBtn').disabled=!n;
+}
+function imgFor(id){const it=items.get(id),s=state.sel[id];if(s&&s.color){const c=it.colors.find(c=>c[0]===s.color);if(c)return c[1]}return it.img}
+
+// Detail dialog
+const dlg=document.getElementById('dlg');
+function openItem(id){
+  const it=items.get(id);
+  const s=state.sel[id]||{color:it.colors[0]?.[0]||'',note:''};
+  let cur=imgFor(id);
+  const gal=[...new Set([...(it.colors.map(c=>c[1])),...it.imgs])];
+  const body=document.getElementById('dlgBody');
+  body.innerHTML=`<div class="gal"><div class="main"><img id="mainImg" src="${IMG(cur)}" alt="${esc(it.name)}"></div>
+    <div class="strip" id="strip">${gal.map(g=>`<img src="${IMG(g,true)}" data-g="${g}" class="${g===cur?'on':''}" alt="">`).join('')}</div></div>
+  <div class="info">
+    <div><h3>${esc(it.name)}</h3>${it.full?`<p class="full">${esc(it.full)}</p>`:''}</div>
+    <div class="facts"><span>Giá <b>${fmt(it.price)}${it.max&&it.max!==it.price?' – '+fmt(it.max):''}</b></span><span>Đã bán <b>${soldTxt(it.sold)}</b></span><span>Đánh giá <b>★ ${it.rating||'–'}</b></span></div>
+    ${it.colors.length?`<div><div class="lbl">Màu / kiểu in · ${it.colors.length} lựa chọn</div><div class="sw" id="sw">${it.colors.map(c=>`<button data-c="${esc(c[0])}" data-g="${c[1]}" aria-pressed="${c[0]===s.color}"><img src="${IMG(c[1],true)}" alt="">${esc(c[0])}</button>`).join('')}</div></div>`:`<div><div class="lbl">Màu / kiểu in</div><div class="row"><label style="flex:1">Ghi màu muốn chọn (xem trên Shopee)<input id="colorTxt" style="width:100%" value="${esc(s.color)}" placeholder="vd: Đen Chữ Retro"></label></div></div>`}
+    <div><label class="lbl" for="note">Ghi chú</label><textarea id="note" placeholder="vd: in 2 mặt, cho ai mặc…">${esc(s.note||'')}</textarea></div>
+    <div class="actions">
+      <button class="btn pri" id="saveBtn">${state.sel[id]?'Cập nhật lựa chọn':'♥ Chọn áo này'}</button>
+      ${state.sel[id]?'<button class="btn" id="unBtn">Bỏ chọn</button>':''}
+      <a class="btn ghost" href="${LINK(id)}" target="_blank" rel="noopener">Mở trên Shopee ↗</a>
+    </div>
+  </div>`;
+  const setMain=g=>{cur=g;body.querySelector('#mainImg').src=IMG(g);body.querySelectorAll('#strip img').forEach(x=>x.classList.toggle('on',x.dataset.g===g))};
+  body.querySelector('#strip').onclick=e=>{const g=e.target.dataset?.g;if(g)setMain(g)};
+  let color=s.color;
+  const sw=body.querySelector('#sw');
+  if(sw)sw.onclick=e=>{const b=e.target.closest('button');if(!b)return;color=b.dataset.c;sw.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));setMain(b.dataset.g)};
+  body.querySelector('#saveBtn').onclick=()=>{
+    const ct=body.querySelector('#colorTxt');if(ct)color=ct.value.trim();
+    state.sel[id]={color,note:body.querySelector('#note').value.trim()};
+    if(!state.rank.includes(id))state.rank.push(id);save();render();dlg.close();toast('Đã lưu lựa chọn');
+  };
+  const un=body.querySelector('#unBtn');if(un)un.onclick=()=>{toggle(id,false);dlg.close()};
+  dlg.showModal();
+}
+
+// Compare dialog
+const cmpDlg=document.getElementById('cmpDlg');
+function summary(){
+  const lines=state.rank.map((id,i)=>{const it=items.get(id),s=state.sel[id];return `${i+1}. ${it.name}${s.color?' — '+s.color:''} — ${fmt(it.price)}${s.note?' — '+s.note:''}\n   ${LINK(id)}`});
+  return `${user} chọn ${state.rank.length} mẫu:\n`+lines.join('\n');
+}
+function openCmp(){
+  const b=document.getElementById('cmpBody');
+  b.innerHTML=`<h3>So sánh &amp; chốt · ${user}</h3><p class="sub" style="margin:0">Xếp theo thứ tự ưu tiên. Mẫu số 1 là lựa chọn chính.</p>
+  <div class="cmp-grid">${state.rank.map((id,i)=>{const it=items.get(id),s=state.sel[id];return `<div class="cmp-item"><img src="${IMG(imgFor(id))}" alt="${esc(it.name)}"><div class="b"><span class="rk">#${i+1}</span><strong>${esc(it.name)}</strong><span>${esc([s.color].filter(Boolean).join(' · '))}</span><span class="price" style="align-self:flex-start">${fmt(it.price)}</span>${s.note?`<span style="color:var(--muted)">${esc(s.note)}</span>`:''}<div class="ctl"><button class="btn" data-mv="-1" data-id="${id}" ${i?'':'disabled'} aria-label="Lên">↑</button><button class="btn" data-mv="1" data-id="${id}" ${i<state.rank.length-1?'':'disabled'} aria-label="Xuống">↓</button><button class="btn" data-ed="${id}">Sửa</button><button class="btn" data-rm="${id}">Bỏ</button></div></div></div>`}).join('')}</div>
+  <div class="lbl" style="margin-top:18px">Tóm tắt gửi team</div><pre class="sum" id="sumTxt">${esc(summary())}</pre>
+  <div class="actions"><button class="btn pri" id="copyBtn">Copy tóm tắt</button></div>`;
+  b.onclick=e=>{const t=e.target.closest('button');if(!t)return;
+    if(t.dataset.mv){const id=t.dataset.id,i=state.rank.indexOf(id),j=i+ +t.dataset.mv;[state.rank[i],state.rank[j]]=[state.rank[j],state.rank[i]];save();render();openCmp()}
+    else if(t.dataset.rm){toggle(t.dataset.rm,false);state.rank.length?openCmp():cmpDlg.close()}
+    else if(t.dataset.ed){cmpDlg.close();openItem(t.dataset.ed)}
+    else if(t.id==='copyBtn'){const txt=summary();(navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>toast('Đã copy tóm tắt')).catch(()=>{const r=document.createRange();r.selectNodeContents(document.getElementById('sumTxt'));const sl=getSelection();sl.removeAllRanges();sl.addRange(r);toast('Đã bôi đen, bấm Ctrl/Cmd+C để copy')})}
+  };
+  if(!cmpDlg.open)cmpDlg.showModal();
+}
+
+function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),1800)}
+
+// Events
+document.addEventListener('click',e=>{
+  const cb=e.target.closest('[data-cat]');if(cb){cat=cb.dataset.cat;limit=48;render();window.scrollTo({top:document.getElementById('allSec').offsetTop-80});return}
+  const p=e.target.closest('[data-pick]');if(p){e.stopPropagation();toggle(p.dataset.pick);return}
+  const c=e.target.closest('.card');if(c){openItem(c.dataset.id);return}
+  const th=e.target.closest('#trayThumbs img');if(th){openItem(th.dataset.id);return}
+  const x=e.target.closest('[data-close]');if(x)x.closest('dialog').close();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.classList?.contains('card'))openItem(e.target.dataset.id)});
+[dlg,cmpDlg].forEach(d=>d.addEventListener('click',e=>{if(e.target===d)d.close()}));
+document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{filter=b.dataset.f;limit=48;document.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x===b));render()});
+document.getElementById('q').oninput=()=>{limit=48;render()};
+document.getElementById('sort').onchange=render;
+document.getElementById('moreBtn').onclick=()=>{limit+=48;render()};
+document.getElementById('clearBtn').onclick=()=>{state={sel:{},rank:[]};save();render()};
+document.getElementById('cmpBtn').onclick=openCmp;
+// who dialog
+const whoDlg=document.getElementById('whoDlg');
+function openWho(){
+  document.getElementById('whoGrid').innerHTML=USERS.map(u=>{let n=0;try{n=(JSON.parse(localStorage.getItem('tuaotim_'+u[0])||'null')?.rank||[]).length}catch(e){}return `<button data-u="${u[0]}" class="${u[0]===user?'cur':''}">${u[0]}<span>${n?n+' mẫu đã chọn':'chưa chọn'}</span></button>`}).join('');
+  whoDlg.showModal();
+}
+document.getElementById('whoGrid').onclick=e=>{const b=e.target.closest('[data-u]');if(!b)return;user=b.dataset.u;try{localStorage.setItem('tuaotim_user',user)}catch(e){}load();whoDlg.close();render();toast('Xin chào '+user)};
+whoDlg.addEventListener('cancel',e=>{if(!user)e.preventDefault()});
+document.getElementById('whoBtn').onclick=openWho;
+render();
+if(!user)openWho();
+</script>
+</body>
+</html>
