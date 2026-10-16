@@ -84,7 +84,21 @@ h2 small{font:500 13px var(--f-body);color:var(--muted)}
 .who-grid button{border:2px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:18px 10px;font:700 16px var(--f-mono);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px}
 .who-grid button span{font:500 12px var(--f-body);color:var(--muted)}
 .who-grid button:hover,.who-grid button.cur{border-color:var(--accent);background:var(--accent-soft)}
-#whoDlg{width:min(440px,calc(100vw - 24px))}
+#whoDlg{width:min(480px,calc(100vw - 24px));background:var(--accent);color:var(--accent-ink);animation:whoPop .4s cubic-bezier(.2,1.4,.4,1)}
+#whoDlg::backdrop{background:rgba(5,12,10,.75)}
+@keyframes whoPop{from{opacity:0;transform:scale(.9) rotate(-1.5deg)}to{opacity:1;transform:none}}
+.who-eyebrow{display:inline-block;background:var(--tag);color:var(--tag-ink);font:600 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;border-radius:4px;margin-bottom:12px;transform:rotate(-1.5deg)}
+.who-dlg h3{color:inherit}
+.who-sub{margin:0;font-size:15px;line-height:1.5;opacity:.92;max-width:42ch}
+.who-foot{margin:16px 0 0;font-size:12.5px;opacity:.8;font-style:italic}
+#whoDlg .who-grid button{background:var(--surface);color:var(--ink);border:2px solid transparent;box-shadow:0 3px 0 rgba(0,0,0,.25);transition:transform .12s,box-shadow .12s,background .12s}
+#whoDlg .who-grid button span{color:var(--muted)}
+#whoDlg .who-grid button:hover{background:var(--tag);color:var(--tag-ink);transform:translateY(-2px) rotate(-1deg);box-shadow:0 5px 0 rgba(0,0,0,.25)}
+#whoDlg .who-grid button:hover span{color:var(--tag-ink)}
+#whoDlg .who-grid button:active{transform:translateY(1px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+#whoDlg .who-grid button.cur{background:var(--tag);color:var(--tag-ink);border-color:var(--tag-ink)}
+#whoDlg .who-grid button.cur span{color:var(--tag-ink)}
+#whoDlg :focus-visible{outline-color:var(--tag)}
 .sel-info{font-size:12px;color:var(--accent);font-weight:600}
 .empty{color:var(--muted);padding:30px 0;text-align:center}
 .more{display:flex;justify-content:center;padding:20px 0}
@@ -194,7 +208,7 @@ pre.sum.flash{animation:flash 1s ease}
 </div></div>
 
 <dialog id="dlg"><button class="close" data-close aria-label="Đóng">×</button><div class="dlg" id="dlgBody"></div></dialog>
-<dialog id="whoDlg"><div class="who-dlg"><h3>Bạn là ai?</h3><p class="sub" style="margin:0">Mỗi người có danh sách chọn riêng. Tên của bạn sẽ đứng đầu bản tóm tắt gửi team.</p><div class="who-grid" id="whoGrid"></div></div></dialog>
+<dialog id="whoDlg"><div class="who-dlg"><div class="who-eyebrow">Nhiệm vụ 20/10 · Tuyệt mật</div><h3>Ai đang gánh áo cho chị em?</h3><p class="who-sub">Bấm vào tên bạn. Mẫu nào bạn chọn sẽ được ghi tên bạn, để chị em biết đường mà cảm ơn, hoặc biết đường mà trách.</p><div class="who-grid" id="whoGrid"></div><p class="who-foot">Không nhận tên thì không được xem áo. Luật chị em đặt ra, tụi mình chỉ làm theo.</p></div></dialog>
 <dialog id="cmpDlg"><button class="close" data-close aria-label="Đóng">×</button><div class="cmp" id="cmpBody"></div></dialog>
 
 <script>
@@ -238,7 +252,7 @@ const DROP=['custom','tet','vn','fan'];
 for(let i=ALL.length-1;i>=0;i--)if(DROP.includes(ALL[i].cat)&&!ALL[i].short){items.delete(ALL[i].id);ALL.splice(i,1)}
 for(let i=CATS.length-1;i>=0;i--)if(DROP.includes(CATS[i][0]))CATS.splice(i,1);
 const CATNAME=Object.fromEntries(CATS.map(c=>[c[0],c[1]]));const CATDESC=Object.fromEntries(CATS.map(c=>[c[0],c[3]]));
-const USERS=[['PhatNT11','Phát'],['ChungLT2','Chung'],['QuocLM','Quốc'],['ThinhTH3','Thịnh']];
+const USERS=[['QuocLM','Quốc'],['ThinhTH3','Thịnh'],['ChungLT2','Chung'],['PhatNT11','Phát']];
 let user=null;try{user=localStorage.getItem('tuaotim_user')}catch(e){}
 if(!USERS.some(u=>u[0]===user))user=null;
 let cat='';
@@ -428,7 +442,7 @@ document.getElementById('hypeBtn').onclick=()=>{hypeI=(hypeI+1)%HYPE.length;rend
 // who dialog
 const whoDlg=document.getElementById('whoDlg');
 function openWho(){
-  document.getElementById('whoGrid').innerHTML=USERS.map(u=>{let n=0;try{n=(JSON.parse(localStorage.getItem('tuaotim_'+u[0])||'null')?.rank||[]).length}catch(e){}return `<button data-u="${u[0]}" class="${u[0]===user?'cur':''}">${u[0]}<span>${n?n+' mẫu đã chọn':'chưa chọn'}</span></button>`}).join('');
+  document.getElementById('whoGrid').innerHTML=USERS.map(u=>{let n=0;try{n=(JSON.parse(localStorage.getItem('tuaotim_'+u[0])||'null')?.rank||[]).length}catch(e){}return `<button data-u="${u[0]}" class="${u[0]===user?'cur':''}">${u[0]}<span>${n?'đã chốt '+n+' mẫu':'chưa ra tay'}</span></button>`}).join('');
   whoDlg.showModal();
 }
 document.getElementById('whoGrid').onclick=e=>{const b=e.target.closest('[data-u]');if(!b)return;user=b.dataset.u;try{localStorage.setItem('tuaotim_user',user)}catch(e){}load();whoDlg.close();render();renderHype();toast('Xin chào '+user)};
