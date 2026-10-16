@@ -30,6 +30,17 @@ header.top{padding-block:28px 12px}
 h1{font:800 clamp(28px,4vw,40px)/1.05 var(--f-display);margin:0;letter-spacing:-.02em;text-wrap:balance}
 .sub{color:var(--muted);margin:6px 0 0;max-width:65ch}
 .toolbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.hype{background:var(--accent);color:var(--accent-ink)}
+.toolbar .hype .wrap{padding-block:12px;flex-wrap:nowrap;align-items:center}
+.hype p{margin:0;flex:1;min-width:0;font:700 clamp(16px,2.2vw,21px)/1.3 var(--f-display);letter-spacing:-.01em;text-wrap:balance}
+.hype p.in{animation:hypeIn .35s ease}
+.hype mark{background:var(--tag);color:var(--tag-ink);padding:0 6px;border-radius:4px;font-family:var(--f-mono);font-weight:500;font-size:.92em;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.hype-who{flex:none;border:1.5px solid currentColor;background:transparent;color:inherit;border-radius:999px;padding:6px 12px;font:600 13px var(--f-body);cursor:pointer;opacity:.85}
+.hype-who:hover{opacity:1}
+.toolbar .hype .wrap{gap:10px}
+.hype-btn{flex:none;width:36px;height:36px;border-radius:50%;border:1.5px solid currentColor;background:transparent;color:inherit;font-size:18px;cursor:pointer;opacity:.85}
+.hype-btn:hover{opacity:1;transform:rotate(90deg);transition:transform .2s}
+@keyframes hypeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 .toolbar .wrap{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding-block:10px}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
 .chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font:500 13px var(--f-body);cursor:pointer}
@@ -129,18 +140,22 @@ a{color:var(--accent)}
 .cmp-item .ctl{display:flex;gap:4px;margin-top:6px}
 .cmp-item .ctl button{flex:1;padding:5px;font-size:12px}
 pre.sum{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;font:12.5px/1.5 var(--f-mono);max-height:240px;overflow:auto}
-.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:13px;z-index:20}
+.btn.copy{display:inline-flex;align-items:center;gap:6px;min-width:170px;justify-content:center;transition:background .2s,transform .1s}
+.btn.copy:active{transform:scale(.96)}
+.btn.copy.done{background:var(--ink);border-color:var(--ink);color:var(--bg);animation:pop .35s ease}
+.btn.copy.done .ic{display:inline-block;animation:tick .35s ease}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes tick{0%{transform:scale(0) rotate(-45deg)}100%{transform:scale(1) rotate(0)}}
+pre.sum.flash{animation:flash 1s ease}
+@keyframes flash{0%{background:var(--accent-soft);border-color:var(--accent)}100%{background:var(--bg);border-color:var(--line)}}
+.toast{animation:toastIn .25s ease;position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:13px;z-index:20}
 @media (max-width:720px){.dlg{grid-template-columns:1fr;overflow-y:auto}.info{overflow:visible}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.grid.big{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
-<header class="top wrap">
-  <h1>Tủ Áo Tịm</h1>
-  <p class="sub">7 mẫu shortlist cùng toàn bộ áo của shop Tịm Áo Nè trên Shopee, gom theo nhóm nội dung. Bấm vào ảnh để xem chi tiết và đổi màu, bấm <strong>Chọn</strong> để thêm vào danh sách. Chọn xong thì mở So sánh &amp; chốt, xếp hạng rồi copy tóm tắt gửi team.</p>
-  <div class="who">Đang chọn: <b id="whoName">—</b><button class="linkbtn" id="whoBtn">Đổi người</button></div>
-</header>
-<div class="toolbar"><div class="wrap">
+<div class="toolbar"><div class="hype"><div class="wrap"><p id="hypeTxt" aria-live="polite"></p><span id="whoName" hidden></span><button id="whoBtn" class="hype-who">Đổi người</button><button id="hypeBtn" class="hype-btn" title="Đổi câu khác" aria-label="Đổi câu khác">↻</button></div></div><div class="wrap">
   <div class="chips" role="group" aria-label="Lọc">
     <button class="chip" data-f="short" aria-pressed="true">Shortlist<b id="nShort">7</b></button>
     <button class="chip" data-f="all" aria-pressed="false">Cả shop<b id="nAll">0</b></button>
@@ -344,17 +359,23 @@ function openCmp(){
   const b=document.getElementById('cmpBody');
   b.innerHTML=`<h3>So sánh &amp; chốt · ${user}</h3><p class="sub" style="margin:0">Xếp theo thứ tự ưu tiên. Mẫu số 1 là lựa chọn chính.</p>
   <div class="cmp-grid">${state.rank.map((id,i)=>{const it=items.get(id),s=state.sel[id];return `<div class="cmp-item"><img src="${IMG(imgFor(id))}" alt="${esc(it.name)}"><div class="b"><span class="rk">#${i+1}</span><strong>${esc(it.name)}</strong><span>${esc([s.color].filter(Boolean).join(' · '))}</span><span class="price" style="align-self:flex-start">${fmt(it.price)}</span>${s.note?`<span style="color:var(--muted)">${esc(s.note)}</span>`:''}<div class="ctl"><button class="btn" data-mv="-1" data-id="${id}" ${i?'':'disabled'} aria-label="Lên">↑</button><button class="btn" data-mv="1" data-id="${id}" ${i<state.rank.length-1?'':'disabled'} aria-label="Xuống">↓</button><button class="btn" data-ed="${id}">Sửa</button><button class="btn" data-rm="${id}">Bỏ</button></div></div></div>`}).join('')}</div>
-  <div class="lbl" style="margin-top:18px">Tóm tắt gửi team</div><pre class="sum" id="sumTxt">${esc(summary())}</pre>
-  <div class="actions"><button class="btn pri" id="copyBtn">Copy tóm tắt</button></div>`;
+  <div class="lbl" style="margin-top:18px">Nội dung gửi team</div><pre class="sum" id="sumTxt">${esc(summary())}</pre>
+  <div class="actions"><button class="btn pri copy" id="copyBtn"><span class="ic">⧉</span> <span class="tx">Copy gửi team</span></button></div>`;
   b.onclick=e=>{const t=e.target.closest('button');if(!t)return;
     if(t.dataset.mv){const id=t.dataset.id,i=state.rank.indexOf(id),j=i+ +t.dataset.mv;[state.rank[i],state.rank[j]]=[state.rank[j],state.rank[i]];save();render();openCmp()}
     else if(t.dataset.rm){toggle(t.dataset.rm,false);state.rank.length?openCmp():cmpDlg.close()}
     else if(t.dataset.ed){cmpDlg.close();openItem(t.dataset.ed)}
-    else if(t.id==='copyBtn'){const txt=summary();(navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>toast('Đã copy tóm tắt')).catch(()=>{const r=document.createRange();r.selectNodeContents(document.getElementById('sumTxt'));const sl=getSelection();sl.removeAllRanges();sl.addRange(r);toast('Đã bôi đen, bấm Ctrl/Cmd+C để copy')})}
+    else if(t.id==='copyBtn'){const txt=summary();(navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>copied(t)).catch(()=>{const r=document.createRange();r.selectNodeContents(document.getElementById('sumTxt'));const sl=getSelection();sl.removeAllRanges();sl.addRange(r);toast('Trình duyệt chặn copy tự động. Đã bôi đen sẵn, bấm Ctrl/Cmd+C')})}
   };
   if(!cmpDlg.open)cmpDlg.showModal();
 }
 
+function copied(btn){
+  btn.classList.add('done');btn.querySelector('.ic').textContent='✓';btn.querySelector('.tx').textContent='Đã copy!';
+  const pre=document.getElementById('sumTxt');if(pre){pre.classList.remove('flash');void pre.offsetWidth;pre.classList.add('flash')}
+  toast('Đã copy, dán vào nhóm chat là xong');
+  clearTimeout(btn._t);btn._t=setTimeout(()=>{btn.classList.remove('done');btn.querySelector('.ic').textContent='⧉';btn.querySelector('.tx').textContent='Copy gửi team'},2200);
+}
 function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),1800)}
 
 // Events
@@ -373,16 +394,47 @@ document.getElementById('sort').onchange=render;
 document.getElementById('moreBtn').onclick=()=>{limit+=48;render()};
 document.getElementById('clearBtn').onclick=()=>{state={sel:{},rank:[]};save();render()};
 document.getElementById('cmpBtn').onclick=openCmp;
+// hype line
+const HYPE=[
+"{u} ơi, 20/10 này chị em chỉ mong một chiếc áo tử tế. Đừng làm chị em thất vọng nha.",
+"{u}, sinh mệnh của các chị em đang nằm trong tay bạn. Chọn sai là chị em mặc sai cả năm.",
+"{u} chọn kỹ vào. Áo tặng 20/10 mà xấu là chị em nhớ tới tận 8/3 năm sau đó.",
+"Chị em đang nhìn {u} bằng ánh mắt đầy hy vọng. Đừng chọn áo “Ủa” rồi bảo là dễ thương nha.",
+"{u} ơi, đây không phải chọn áo. Đây là bài kiểm tra mức độ thấu hiểu phụ nữ.",
+"{u}, chọn áo cho chị em mà vô tri là 20/10 năm sau không ai nhận quà đâu.",
+"Quà 20/10 năm nay do {u} chọn. Nếu chị em mặc đẹp, công của chị em. Nếu xấu, lỗi của {u}.",
+"{u} ơi, câu in trên áo phải dễ thương, đừng khịa. Chị em có quyền đổi người chọn đó nha.",
+"{u}, nhớ rằng chị em sẽ chụp ảnh với cái áo này rồi đăng story. Danh tiếng phòng mình trông cả vào bạn.",
+"{u} chọn kỹ giùm. Năm ngoái tặng hoa đã bị chê héo, năm nay đừng để áo cũng héo theo.",
+"Chị em không cần hoa, không cần bánh. Chị em chỉ cần {u} chọn đúng một chiếc áo.",
+"{u}, mỗi cú bấm Chọn là một lời hứa với chị em. Bấm có trách nhiệm nha.",
+"{u} ơi, chọn áo “Đã Có Chồng” cho chị em còn độc thân là toang đó. Đọc kỹ chữ trước khi bấm.",
+"20/10 là ngày của chị em, còn hôm nay là ngày thử thách của {u}. Cố lên.",
+"{u}, phụ nữ để yêu thương, không phải để mặc áo “Thiếu Tất Cả Nhưng Thừa Cân”. Cân nhắc giùm.",
+"{u} ơi, thẩm mỹ của cả team nam đang bị chị em chấm điểm. Đừng kéo điểm trung bình xuống.",
+"Chị em dặn: {u} chọn sao cũng được, miễn là đẹp, dễ thương, sang, hợp màu da và không đụng hàng.",
+"{u}, chọn áo cho chị em cũng như trả lời câu “Em mập không?”. Một bước sai là cả đời hối hận.",
+"{u} ơi, áo đẹp thì chị em khen cả team. Áo xấu thì chị em nhớ đúng tên {u}.",
+"Ngày 20/10 đang tới gần. Thời gian của {u} không còn nhiều. Chọn đi, đừng lướt nữa.",
+"{u}, đừng chọn theo gu của mình. Chọn theo gu của người sẽ cầm KPI của bạn.",
+"{u} ơi, chị em làm việc vất vả cả năm rồi. Một chiếc áo xịn là điều tối thiểu.",
+"{u}, nhớ chọn cho chị em mẫu mặc đi làm được, chứ đừng chỉ mặc ở nhà ngủ nha.",
+"Hội đồng chị em đã sẵn sàng chấm điểm. {u}, mời bạn trình bày lựa chọn.",
+"{u} ơi, chọn áo xong nhớ chuẩn bị thêm lời chúc. Áo đẹp mà chúc khô khan cũng mất điểm."
+];
+let hypeI=Math.floor(Math.random()*HYPE.length);
+function renderHype(){const el=document.getElementById('hypeTxt');const name=user||'Bạn';el.innerHTML=esc(HYPE[hypeI]).replaceAll('{u}','<mark>'+esc(name)+'</mark>');el.classList.remove('in');void el.offsetWidth;el.classList.add('in')}
+document.getElementById('hypeBtn').onclick=()=>{hypeI=(hypeI+1)%HYPE.length;renderHype()};
 // who dialog
 const whoDlg=document.getElementById('whoDlg');
 function openWho(){
   document.getElementById('whoGrid').innerHTML=USERS.map(u=>{let n=0;try{n=(JSON.parse(localStorage.getItem('tuaotim_'+u[0])||'null')?.rank||[]).length}catch(e){}return `<button data-u="${u[0]}" class="${u[0]===user?'cur':''}">${u[0]}<span>${n?n+' mẫu đã chọn':'chưa chọn'}</span></button>`}).join('');
   whoDlg.showModal();
 }
-document.getElementById('whoGrid').onclick=e=>{const b=e.target.closest('[data-u]');if(!b)return;user=b.dataset.u;try{localStorage.setItem('tuaotim_user',user)}catch(e){}load();whoDlg.close();render();toast('Xin chào '+user)};
+document.getElementById('whoGrid').onclick=e=>{const b=e.target.closest('[data-u]');if(!b)return;user=b.dataset.u;try{localStorage.setItem('tuaotim_user',user)}catch(e){}load();whoDlg.close();render();renderHype();toast('Xin chào '+user)};
 whoDlg.addEventListener('cancel',e=>{if(!user)e.preventDefault()});
 document.getElementById('whoBtn').onclick=openWho;
-render();
+render();renderHype();
 if(!user)openWho();
 </script>
 </body>
